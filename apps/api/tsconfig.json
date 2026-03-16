@@ -1,0 +1,27 @@
+{
+    "extends": "@automacao_contrato/tsconfig/base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": ".", // Mudei de 'src' para '.' para ele enxergar a raiz
+        "esModuleInterop": true,
+        "strict": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "Bundler", // Essencial para o Kubb v4 encontrar os plugins
+        "skipLibCheck": true,
+        "target": "ESNext", // Ou pelo menos ES2020
+        "module": "ESNext", // Ou NodeNext se estiver no Node
+        "lib": [
+            "ESNext",
+            "DOM"
+        ] // Garante que o TS conheça as APIs novas
+    },
+    "include": [
+        "src/**/*",
+        "swagger-jsdoc.config.ts",
+        "kubb.config.ts" // O convidado de honra que faltava!
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

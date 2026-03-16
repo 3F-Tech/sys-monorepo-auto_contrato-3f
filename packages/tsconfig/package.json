@@ -1,0 +1,9 @@
+{
+    "name": "@automacao_contrato/tsconfig",
+    "version": "1.0.0",
+    "main": "base.json",
+    "files": [
+        "base.json"
+    ],
+    "private": true
+}

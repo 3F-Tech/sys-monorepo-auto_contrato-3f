@@ -1,0 +1,29 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "pipeline": {
+        "codegen": {
+            "inputs": [
+                "../api/swagger.json"
+            ],
+            "outputs": [
+                "../packages/api-client/**"
+            ]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true,
+            "dependsOn": [
+                "^codegen"
+            ]
+        },
+        "build": {
+            "dependsOn": [
+                "^codegen",
+                "^build"
+            ],
+            "outputs": [
+                "dist/**"
+            ]
+        }
+    }
+}

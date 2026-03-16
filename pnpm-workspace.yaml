@@ -1,0 +1,5 @@
+packages:
+  # Onde ficam as aplicações (Vue e Express)
+  - 'apps/*'
+  # Onde ficam as configurações e códigos gerados pelo Kubb
+  - 'packages/*'

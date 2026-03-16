@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model business {
+  id              Int               @id @default(autoincrement())
+  name            String?           @db.VarChar(255)
+  cnpj            String?           @db.VarChar(18)
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  update_at       DateTime?         @default(now()) @db.Timestamp(6)
+  img_base64      String?
+  color           String?
+  contracts       contracts[]
+  seller_business seller_business[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model seller_business {
+  seller_id   BigInt   @default(autoincrement())
+  business_id Int      @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  business    business @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sellers     sellers  @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([seller_id, business_id])
+}
+
+model sellers {
+  id              BigInt            @id @default(autoincrement())
+  name            String?           @db.VarChar(255)
+  cpf             String?           @unique @db.VarChar(14)
+  email           String?           @unique @db.VarChar(255)
+  phone           String?
+  password        String?
+  type            String
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  update_at       DateTime?         @default(now()) @db.Timestamp(6)
+  head_id         BigInt?
+  contracts       contracts[]
+  seller_business seller_business[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model contracts {
+  id                 BigInt    @id @default(autoincrement())
+  title              String?
+  link               String?
+  cnpj_client        String?
+  seller_id          BigInt
+  bu_id              Int
+  monthly_fee        Decimal?  @db.Decimal
+  implementation_fee Decimal?  @db.Decimal
+  contractual_term   Int?      @db.SmallInt
+  due_date           DateTime? @db.Date
+  type_contract      String?
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  signed             Boolean   @default(false)
+  change_status      String?
+  signed_date        DateTime? @db.Timestamptz(6)
+  change_description String?
+  business           business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sellers            sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+}
