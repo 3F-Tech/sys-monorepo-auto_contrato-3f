@@ -25,19 +25,6 @@
           Avisos Pendentes
         </button>
 
-        <!-- Dropdown de Vendedores para Líderes -->
-        <div v-if="isLeadership && filterMode === 'team'" class="relative">
-          <select 
-            v-model="selectedSellerFilter"
-            class="appearance-none pl-4 pr-10 py-2 rounded-xl bg-brand-offset border border-brand-glass-border text-[10px] font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-cyan/50 transition-all cursor-pointer shadow-sm w-48"
-          >
-            <option value="">Todos os Vendedores</option>
-            <option v-for="seller in sellers" :key="seller.id" :value="seller.id">
-              {{ seller.name }}
-            </option>
-          </select>
-          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
-        </div>
       </div>
 
       <!-- Search Input -->
@@ -49,8 +36,37 @@
       </div>
     </div>
 
+    <!-- Loading State (Skeleton) -->
+    <div v-if="loading" class="space-y-3">
+      <div v-for="i in 1" :key="i" 
+        class="p-5 rounded-2xl bg-brand-surface/30 border border-brand-glass-border animate-pulse flex items-center justify-between relative overflow-hidden"
+      >
+        <!-- Shimmer gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+        
+        <div class="flex items-center gap-4 relative z-10">
+          <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10"></div>
+          <div class="space-y-2">
+            <div class="h-4 w-56 bg-white/10 rounded-md"></div>
+            <div class="h-3 w-40 bg-white/5 rounded-md"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-8 relative z-10">
+          <div class="hidden lg:flex flex-col items-end gap-2">
+            <div class="h-2 w-20 bg-white/5 rounded"></div>
+            <div class="h-6 w-28 bg-white/10 rounded-full"></div>
+          </div>
+          <div class="hidden md:flex flex-col items-end gap-2">
+            <div class="h-2 w-16 bg-white/5 rounded"></div>
+            <div class="h-4 w-24 bg-white/10 rounded"></div>
+          </div>
+          <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Empty State -->
-    <div v-if="filteredContracts.length === 0"
+    <div v-else-if="filteredContracts.length === 0"
       class="p-12 rounded-2xl bg-brand-offset/30 border border-brand-glass-border border-dashed text-center space-y-3">
       <FileX2 class="h-10 w-10 text-white/10 mx-auto" />
       <p class="text-white/40 text-sm">Nenhum contrato encontrado.</p>
@@ -145,15 +161,26 @@
                   </div>
                 </div>
 
-                <div
-                  class="grid grid-cols-2 gap-4 p-5 rounded-2xl bg-black/40 border border-brand-glass-border shadow-md">
-                  <div class="space-y-1.5">
-                    <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Vencimento</p>
-                    <p class="text-sm font-bold text-white">{{ formatDate(contract.due_date) }}</p>
+                <div class="p-5 rounded-2xl bg-black/40 border border-brand-glass-border shadow-md space-y-4">
+                  <div class="space-y-1.5 flex items-center justify-between border-b border-white/5 pb-3">
+                    <div class="space-y-1">
+                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Vencimento</p>
+                      <p class="text-sm font-bold text-white">{{ formatDate(contract.due_date) }}</p>
+                    </div>
+                    <div class="text-right space-y-1">
+                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">CNPJ do Cliente</p>
+                      <p class="text-sm font-bold text-white/60">{{ contract.cnpj_client || 'Não informado' }}</p>
+                    </div>
                   </div>
-                  <div class="text-right space-y-1.5">
-                    <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Valor da Mensalidade</p>
-                    <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract) }}</p>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Implementação</p>
+                      <p class="text-sm font-black text-white">{{ formatCurrency(contract.implementation_fee) }}</p>
+                    </div>
+                    <div class="text-right space-y-1">
+                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Mensalidade</p>
+                      <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -364,6 +391,7 @@ const props = defineProps<{
   isLeadership?: boolean;
   businessUnits?: Business[];
   sellers?: Sellers[];
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -377,7 +405,6 @@ const editingLink = ref('');
 const changeDescriptionInput = ref('');
 const searchQuery = ref('');
 const showAlertsOnly = ref(false);
-const selectedSellerFilter = ref<string>('');
 
 const changeRequestModalOpen = ref(false);
 const selectedContractForChange = ref<Contracts | null>(null);
@@ -418,11 +445,6 @@ const filteredContracts = computed(() => {
     displayContracts = displayContracts.filter(c => c.change_status === 'alert');
   }
   
-  // Filtro de Vendedor (Apenas Liderança na visão "Equipe")
-  if (props.isLeadership && props.filterMode === 'team' && selectedSellerFilter.value) {
-    displayContracts = displayContracts.filter(c => c.seller_id === selectedSellerFilter.value);
-  }
-
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     displayContracts = displayContracts.filter(c =>
@@ -571,10 +593,9 @@ const formatDate = (date: string | null | undefined) => {
   return new Date(date).toLocaleDateString('pt-BR');
 };
 
-const formatCurrency = (contract: Contracts) => {
-  const mFee = parseFloat(contract.monthly_fee?.toString() || '0');
-  // const iFee = parseFloat(contract.implementation_fee?.toString() || '0');
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(mFee);
+const formatCurrency = (value: any) => {
+  const amount = parseFloat(value?.toString() || '0');
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
 };
 </script>
 
@@ -590,5 +611,18 @@ const formatCurrency = (contract: Contracts) => {
   max-height: 0;
   opacity: 0;
   transform: translateY(-8px);
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 </style>

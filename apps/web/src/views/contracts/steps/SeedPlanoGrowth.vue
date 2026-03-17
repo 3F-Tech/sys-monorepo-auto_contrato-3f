@@ -12,11 +12,13 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">RAZÃO SOCIAL DO CONTRATANTE</label>
-          <input type="text" id="RAZAO SOCIAL DO CONTRATANTE" v-model="form['RAZAO SOCIAL DO CONTRATANTE']" class="input-glass w-full" placeholder="NOME COMPLETO DA EMPRESA" :class="[errors && errors.includes('RAZAO SOCIAL DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="RAZAO SOCIAL DO CONTRATANTE" v-model="form['RAZAO SOCIAL DO CONTRATANTE']" class="input-glass w-full" placeholder="NOME COMPLETO DA EMPRESA" :class="[errors && errors['RAZAO SOCIAL DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['RAZAO SOCIAL DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['RAZAO SOCIAL DO CONTRATANTE'] }}</span>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CNPJ DO CONTRATANTE</label>
-          <input type="text" id="CNPJ DO CONTRATANTE" v-model="form['CNPJ DO CONTRATANTE']" v-maska="'##.###.###/####-##'" class="input-glass w-full" placeholder="00.000.000/0000-00" :class="[errors && errors.includes('CNPJ DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="CNPJ DO CONTRATANTE" v-model="form['CNPJ DO CONTRATANTE']" v-maska="'##.###.###/####-##'" class="input-glass w-full" placeholder="00.000.000/0000-00" :class="[errors && errors['CNPJ DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['CNPJ DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CNPJ DO CONTRATANTE'] }}</span>
         </div>
       </div>
     </div>
@@ -35,31 +37,37 @@
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest italic" v-if="cepLoading">Buscando...</label>
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest" v-else>CEP DO CONTRATANTE</label>
           <input type="text" id="CEP DO CONTRATANTE" v-model="form['CEP DO CONTRATANTE']" v-maska="'#####-###'" class="input-glass w-full"
-            placeholder="00000-000" :class="[errors && errors.includes('CEP DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            placeholder="00000-000" :class="[errors && errors['CEP DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['CEP DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CEP DO CONTRATANTE'] }}</span>
         </div>
         <div class="md:col-span-6 space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">LOGRADOURO DO CONTRATANTE</label>
           <input type="text" id="LOGRADOURO DO CONTRATANTE" v-model="form['LOGRADOURO DO CONTRATANTE']" class="input-glass w-full"
-            placeholder="RUA, AVENIDA, ETC" :class="[errors && errors.includes('LOGRADOURO DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            placeholder="RUA, AVENIDA, ETC" :class="[errors && errors['LOGRADOURO DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['LOGRADOURO DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['LOGRADOURO DO CONTRATANTE'] }}</span>
         </div>
         <div class="md:col-span-3 space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NÚMERO DO CONTRATANTE</label>
-          <input type="text" id="NUMERO DO CONTRATANTE" v-model="form['NUMERO DO CONTRATANTE']" class="input-glass w-full" placeholder="123" :class="[errors && errors.includes('NUMERO DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="NUMERO DO CONTRATANTE" v-model="form['NUMERO DO CONTRATANTE']" class="input-glass w-full" placeholder="123" :class="[errors && errors['NUMERO DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['NUMERO DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NUMERO DO CONTRATANTE'] }}</span>
         </div>
 
         <div class="md:col-span-5 space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">BAIRRO DO CONTRATANTE</label>
           <input type="text" id="BAIRRO DO CONTRATANTE" v-model="form['BAIRRO DO CONTRATANTE']" class="input-glass w-full"
-            placeholder="NOME DO BAIRRO" :class="[errors && errors.includes('BAIRRO DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            placeholder="NOME DO BAIRRO" :class="[errors && errors['BAIRRO DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['BAIRRO DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['BAIRRO DO CONTRATANTE'] }}</span>
         </div>
         <div class="md:col-span-5 space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CIDADE DO CONTRATANTE</label>
-          <input type="text" id="CIDADE DO CONTRATANTE" v-model="form['CIDADE DO CONTRATANTE']" class="input-glass w-full" placeholder="CIDADE" :class="[errors && errors.includes('CIDADE DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="CIDADE DO CONTRATANTE" v-model="form['CIDADE DO CONTRATANTE']" class="input-glass w-full" placeholder="CIDADE" :class="[errors && errors['CIDADE DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['CIDADE DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CIDADE DO CONTRATANTE'] }}</span>
         </div>
         <div class="md:col-span-2 space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">UF DO CONTRATANTE</label>
           <input type="text" id="UF DO CONTRATANTE" v-model="form['UF DO CONTRATANTE']" v-maska="'@@'" class="input-glass w-full uppercase"
-            placeholder="SP" :class="[errors && errors.includes('UF DO CONTRATANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            placeholder="SP" :class="[errors && errors['UF DO CONTRATANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['UF DO CONTRATANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['UF DO CONTRATANTE'] }}</span>
         </div>
       </div>
     </div>
@@ -76,15 +84,18 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO REPRESENTANTE</label>
-          <input type="text" id="NOME DO REPRESENTANTE" v-model="form['NOME DO REPRESENTANTE']" class="input-glass w-full" placeholder="NOME COMPLETO" :class="[errors && errors.includes('NOME DO REPRESENTANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="NOME DO REPRESENTANTE" v-model="form['NOME DO REPRESENTANTE']" class="input-glass w-full" placeholder="NOME COMPLETO" :class="[errors && errors['NOME DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['NOME DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME DO REPRESENTANTE'] }}</span>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CARGO DO REPRESENTANTE</label>
-          <input type="text" id="CARGO DO REPRESENTANTE" v-model="form['CARGO DO REPRESENTANTE']" class="input-glass w-full" placeholder="EX: DIRETOR" :class="[errors && errors.includes('CARGO DO REPRESENTANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="CARGO DO REPRESENTANTE" v-model="form['CARGO DO REPRESENTANTE']" class="input-glass w-full" placeholder="EX: DIRETOR" :class="[errors && errors['CARGO DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['CARGO DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CARGO DO REPRESENTANTE'] }}</span>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO REPRESENTANTE</label>
-          <input type="text" id="CPF DO REPRESENTANTE" v-model="form['CPF DO REPRESENTANTE']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors.includes('CPF DO REPRESENTANTE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="CPF DO REPRESENTANTE" v-model="form['CPF DO REPRESENTANTE']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['CPF DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF DO REPRESENTANTE'] }}</span>
         </div>
       </div>
     </div>
@@ -103,23 +114,27 @@
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">VALOR TAXA IMPLEMENTAÇÃO</label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs text-brand-cyan font-bold">R$</span>
-            <input type="text" id="VALOR TAXA IMPLEMENTACAO" v-model="form['VALOR TAXA IMPLEMENTACAO']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors.includes('VALOR TAXA IMPLEMENTACAO') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <input type="text" id="VALOR TAXA IMPLEMENTACAO" v-model="form['VALOR TAXA IMPLEMENTACAO']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors['VALOR TAXA IMPLEMENTACAO'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['VALOR TAXA IMPLEMENTACAO']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['VALOR TAXA IMPLEMENTACAO'] }}</span>
           </div>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">VALOR MENSALIDADE</label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs text-brand-cyan font-bold">R$</span>
-            <input type="text" id="VALOR MENSALIDADE" v-model="form['VALOR MENSALIDADE']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors.includes('VALOR MENSALIDADE') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <input type="text" id="VALOR MENSALIDADE" v-model="form['VALOR MENSALIDADE']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors['VALOR MENSALIDADE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['VALOR MENSALIDADE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['VALOR MENSALIDADE'] }}</span>
           </div>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DATA PRIMEIRO PAGAMENTO</label>
-          <input type="text" id="DATA PRIMEIRO PAGAMENTO" v-model="form['DATA PRIMEIRO PAGAMENTO']" v-maska="'##/##/####'" class="input-glass w-full" placeholder="DD/MM/AAAA" :class="[errors && errors.includes('DATA PRIMEIRO PAGAMENTO') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="DATA PRIMEIRO PAGAMENTO" v-model="form['DATA PRIMEIRO PAGAMENTO']" v-maska="'##/##/####'" class="input-glass w-full" placeholder="DD/MM/AAAA" :class="[errors && errors['DATA PRIMEIRO PAGAMENTO'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['DATA PRIMEIRO PAGAMENTO']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['DATA PRIMEIRO PAGAMENTO'] }}</span>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DIA VENCIMENTO MENSAL</label>
-          <input type="number" id="DIA VENCIMENTO MENSAL" v-model="form['DIA VENCIMENTO MENSAL']" min="1" max="31" class="input-glass w-full" placeholder="EX: 10" :class="[errors && errors.includes('DIA VENCIMENTO MENSAL') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="number" id="DIA VENCIMENTO MENSAL" v-model="form['DIA VENCIMENTO MENSAL']" min="1" max="31" class="input-glass w-full" placeholder="EX: 10" :class="[errors && errors['DIA VENCIMENTO MENSAL'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['DIA VENCIMENTO MENSAL']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['DIA VENCIMENTO MENSAL'] }}</span>
         </div>
       </div>
     </div>
@@ -136,7 +151,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DATA ASSINATURA CONTRATO</label>
-          <input type="text" id="DATA ASSINATURA CONTRATO" v-model="form['DATA ASSINATURA CONTRATO']" v-maska="'##/##/####'" class="input-glass w-full" placeholder="DD/MM/AAAA" :class="[errors && errors.includes('DATA ASSINATURA CONTRATO') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <input type="text" id="DATA ASSINATURA CONTRATO" v-model="form['DATA ASSINATURA CONTRATO']" v-maska="'##/##/####'" class="input-glass w-full" placeholder="DD/MM/AAAA" :class="[errors && errors['DATA ASSINATURA CONTRATO'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['DATA ASSINATURA CONTRATO']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['DATA ASSINATURA CONTRATO'] }}</span>
         </div>
       </div>
     </div>
@@ -159,11 +175,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DA TESTEMUNHA</label>
-                    <input type="text" id="NOME TESTEMUNHA 1" v-model="form['NOME TESTEMUNHA 1']" class="input-glass w-full" placeholder="NOME COMPLETO" :class="[errors && errors.includes('NOME TESTEMUNHA 1') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="NOME TESTEMUNHA 1" v-model="form['NOME TESTEMUNHA 1']" class="input-glass w-full" placeholder="NOME COMPLETO" :class="[errors && errors['NOME TESTEMUNHA 1'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['NOME TESTEMUNHA 1']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME TESTEMUNHA 1'] }}</span>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DA TESTEMUNHA</label>
-                    <input type="text" id="CPF TESTEMUNHA 1" v-model="form['CPF TESTEMUNHA 1']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors.includes('CPF TESTEMUNHA 1') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="CPF TESTEMUNHA 1" v-model="form['CPF TESTEMUNHA 1']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF TESTEMUNHA 1'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['CPF TESTEMUNHA 1']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF TESTEMUNHA 1'] }}</span>
                 </div>
             </div>
         </div>
@@ -179,19 +197,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
-                    <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium" placeholder="NOME DO VENDEDOR" :class="[errors && errors.includes('NOME VENDEDOR') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium" placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
-                    <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors.includes('CPF VENDEDOR') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA BU</label>
-                    <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full" placeholder="NOME DO COORDENADOR" :class="[errors && errors.includes('NOME COORD BU') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full" placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA BU</label>
-                    <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors.includes('CPF COORD BU') ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+                    <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
                 </div>
             </div>
         </div>
@@ -217,8 +239,8 @@ const props = defineProps({
     required: true
   },
   errors: {
-    type: Array,
-    default: () => []
+    type: Object,
+    default: () => ({})
   }
 });
 

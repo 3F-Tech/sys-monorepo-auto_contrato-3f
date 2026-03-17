@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "vite",
+        "codegen": "kubb generate --config ../../kubb.config.ts",
         "build": "vue-tsc && vite build",
         "preview": "vite preview"
     },
@@ -11,6 +12,7 @@
         "@meu-projeto/api-client": "workspace:*",
         "axios": "^1.6.0",
         "crypto-js": "^4.2.0",
+        "date-fns": "^4.1.0",
         "lucide-vue-next": "^0.330.0",
         "maska": "^3.2.0",
         "pinia": "^2.1.7",
@@ -27,6 +29,6 @@
         "tailwindcss": "^3.4.1",
         "typescript": "^5.3.3",
         "vite": "^5.1.4",
-        "vue-tsc": "^1.8.27"
+        "vue-tsc": "^3.2.6"
     }
 }

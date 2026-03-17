@@ -1,0 +1,19 @@
+# ==========================================
+# 3F Deploy Orchestrator - Projeto Monorepo
+# ==========================================
+
+# ------------------------------------------
+# CONFIGURAÇÃO DO BACKEND (API)
+# ------------------------------------------
+# No Dashboard, use app_path: apps/api
+kind: fullstack
+runtime: node
+install_cmd: pnpm install
+build_cmd: pnpm build
+start_cmd: node dist/index.js
+pm2_name: "api-contrato"
+port: 3007
+requires_nginx: true
+domains:
+  - "auto-contrato.3fventure.tech"
+healthcheck: "/api-docs"

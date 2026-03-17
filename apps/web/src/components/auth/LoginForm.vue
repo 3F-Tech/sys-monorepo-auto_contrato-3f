@@ -62,12 +62,7 @@
             </div>
           </div>
 
-          <!-- Alerta de Erro -->
-          <div v-if="errorMessage"
-            class="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm animate-shake">
-            <AlertCircle class="h-5 w-5 flex-shrink-0" />
-            <p>{{ errorMessage }}</p>
-          </div>
+
 
           <div class="space-y-2">
             <button type="submit" class="btn-primary" :disabled="loading">
@@ -93,31 +88,25 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { Mail, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-vue-next';
-import { useAuthStore } from '../../store/auth';
+
+const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['submit']);
 
 const showPassword = ref(false);
 const email = ref('');
 const password = ref('');
-const loading = ref(false);
-const errorMessage = ref('');
-const router = useRouter();
-const authStore = useAuthStore();
 
-const handleSubmit = async () => {
-  if (loading.value) return;
-
-  loading.value = true;
-  errorMessage.value = '';
-
-  const result = await authStore.login(email.value, password.value);
-
-  if (result.success) {
-    router.push('/');
-  } else {
-    errorMessage.value = result.error || 'Credenciais inválidas';
-    loading.value = false;
-  }
+const handleSubmit = () => {
+  if (props.loading) return;
+  emit('submit', { email: email.value, password: password.value });
 };
 </script>
+
+
