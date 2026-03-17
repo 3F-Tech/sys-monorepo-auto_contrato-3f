@@ -10,7 +10,7 @@ kind: fullstack
 runtime: node
 install_cmd: pnpm install
 build_cmd: pnpm --filter api run build
-start_cmd: node apps/api/dist/index.js
+start_cmd: node apps/api/dist/src/index.js
 pm2_name: "api-contrato"
 port: 3007
 requires_nginx: true
