@@ -9,7 +9,7 @@
 kind: fullstack
 runtime: node
 install_cmd: pnpm install
-build_cmd: pnpm build
+build_cmd: pnpm --filter web exec vite build
 start_cmd: node dist/index.js
 pm2_name: "api-contrato"
 port: 3007
