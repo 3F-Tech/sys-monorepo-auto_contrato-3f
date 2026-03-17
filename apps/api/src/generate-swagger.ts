@@ -1,4 +1,4 @@
-import { specs } from './swagger.config.ts';
+import { specs } from './swagger.config';
 import fs from 'fs';
 import path from 'path';
 
