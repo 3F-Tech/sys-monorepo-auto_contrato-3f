@@ -69,10 +69,9 @@
             <div class="relative">
               <select v-model="form.type"
                 class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer">
-                <option value="seller" class="bg-brand-offset">Vendedor</option>
-                <option value="head" class="bg-brand-offset">Head de Equipe</option>
-                <option value="admin" class="bg-brand-offset">Administrador</option>
-                <option value="coord" class="bg-brand-offset">Coordenador de BU</option>
+                <option v-for="role in availableRoles" :key="role.value" :value="role.value" class="bg-brand-offset">
+                  {{ role.label }}
+                </option>
               </select>
               <ChevronDown
                 class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 pointer-events-none" />
@@ -84,10 +83,10 @@
         <div v-if="form.type === 'seller'" class="space-y-1.5">
           <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Head Responsável</label>
           <div class="relative">
-            <select v-model="form.head_id"
-              class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer">
+            <select v-model="form.head_id" :disabled="authStore.userRole === 'head'"
+              class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
               <option :value="null" class="bg-brand-offset italic">Nenhum (Vendedor Independente)</option>
-              <option v-for="h in heads" :key="h.id" :value="h.id" class="bg-brand-offset">
+              <option v-for="h in heads" :key="h.id" :value="h.id?.toString()" class="bg-brand-offset">
                 {{ h.name }}
               </option>
             </select>
@@ -119,7 +118,7 @@
                 <img :src="bu.img_base64" class="h-full w-full object-cover" />
               </div>
               <div v-else class="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                <Building2 class="h-3 w-3 text-white/20" :style="{ color: bu.color }" />
+                <Building2 class="h-3 w-3 text-white/20" :style="{ color: bu.color || undefined }" />
               </div>
 
               <span
@@ -147,29 +146,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { UserPlus, UserCog, X, Loader2, ChevronDown, Check, Building2, Save } from 'lucide-vue-next';
+import client from '../../api/client';
 import type { Sellers } from '../../gen/types/Sellers';
 import type { Business } from '../../gen/types/Business';
+
+type SellerWithRelations = Sellers & {
+  seller_business?: {
+    business_id: number;
+    business: Business;
+  }[];
+};
 import { postSellers } from '../../gen/hooks/postSellers';
+import { deleteSellersId } from '../../gen/hooks/deleteSellersId';
 import { putSellersId } from '../../gen/hooks/putSellersId';
 import { getSellers } from '../../gen/hooks/getSellers';
 import { getBusiness } from '../../gen/hooks/getBusiness';
 import { putSellerBusiness } from '../../gen/hooks/putSellerBusiness';
-import client from '../../api/client';
 import crypto from 'crypto-js';
+import { useAuthStore } from '../../store/auth';
 
 const props = defineProps<{
   isOpen: boolean;
-  user: Sellers | null;
+  user: SellerWithRelations | null;
 }>();
 
 const emit = defineEmits(['close', 'saved']);
 
+const authStore = useAuthStore();
 const loading = ref(false);
 const allBusiness = ref<Business[]>([]);
 const heads = ref<Sellers[]>([]);
 const selectedBUs = ref<number[]>([]);
+
+const availableRoles = computed(() => {
+  if (authStore.userRole === 'admin' || authStore.userRole === 'coord') {
+    return [
+      { value: 'seller', label: 'Vendedor' },
+      { value: 'head', label: 'Head de Equipe' },
+      { value: 'coord', label: 'Coordenador de BU' },
+      { value: 'admin', label: 'Administrador' }
+    ];
+  }
+  // Heads só podem criar vendedores na V1
+  return [
+    { value: 'seller', label: 'Vendedor' }
+  ];
+});
 
 const form = ref({
   name: '',
@@ -188,7 +212,18 @@ const loadInitialData = async () => {
       getSellers({}, { client })
     ]);
     allBusiness.value = busData as Business[];
-    heads.value = (sellersData as Sellers[]).filter(s => s.type === 'head');
+    
+    const fetchedHeads = (sellersData as Sellers[]).filter(s => s.type === 'head');
+    
+    // Se o usuário logado for head, garante que ele esteja na lista para o preenchimento automático
+    if (authStore.userRole === 'head' && authStore.user) {
+      const alreadyInList = fetchedHeads.some(h => h.id?.toString() === authStore.user?.id?.toString());
+      if (!alreadyInList) {
+        fetchedHeads.push(authStore.user as Sellers);
+      }
+    }
+    
+    heads.value = fetchedHeads;
   } catch (error) {
     console.error('Erro ao carregar dados auxiliares:', error);
   }
@@ -219,7 +254,7 @@ watch(() => props.isOpen, async (newVal) => {
         cpf: props.user.cpf || '',
         phone: props.user.phone || '',
         type: props.user.type || 'seller',
-        head_id: props.user.head_id ? props.user.head_id : null
+        head_id: props.user.head_id ? props.user.head_id.toString() : null
       };
       // Extrair IDs das BUs vinculadas
       selectedBUs.value = props.user.seller_business?.map((sb: any) => sb.business_id) || [];
@@ -230,8 +265,8 @@ watch(() => props.isOpen, async (newVal) => {
         password: '',
         cpf: '',
         phone: '',
-        type: 'seller',
-        head_id: null
+        type: availableRoles.value[0]?.value || 'seller',
+        head_id: (authStore.userRole === 'head' && availableRoles.value[0]?.value === 'seller') ? authStore.user?.id?.toString() : null
       };
       selectedBUs.value = [];
     }

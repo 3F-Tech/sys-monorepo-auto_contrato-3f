@@ -24,7 +24,7 @@ const router = createRouter({
       path: '/admin/users',
       name: 'admin-users',
       component: UsersView,
-      meta: { adminOnly: true }
+      meta: { managementOnly: true }
     },
     {
       path: '/admin/business',
@@ -43,9 +43,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   
+  const isManagement = ['admin', 'head', 'coord'].includes(authStore.userRole);
+
   if (!to.meta.public && !authStore.isAuthenticated) {
     next('/login');
   } else if (to.meta.adminOnly && authStore.userRole !== 'admin') {
+    next('/');
+  } else if (to.meta.managementOnly && !isManagement) {
     next('/');
   } else if (to.meta.public && authStore.isAuthenticated) {
     next('/');

@@ -13,6 +13,11 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **Payload**: Tokens devem conter `id`, `email` e `type`.
 - **Expiração**: O token deve expirar em `3h`.
 - **Proteção**: Todas as rotas (exceto `/login` e `/health`) devem utilizar o `authMiddleware`.
+- **RBAC (Controle de Acesso em Sellers)**:
+  - `admin`: Ver e gerenciar todos os usuários e BUs.
+  - `head`: Vê apenas sua equipe direta (`head_id`). Só pode criar/editar vendedores para sua própria equipe. Não pode mudar o próprio cargo de um alvo.
+  - `coord`: Vê todos os usuários vinculados à sua BU. Pode criar qualquer cargo, facilitando a gestão descentralizada da unidade. Não pode gerenciar BUs.
+  - `vendedor`: Acesso apenas aos próprios dados.
 
 ## 📝 Documentação (Swagger)
 - **Obrigatoriedade**: Todo método público de um controlador DEVE possuir um bloco JSDoc `@openapi`.

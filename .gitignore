@@ -92,3 +92,37 @@ src/gen/
 *.key
 google-credentials.json
 GOOGLE_SHEETS_CREDENTIALS
+
+# Turbo
+.turbo/
+
+# Playwright (Testes)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Credentials específicas (para pegar o arquivo sharp-messenger...)
+*.json
+!package.json
+!tsconfig.json
+!composer.json
+!kubb.config.ts
+
+# --- QA-UX Sentinel & Playwright ---
+# Ignorar configurações e testes locais
+playwright.config.ts
+apps/web/tests/
+test-results/
+playwright-report/
+blob-report/
+
+# --- Antigravity Skills ---
+# Ignorar prompts e configurações de subagentes locais
+skills/QA-Sentinal-Deep/
+skills/QA-Sentinel-Scout/
+skills/QA-UX-Sentinel/
+
+# --- Turbo & Logs ---
+.turbo/
+*.log

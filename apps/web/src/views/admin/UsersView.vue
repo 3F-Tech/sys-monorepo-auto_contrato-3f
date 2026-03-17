@@ -12,7 +12,7 @@
           </div>
           <div>
             <h2 class="text-sm font-semibold text-white/90 leading-tight">Gestão de Usuários</h2>
-            <p class="text-[11px] text-brand-cyan uppercase tracking-wider font-medium">Painel Administrativo</p>
+            <p class="text-[11px] text-brand-cyan uppercase tracking-wider font-medium">{{ panelLabel }}</p>
           </div>
         </div>
 
@@ -141,12 +141,33 @@ import { deleteSellersId } from '../../gen/hooks/deleteSellersId';
 import client from '../../api/client';
 import type { Sellers } from '../../gen/types/Sellers';
 import type { Business } from '../../gen/types/Business';
+import { useAuthStore } from '../../store/auth';
+
+// Definindo um tipo estendido para incluir as relações
+type SellerWithRelations = Sellers & {
+  seller_business?: {
+    business_id: number;
+    business: Business;
+  }[];
+};
 
 const router = useRouter();
-const sellers = ref<Sellers[]>([]);
+const authStore = useAuthStore();
+const sellers = ref<SellerWithRelations[]>([]);
 const allBusiness = ref<Business[]>([]);
 const loading = ref(true);
 const searchQuery = ref('');
+
+const isAdmin = computed(() => authStore.userRole === 'admin');
+const isHead = computed(() => authStore.userRole === 'head');
+const isCoord = computed(() => authStore.userRole === 'coord');
+
+const panelLabel = computed(() => {
+  if (isAdmin.value) return 'Painel Administrativo';
+  if (isHead.value) return 'Gestão de Equipe';
+  if (isCoord.value) return 'Gestão de Unidade';
+  return 'Gestão de Usuários';
+});
 
 // Modal state
 const modalOpen = ref(false);
@@ -155,11 +176,19 @@ const selectedUser = ref<Sellers | null>(null);
 const loadSellers = async () => {
   loading.value = true;
   try {
+    const params: any = {};
+    if (isHead.value) {
+      params.head_id = authStore.user?.id?.toString();
+    }
+    
+    // Se for coordenador, o backend deve filtrar pela BU do coordenador.
+    // Verificaremos se o backend suporta isso ou se precisamos filtrar no front.
+
     const [sellersData, busData] = await Promise.all([
-      getSellers({}, { client }),
+      getSellers(params, { client }),
       getBusiness({ client })
     ]);
-    sellers.value = sellersData as Sellers[];
+    sellers.value = sellersData as SellerWithRelations[];
     allBusiness.value = busData as Business[];
   } catch (error) {
     console.error('Falha ao buscar dados:', error);
@@ -177,7 +206,7 @@ const getBusinessName = (id: number) => {
 };
 
 const getBusinessColor = (id: number) => {
-  return allBusiness.value.find(b => Number(b.id) === id)?.color;
+  return allBusiness.value.find(b => Number(b.id) === id)?.color || undefined;
 };
 
 const filteredSellers = computed(() => {

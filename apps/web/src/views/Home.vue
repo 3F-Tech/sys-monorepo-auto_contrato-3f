@@ -193,24 +193,27 @@
           :businessUnits="businessList" :sellers="sellerStore.allSellers" @update:filterMode="handleFilterModeChange" />
       </section>
 
-      <!-- Admin section if applicable -->
-      <section v-if="user?.type === 'admin'"
+      <!-- Management section for admin, head and coord -->
+      <section v-if="['admin', 'head', 'coord']. some(r => r === user?.type)"
         class="p-10 rounded-3xl bg-gradient-to-br from-brand-offset to-brand-deep border border-brand-glass-border relative overflow-hidden text-center space-y-6">
         <div class="h-20 w-20 mx-auto rounded-3xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
           <Settings class="h-10 w-10 animate-spin-slow" />
         </div>
         <div class="space-y-2">
-          <h2 class="text-2xl font-bold">Configurações do Sistema</h2>
-          <p class="text-white/40 text-sm max-w-md mx-auto">Gerencie usuários, permissões e unidades de negócio de toda
-            a plataforma.</p>
+          <h2 class="text-2xl font-bold">Gestão do Sistema</h2>
+          <p class="text-white/40 text-sm max-w-md mx-auto">
+            {{ user?.type === 'admin' ? 'Gerencie usuários, permissões e unidades de negócio de toda a plataforma.' : 'Gerencie os usuários e permissões da sua equipe ou unidade.' }}
+          </p>
         </div>
         <div class="flex flex-wrap justify-center gap-4">
           <button @click="router.push('/admin/users')"
-            class="px-6 py-2.5 rounded-xl bg-brand-cyan font-bold text-brand-deep hover:brightness-110 active:scale-95 transition-all">Gerenciar
-            Usuários</button>
-          <button @click="router.push('/admin/business')"
-            class="px-6 py-2.5 rounded-xl bg-brand-surface border border-brand-glass-border font-bold hover:bg-white/10 transition-all">Configurar
-            BUs</button>
+            class="px-6 py-2.5 rounded-xl bg-brand-cyan font-bold text-brand-deep hover:brightness-110 active:scale-95 transition-all">
+            Gerenciar Usuários
+          </button>
+          <button v-if="user?.type === 'admin'" @click="router.push('/admin/business')"
+            class="px-6 py-2.5 rounded-xl bg-brand-surface border border-brand-glass-border font-bold hover:bg-white/10 transition-all">
+            Configurar BUs
+          </button>
         </div>
       </section>
 

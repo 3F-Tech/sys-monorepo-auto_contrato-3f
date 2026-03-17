@@ -112,18 +112,45 @@ export const getSellerByEmail = async (req: Request, res: Response) => {
  *               items:
  *                 $ref: '#/components/schemas/Sellers'
  */
-export const getSellers = async (req: Request, res: Response) => {
+export const getSellers = async (req: any, res: Response) => {
     try {
-    const { head_id, type } = req.query;
-    const where: any = {};
+        const { head_id, type } = req.query;
+        const requester = req.user;
+        const where: any = {};
 
-    if (head_id) {
-      where.head_id = BigInt(head_id as string);
-    }
+        // Se não for admin, impõe filtros de visibilidade
+        if (requester && requester.type !== 'admin') {
+            if (requester.type === 'head') {
+                // Head vê apenas sua própria equipe
+                where.head_id = BigInt(requester.id);
+            } else if (requester.type === 'coord') {
+                // Coordenador vê todos vinculados à BU dele
+                // 1. Descobrir a BU do coordenador
+                const coordBusiness = await prisma.seller_business.findFirst({
+                    where: { seller_id: Number(requester.id) }
+                });
 
-    if (type) {
-      where.type = type as string;
-    }
+                if (coordBusiness) {
+                    where.seller_business = {
+                        some: {
+                            business_id: coordBusiness.business_id
+                        }
+                    };
+                } else {
+                    // Se o coordenador não tem BU, não vê ninguém (ou erro)
+                    return res.json([]);
+                }
+            }
+        } else {
+            // Admin ou filtros manuais via query
+            if (head_id) {
+                where.head_id = BigInt(head_id as string);
+            }
+        }
+
+        if (type) {
+            where.type = type as string;
+        }
 
         const sellers = await prisma.sellers.findMany({
             where,
@@ -242,13 +269,30 @@ export const login = async (req: Request, res: Response) => {
  *       201:
  *         description: Criado
  */
-export const createSeller = async (req: Request, res: Response) => {
+export const createSeller = async (req: any, res: Response) => {
     try {
-        const { data } = req.body
+        const { data } = req.body;
+        const requester = req.user;
+
+        if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
+            return res.status(403).json({ error: "Acesso negado" });
+        }
+
+        // Restrições específicas para Head (Coordenador agora é livre para usuários)
+        if (requester.type === 'head') {
+            data.type = 'seller'; // Head só cria seller
+            data.head_id = BigInt(requester.id); // Vendedor vinculado ao head
+        }
+
         const seller = await prisma.sellers.create({
             data: data,
         });
-        res.json(seller);
+        
+        const serializedSeller = JSON.parse(JSON.stringify(seller, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+        ));
+
+        res.json(serializedSeller);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Falha ao criar vendedor" });
@@ -281,16 +325,40 @@ export const createSeller = async (req: Request, res: Response) => {
  *       200:
  *         description: Atualizado
  */
-export const updateSeller = async (req: Request, res: Response) => {
+export const updateSeller = async (req: any, res: Response) => {
     try {
-        const { data } = req.body
+        const { data } = req.body;
+        const requester = req.user;
+        const targetId = Number(req.params.id);
+
+        if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
+            return res.status(403).json({ error: "Acesso negado" });
+        }
+
+        // Validação de escopo para Head
+        if (requester.type === 'head') {
+            const target = await prisma.sellers.findUnique({ where: { id: targetId } });
+            if (!target || target.head_id?.toString() !== requester.id.toString()) {
+                return res.status(403).json({ error: "Você só pode editar vendedores da sua equipe" });
+            }
+            delete data.type; // Head não pode mudar cargo
+            data.head_id = BigInt(requester.id); // Garante vínculo
+        }
+        
+        // Coordenador (coord) não tem travas de re-atribuição de cargo ou vínculo para os usuários que vê
+
         const seller = await prisma.sellers.update({
             where: {
-                id: Number(req.params.id),
+                id: targetId,
             },
             data: data,
         });
-        res.json(seller);
+
+        const serializedSeller = JSON.parse(JSON.stringify(seller, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+        ));
+
+        res.json(serializedSeller);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Falha ao atualizar vendedor" });
@@ -314,14 +382,34 @@ export const updateSeller = async (req: Request, res: Response) => {
  *       200:
  *         description: Deletado
  */
-export const deleteSeller = async (req: Request, res: Response) => {
+export const deleteSeller = async (req: any, res: Response) => {
     try {
+        const requester = req.user;
+        const targetId = Number(req.params.id);
+
+        if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
+            return res.status(403).json({ error: "Acesso negado" });
+        }
+
+        // Validação de escopo para Head
+        if (requester.type === 'head') {
+            const target = await prisma.sellers.findUnique({ where: { id: targetId } });
+            if (!target || target.head_id?.toString() !== requester.id.toString()) {
+                return res.status(403).json({ error: "Você só pode excluir vendedores da sua equipe" });
+            }
+        }
+
         const seller = await prisma.sellers.delete({
             where: {
-                id: Number(req.params.id),
+                id: targetId,
             },
         });
-        res.json(seller);
+
+        const serializedSeller = JSON.parse(JSON.stringify(seller, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+        ));
+
+        res.json(serializedSeller);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Falha ao excluir vendedor" });
