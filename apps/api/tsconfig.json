@@ -6,10 +6,10 @@
         "esModuleInterop": true,
         "strict": true,
         "resolveJsonModule": true,
-        "moduleResolution": "Bundler", // Essencial para o Kubb v4 encontrar os plugins
+        "moduleResolution": "Node16",
         "skipLibCheck": true,
-        "target": "ESNext", // Ou pelo menos ES2020
-        "module": "ESNext", // Ou NodeNext se estiver no Node
+        "target": "ES2020",
+        "module": "Node16",
         "lib": [
             "ESNext",
             "DOM"
