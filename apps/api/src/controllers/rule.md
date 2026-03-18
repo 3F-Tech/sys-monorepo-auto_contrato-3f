@@ -42,4 +42,11 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **Log**: Em produção, evite `console.log` excessivo; utilize o padrão de logs do monorepo se disponível.
 
 ## 🔄 Evolução do Schema
-- **Status de Mudança**: O campo `change_alert` (boolean) foi desativado em favor de `change_status` (string). Valores possíveis incluem `'alert'`, `'none'`, ou `null`.
+- **Status de Mudança**: O campo `change_alert` (boolean) foi desativado em favor de `change_status` (string). Valores possíveis: `'alert'`, `'approved'`, `'reject'`, ou `null` (padrão). Não use o valor `'none'`.
+
+## 🛠️ Build e Configuração TypeScript
+- **Módulo**: A API compila com `"module": "Node16"` e `"moduleResolution": "Node16"` no `tsconfig.json`, gerando output **CommonJS**.
+- **Output**: O build `tsc` gera os arquivos em `dist/src/` (não `dist/` diretamente), pois `rootDir` é `.` (raiz de `apps/api`).
+- **Comando de start em produção**: `node apps/api/dist/src/index.js` (configurado em `ops/project.yml`).
+- **Proibido**: Não use `import.meta.url` — incompível com output CommonJS. Use `__dirname` diretamente.
+- **Imports**: Nunca adicione extensão `.ts` em imports relativos dentro do código-fonte.

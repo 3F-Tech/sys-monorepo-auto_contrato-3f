@@ -88,11 +88,6 @@
           <span v-if="errors && errors['NOME DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME DO REPRESENTANTE'] }}</span>
         </div>
         <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CARGO DO REPRESENTANTE</label>
-          <input type="text" id="CARGO DO REPRESENTANTE" v-model="form['CARGO DO REPRESENTANTE']" class="input-glass w-full" placeholder="EX: DIRETOR" :class="[errors && errors['CARGO DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-          <span v-if="errors && errors['CARGO DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CARGO DO REPRESENTANTE'] }}</span>
-        </div>
-        <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO REPRESENTANTE</label>
           <input type="text" id="CPF DO REPRESENTANTE" v-model="form['CPF DO REPRESENTANTE']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
           <span v-if="errors && errors['CPF DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF DO REPRESENTANTE'] }}</span>
@@ -124,6 +119,14 @@
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs text-brand-cyan font-bold">R$</span>
             <input type="text" id="VALOR MENSALIDADE" v-model="form['VALOR MENSALIDADE']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors['VALOR MENSALIDADE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['VALOR MENSALIDADE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['VALOR MENSALIDADE'] }}</span>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">VALOR DO PRIMEIRO PAGAMENTO</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 text-xs text-brand-cyan font-bold">R$</span>
+            <input type="text" id="VALOR DO PRIMEIRO PAGAMENTO" v-model="form['VALOR DO PRIMEIRO PAGAMENTO']" v-maska="{ mask: '###.###.###,##', tokens: { '#': { pattern: /[0-9]/, repeated: true } }, reversed: true }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[errors && errors['VALOR DO PRIMEIRO PAGAMENTO'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['VALOR DO PRIMEIRO PAGAMENTO']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['VALOR DO PRIMEIRO PAGAMENTO'] }}</span>
           </div>
         </div>
         <div class="space-y-2">
@@ -159,64 +162,45 @@
 
     <!-- Seção: TESTEMUNHAS E RESPONSÁVEIS -->
     <div class="space-y-12 pt-6 border-t border-brand-glass-border">
-        <!-- Testemunha 1 -->
-        <div class="space-y-6">
-            <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
-                <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
-                    <UserIcon class="h-5 w-5" />
-                </div>
-                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Testemunha 1</h3>
-                <div class="flex gap-2 ml-auto">
-                    <button @click="fillWitness('Luís Fernando Mauri Menti', '023.275.400-46')" type="button" class="text-[9px] px-3 py-1 rounded-full bg-brand-cyan/5 border border-brand-cyan/20 hover:bg-brand-cyan/10 transition-all text-brand-cyan font-bold uppercase tracking-wider">Luís</button>
-                    <button @click="fillWitness('Natália Selister Piccoli', '013.266.710-06')" type="button" class="text-[9px] px-3 py-1 rounded-full bg-brand-cyan/5 border border-brand-cyan/20 hover:bg-brand-cyan/10 transition-all text-brand-cyan font-bold uppercase tracking-wider">Natália</button>
-                    <button @click="fillWitness('', '')" type="button" class="text-[9px] px-3 py-1 rounded-full bg-brand-cyan/5 border border-brand-cyan/20 hover:bg-brand-cyan/10 transition-all text-brand-cyan font-bold uppercase tracking-wider">Vazio</button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DA TESTEMUNHA</label>
-                    <input type="text" id="NOME TESTEMUNHA 1" v-model="form['NOME TESTEMUNHA 1']" class="input-glass w-full" placeholder="NOME COMPLETO" :class="[errors && errors['NOME TESTEMUNHA 1'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['NOME TESTEMUNHA 1']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME TESTEMUNHA 1'] }}</span>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DA TESTEMUNHA</label>
-                    <input type="text" id="CPF TESTEMUNHA 1" v-model="form['CPF TESTEMUNHA 1']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF TESTEMUNHA 1'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['CPF TESTEMUNHA 1']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF TESTEMUNHA 1'] }}</span>
-                </div>
-            </div>
-        </div>
+      <WitnessSection :form="form" :errors="errors" />
 
-        <!-- Equipe Interna -->
-        <div class="space-y-6">
-            <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
-                <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
-                    <UsersIcon class="h-5 w-5" />
-                </div>
-                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Equipe Responsável</h3>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
-                    <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium" placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
-                    <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA BU</label>
-                    <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full" placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA BU</label>
-                    <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-                    <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
-                </div>
-            </div>
+      <!-- Equipe Interna -->
+      <div class="space-y-6">
+        <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
+          <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
+            <UsersIcon class="h-5 w-5" />
+          </div>
+          <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Equipe Responsável</h3>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
+            <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium"
+              placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
+            <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full"
+              placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA
+              BU</label>
+            <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full"
+              placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA
+              BU</label>
+            <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full"
+              placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -224,6 +208,7 @@
 <script setup lang="ts">
 import { watch } from 'vue';
 import { useCep } from '../../../composables/useCep';
+import WitnessSection from '../../../components/contracts/WitnessSection.vue';
 import { 
   Building2, 
   MapPin, 
@@ -257,11 +242,6 @@ watch(() => props.form['CEP DO CONTRATANTE'], async (newCep) => {
     }
   }
 });
-
-const fillWitness = (name: string, cpf: string) => {
-  props.form['NOME TESTEMUNHA 1'] = name;
-  props.form['CPF TESTEMUNHA 1'] = cpf;
-};
 </script>
 
 <style scoped>

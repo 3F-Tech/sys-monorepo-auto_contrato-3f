@@ -61,16 +61,13 @@
         <div v-if="canEditHierarchy" class="space-y-6 pt-4 border-t border-white/5">
             <div class="space-y-1.5">
                 <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Head Responsável</label>
-                <div class="relative">
-                    <select v-model="form.head_id"
-                    class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer">
-                    <option :value="null" class="bg-brand-offset italic">Nenhum (Vendedor Independente)</option>
-                    <option v-for="h in heads" :key="h.id" :value="h.id" class="bg-brand-offset">
-                        {{ h.name }}
-                    </option>
-                    </select>
-                    <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 pointer-events-none" />
-                </div>
+                <CustomSelect 
+                  v-model="form.head_id" 
+                  :options="headsOptions"
+                  placeholder="Selecione o Head"
+                  searchable
+                  allow-clear
+                />
             </div>
 
             <div class="space-y-3">
@@ -127,7 +124,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { User, X, Loader2, ChevronDown, Check, Building2, Save } from 'lucide-vue-next';
+import { User, X, Loader2, Building2, Save } from 'lucide-vue-next';
+import CustomSelect from '../ui/CustomSelect.vue';
 import { useAuthStore } from '../../store/auth';
 import type { Sellers } from '../../gen/types/Sellers';
 import type { Business } from '../../gen/types/Business';
@@ -168,6 +166,16 @@ const form = ref({
 
 const user = computed(() => authStore.user as SellerWithRelations | null);
 const canEditHierarchy = computed(() => user.value?.type === 'head' || user.value?.type === 'admin');
+
+const headsOptions = computed(() => {
+  return [
+    { value: null, label: 'Nenhum (Gestor Independente)' },
+    ...heads.value.map(h => ({
+      value: h.id,
+      label: h.name || 'Sem nome'
+    }))
+  ];
+});
 
 const loadInitialData = async () => {
     if (!canEditHierarchy.value) return;

@@ -35,12 +35,12 @@ const getContractRow = (data: any, isGrowth: boolean = false) => {
         data['CIDADE DO CONTRATANTE'] || '',       // F
         data['UF DO CONTRATANTE'] || '',           // G
         data['CEP DO CONTRATANTE'] || '',           // H
-        data['CARGO DO REPRESENTANTE'] || '',      // I
-        data['NOME DO REPRESENTANTE'] || '',       // J
-        data['CPF DO REPRESENTANTE'] || '',        // K
-        data['VALOR TAXA IMPLEMENTACAO'] || '',     // L
-        data['VALOR MENSALIDADE'] || '',           // M
-        data['DATA PRIMEIRO PAGAMENTO'] || '',     // N
+        data['NOME DO REPRESENTANTE'] || '',       // I
+        data['CPF DO REPRESENTANTE'] || '',        // J
+        data['VALOR TAXA IMPLEMENTACAO'] || '',     // K
+        data['VALOR MENSALIDADE'] || '',           // L
+        data['DATA PRIMEIRO PAGAMENTO'] || '',     // M
+        data['VALOR DO PRIMEIRO PAGAMENTO'] || '', // N
         data['DIA VENCIMENTO MENSAL'] || '',       // O
         data['PRAZO CONTRATUAL MESES'] || '',      // P (Removido se for Growth)
         data['DATA ASSINATURA CONTRATO'] || '',    // Q -> P se Growth
@@ -52,6 +52,16 @@ const getContractRow = (data: any, isGrowth: boolean = false) => {
         data['CPF VENDEDOR'] || '',                // W -> V se Growth
         data['NOME COORD BU'] || '',               // X -> W se Growth
         data['CPF COORD BU'] || '',                // Y -> X se Growth
+        data['NOME TESTEMUNHA 2'] || '',           // Z -> Y se Growth
+        data['CPF TESTEMUNHA 2'] || '',            // AA -> Z se Growth
+        data['NOME TESTEMUNHA 3'] || '',           // AB -> AA se Growth
+        data['CPF TESTEMUNHA 3'] || '',            // AC -> AB se Growth
+        data['NOME TESTEMUNHA 4'] || '',           // AD -> AC se Growth
+        data['CPF TESTEMUNHA 4'] || '',            // AE -> AD se Growth
+        data['NOME TESTEMUNHA 5'] || '',           // AF -> AE se Growth
+        data['CPF TESTEMUNHA 5'] || '',            // AG -> AF se Growth
+        data['NOME TESTEMUNHA 6'] || '',           // AH -> AG se Growth
+        data['CPF TESTEMUNHA 6'] || '',            // AI -> AH se Growth
     ];
 
     if (isGrowth) {
@@ -162,6 +172,8 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
                 contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
                 type_contract: sheetName,
                 signed: false,
                 change_status: null,

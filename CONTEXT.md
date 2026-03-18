@@ -4,15 +4,23 @@
 Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1 é permitir que vendedores vinculados a diferentes empresas possam preencher formulários de contrato de forma rápida, disparando um fluxo de automação externo no **Make.com**.
 
 ## 👥 Perfis de Usuário (Roles)
-1. **Vendedor:**
+1. **Vendedor (seller):**
    - Visualiza apenas as empresas às quais está vinculado.
    - Seleciona um modelo de contrato disponível para a empresa.
    - Preenche o formulário e envia para processamento.
-2. **Administrador (admin):**
-   - Possui todas as permissões de vendedor.
-   - **CRUD de Vendedores:** Criação, edição e remoção de usuários.
+2. **Head de Equipe (head):**
+   - Gerencia uma equipe de vendedores (vinculados via `head_id`).
+   - Visualiza contratos da própria equipe no dashboard.
+   - Pode aprovar/rejeitar solicitações de alteração de contratos (`change_status`).
+3. **Coordenador de BU (coord):**
+   - Coordena UMA única unidade de negócio.
+   - Visualiza todos os usuários e contratos vinculados à sua BU.
+   - Pode aprovar/rejeitar solicitações de alteração de contratos.
+4. **Administrador (admin):**
+   - Possui todas as permissões.
+   - **CRUD de Usuários:** Criação, edição e remoção de qualquer perfil.
    - **Vínculos:** Define quais empresas cada vendedor pode acessar (N:N).
-   - **CRUD de Empresas:** Gerencia as empresas fixas do sistema.
+   - **CRUD de Empresas:** Gerencia as BUs (Business Units) do sistema.
 
 ## 🏢 Regras de Negócio: Multi-Tenancy
 - Um vendedor pode estar vinculado a múltiplas empresas simultaneamente via tabela `seller_business`.
@@ -20,17 +28,18 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 - O campo `color` da empresa deve ser usado para personalizar elementos da interface (botões, headers) quando o vendedor estiver no contexto daquela empresa.
 
 ## 🔄 Fluxo do Usuário
-1. **Autenticação:** Login via Supabase.
-2. **Home:** Listagem das empresas permitidas.
+1. **Autenticação:** Login via JWT próprio (email + senha MD5, `JWT_SECRET` no `.env`).
+2. **Home:** Dashboard com stats, filtros de mês/BU/vendedor e listagem de contratos.
 3. **Seleção de Contrato:** Escolha do modelo específico da empresa.
 4. **Preenchimento:** Formulário com validação Zod no front e back.
 5. **Registro e Trigger:**
    - Back-end salva o log da operação no Prisma.
-   - Back-end dispara POST para Webhook do Make.com.
+   - Back-end envia dados para o Google Sheets via API.
+   - Make.com ou outro serviço de automação processa o restante.
 
 ## 🛑 Escopo V1 vs Futuro
-- **V1:** Foco em CRUDs básicos, autenticação e disparo de webhook.
-- **Futuro:** Dashboard de métricas, integração n8n, Clicksign e Conta Azul.
+- **V1 (atual):** CRUDs de usuários e BUs, autenticação JWT própria, disparo para Google Sheets, dashboard de métricas básicas com filtros por mês/BU/vendedor, fluxo de aprovação de alterações de contrato (`change_status`).
+- **Futuro:** Integração n8n, Clicksign, Conta Azul, dashboard avançado com BI.
 
 ## 🎨 Identidade Visual (Design System)
 > **Consulte o `.antigravityrules` para os tokens completos.** Resumo essencial:

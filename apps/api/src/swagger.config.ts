@@ -66,6 +66,8 @@ const options: swaggerJsdoc.Options = {
                         change_status: { type: 'string', nullable: true },
                         change_description: { type: 'string', nullable: true },
                         signed_date: { type: 'string', format: 'date-time', nullable: true },
+                        first_payment_date: { type: 'string', format: 'date-time', nullable: true },
+                        first_payment_amount: { type: 'string', description: 'Decimal', nullable: true },
                     },
                 },
             },

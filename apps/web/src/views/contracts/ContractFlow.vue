@@ -188,8 +188,11 @@
             <div class="flex gap-3">
               <button @click="currentStep = 2"
                 class="px-8 py-3 rounded-2xl bg-brand-surface border border-brand-glass-border font-bold text-xs hover:bg-white/5 transition-all">Voltar</button>
-              <button @click="handleContractGenerate"
-                class="btn-primary px-10 py-3 rounded-2xl shadow-lg shadow-brand-cyan/20">Finalizar Contrato</button>
+              <button @click="handleContractGenerate" :disabled="generating"
+                class="btn-primary px-10 py-3 rounded-2xl shadow-lg shadow-brand-cyan/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <Loader2 v-if="generating" class="h-4 w-4 animate-spin" />
+                {{ generating ? 'Gerando...' : 'Finalizar Contrato' }}
+              </button>
             </div>
           </div>
         </div>
@@ -216,13 +219,15 @@ import {
   FileText,
   ChevronRight,
   ShieldCheck,
-  Construction
+  Construction,
+  Loader2
 } from 'lucide-vue-next';
 import ImpulsePlano1 from './steps/ImpulsePlano1.vue';
 import ImpulsePlano2 from './steps/ImpulsePlano2.vue';
 import SeedPlano1 from './steps/SeedPlano1.vue';
 import SeedPlano2 from './steps/SeedPlano2.vue';
 import SeedPlanoGrowth from './steps/SeedPlanoGrowth.vue';
+import BommaPlano1 from './steps/BommaPlano1.vue';
 
 import { useToast } from '../../composables/useToast';
 
@@ -233,6 +238,7 @@ const authStore = useAuthStore();
 const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
 
 const loading = ref(true);
+const generating = ref(false);
 const currentStep = ref(1);
 const allBusiness = ref<Business[]>([]);
 const allSellers = ref<Sellers[]>([]);
@@ -321,6 +327,11 @@ const activeFormComponent = computed(() => {
     if (templateName.includes('growth')) return SeedPlanoGrowth;
   }
 
+  if (buName.includes('bomma')) {
+    // Para Bomma, usamos o SeedPlano1 como base genérica caso não existam específicos
+    return SeedPlano1;
+  }
+
   return null;
 });
 
@@ -340,6 +351,11 @@ const activeEndpoint = computed(() => {
     if (templateName.includes('plano 1')) return '/contracts-sheets/seed-plano-1';
     if (templateName.includes('plano 2')) return '/contracts-sheets/seed-plano-2';
     if (templateName.includes('growth')) return '/contracts-sheets/seed-plano-growth';
+  }
+
+  if (buName.includes('bomma')) {
+    // Redireciona para o endpoint de Seed Plano 1 por compatibilidade de colunas inicial
+    return '/contracts-sheets/seed-plano-1';
   }
 
   return null;
@@ -365,15 +381,25 @@ const handleTemplateSelect = (template: string) => {
     'CIDADE DO CONTRATANTE': '',
     'UF DO CONTRATANTE': '',
     'NOME DO REPRESENTANTE': '',
-    'CARGO DO REPRESENTANTE': '',
     'CPF DO REPRESENTANTE': '',
     'VALOR TAXA IMPLEMENTACAO': '',
     'VALOR MENSALIDADE': '',
+    'VALOR DO PRIMEIRO PAGAMENTO': '',
     'DATA PRIMEIRO PAGAMENTO': '',
     'DIA VENCIMENTO MENSAL': '',
     'DATA ASSINATURA CONTRATO': '',
     'NOME TESTEMUNHA 1': '',
     'CPF TESTEMUNHA 1': '',
+    'NOME TESTEMUNHA 2': '',
+    'CPF TESTEMUNHA 2': '',
+    'NOME TESTEMUNHA 3': '',
+    'CPF TESTEMUNHA 3': '',
+    'NOME TESTEMUNHA 4': '',
+    'CPF TESTEMUNHA 4': '',
+    'NOME TESTEMUNHA 5': '',
+    'CPF TESTEMUNHA 5': '',
+    'NOME TESTEMUNHA 6': '',
+    'CPF TESTEMUNHA 6': '',
     'NOME VENDEDOR': '',
     'CPF VENDEDOR': '',
     'NOME COORD BU': '',
@@ -394,6 +420,25 @@ const handleTemplateSelect = (template: string) => {
 
   if (selectedBU.value?.id) {
     const buId = selectedBU.value.id;
+    const buName = selectedBU.value.name?.toLowerCase() || '';
+    
+    // Preenchimento Automático de Testemunhas e Coordenadores por BU
+    if (buName.includes('bomma')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Luís Fernando Mauri Menti';
+      initialData['CPF TESTEMUNHA 1'] = '023.275.400-46';
+      // Para Bomma, Luis Fernando também costuma ser o Coordenador se não houver outro
+      initialData['NOME COORD BU'] = 'Luís Fernando Mauri Menti';
+      initialData['CPF COORD BU'] = '023.275.400-46';
+    } else if (buName.includes('impulse')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Natália Selister Piccoli';
+      initialData['CPF TESTEMUNHA 1'] = '013.266.710-06';
+    } else if (buName.includes('seed')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Erika'; // CPF será preenchido manualmente ou via botão
+      initialData['CPF TESTEMUNHA 1'] = ''; 
+      initialData['NOME TESTEMUNHA 2'] = 'Natália Selister Piccoli';
+      initialData['CPF TESTEMUNHA 2'] = '013.266.710-06';
+    }
+
     const coordinator = allSellers.value.find(s =>
       s.type === 'coord' &&
       (s as any).seller_business?.some((sb: any) => sb.business_id === buId)
@@ -453,6 +498,8 @@ watch(
 );
 
 const handleContractGenerate = async () => {
+  if (generating.value) return;
+
   if (!activeEndpoint.value) {
     toastError('Endpoint não configurado para este modelo de contrato.');
     return;
@@ -464,6 +511,7 @@ const handleContractGenerate = async () => {
   }
 
   try {
+    generating.value = true;
     const response = await client.post(activeEndpoint.value, {
       data: contractData.value,
       bu_id: selectedBU.value?.id,
@@ -477,6 +525,8 @@ const handleContractGenerate = async () => {
   } catch (error: any) {
     console.error('Erro ao gerar contrato:', error);
     toastError('Erro ao enviar dados para a planilha: ' + (error.response?.data?.error || error.message));
+  } finally {
+    generating.value = false;
   }
 };
 
