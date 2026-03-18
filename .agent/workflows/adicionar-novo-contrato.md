@@ -14,32 +14,38 @@ Este guia descreve os passos necessários para adicionar um novo modelo de contr
 ### 2. Frontend: Criar o Formulário
 1. Crie um novo arquivo em `apps/web/src/views/contracts/steps/` (ex: `NovoContrato.vue`).
 2. Utilize o padrão do `ImpulsePlano1.vue`, importando o composable `useCep` para o auto-preenchimento.
-3. Certifique-se de usar `v-model:form` para sincronizar os dados com o componente pai.
+3. **Validação Visual**: 
+   - Adicione o prop `errors: { type: Object, default: () => ({}) }`.
+   - Aplique a classe condicional `:class="{ '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5': errors && errors['NOME_DO_CAMPO'] }"` nos inputs.
+   - Exiba a mensagem de erro: `<span v-if="errors && errors['NOME_DO_CAMPO']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME_DO_CAMPO'] }}</span>`.
+4. Certifique-se de usar `v-model:form` para sincronizar os dados com o componente pai.
 
-### 3. Frontend: Registrar o Modelo
-No arquivo `apps/web/src/views/contracts/ContractFlow.vue`:
-1. Importe o novo componente.
-2. Adicione o nome do template no objeto `templatesByBU`.
-3. Atualize a computed `activeFormComponent` para renderizar o novo componente.
-4. Atualize a computed `activeEndpoint` para definir a rota da API (ex: `/contracts/novo-contrato`).
+### 3. Frontend: Registrar o Modelo e Validações
+1. No arquivo `apps/web/src/utils/contractValidations.ts`:
+   - Adicione as regras de validação no objeto retornado por `getValidationRules()`.
+2. No arquivo `apps/web/src/views/contracts/ContractFlow.vue`:
+   - Importe o novo componente.
+   - Adicione o nome do template no objeto `templatesByBU`.
+   - Atualize a computed `activeFormComponent` para renderizar o novo componente.
+   - Atualize a computed `activeEndpoint` para definir a rota da API (ex: `/contracts/novo-contrato`).
 
-### 4. Backend: Criar o Controller
+### 4. Backend: Criar Schema de Validação
+No arquivo `apps/api/src/schemas/contractSubmissionSchema.ts`:
+1. Defina um novo schema Zod para o contrato (ex: `novoContratoSchema`).
+2. Adicione-o ao objeto `contractSchemas`.
+
+### 5. Backend: Criar o Controller e Rota
 No arquivo `apps/api/src/controllers/contractSheetsController.ts`:
-1. Adicione uma nova exportação usando o helper `handleContractSubmit`:
+1. Adicione uma nova exportação:
    ```typescript
    export const submitNovoContrato = (req: Request, res: Response) => 
-       handleContractSubmit(req, res, 'Nome Exato da Aba na Planilha');
+       handleContractSubmit(req, res, 'Nome Exato da Aba na Planilha', 'novoContratoSchema');
    ```
-   *Nota: O sistema detecta automaticamente se o nome contém "Growth" para ajustar o número de colunas.*
 
-### 5. Backend: Registrar a Rota
 No arquivo `apps/api/src/routes/index.ts`:
-1. Importe a nova função do controller.
-2. Registre a rota POST:
-   ```typescript
-   router.post('/contracts/novo-contrato', submitNovoContrato);
-   ```
+1. Registre a rota POST: `router.post('/contracts/novo-contrato', submitNovoContrato);`
 
 ### 6. Verificação
 1. Teste o preenchimento do CEP.
-2. Clique em "Finalizar" e verifique se a linha foi adicionada na aba correta da planilha.
+2. Tente enviar campos vazios ou formatos inválidos (CNPJ/CPF) para garantir que as mensagens de erro apareçam.
+3. Verifique se a linha foi adicionada na aba correta da planilha após sucesso.

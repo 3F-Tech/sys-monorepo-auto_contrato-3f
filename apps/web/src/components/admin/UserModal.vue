@@ -306,7 +306,7 @@ const handleSubmit = async () => {
     if (sellerId) {
       await putSellerBusiness({
         data: {
-          seller_id: Number(sellerId),
+          seller_id: sellerId,
           business_ids: selectedBUs.value
         }
       }, { client });
@@ -314,9 +314,10 @@ const handleSubmit = async () => {
 
     emit('saved');
     close();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Falha ao salvar usuário e vínculos:', error);
-    alert('Erro ao salvar usuário. Verifique se o e-mail/CPF já existem.');
+    const msg = error.response?.data?.error || 'Erro ao salvar usuário. Verifique se o e-mail/CPF já existem.';
+    alert(msg);
   } finally {
     loading.value = false;
   }

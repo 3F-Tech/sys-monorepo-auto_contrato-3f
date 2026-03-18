@@ -25,8 +25,8 @@ export const useSellerStore = defineStore('seller', () => {
   async function fetchAllSellers() {
     loading.value = true;
     try {
-      // Otimizado: Busca apenas usuários do tipo 'seller' conforme solicitado
-      const sellers = await getSellers({ type: 'seller' }, { client });
+      // Busca todos os usuários para que Admin possa gerenciar todos os cargos corretamente
+      const sellers = await getSellers({}, { client });
       allSellers.value = sellers as Sellers[];
     } catch (error) {
       console.error('Erro ao buscar todos os vendedores:', error);
@@ -38,7 +38,7 @@ export const useSellerStore = defineStore('seller', () => {
   async function updateSeller(id: string | number, data: Partial<Sellers>) {
     loading.value = true;
     try {
-      await putSellersId(Number(id), { data: data as Sellers }, { client });
+      await putSellersId(id as any, { data: data as Sellers }, { client });
       return { success: true };
     } catch (error) {
       console.error('Erro ao atualizar vendedor:', error);

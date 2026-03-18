@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { getContracts } from '../gen/hooks/getContracts';
 import { getContractsSellerSellerid } from '../gen/hooks/getContractsSellerSellerid';
 import { getContractsHeadHeadid } from '../gen/hooks/getContractsHeadHeadid';
+import { getContractsBuBuid } from '../gen/hooks/getContractsBuBuid';
 import { putContractsId } from '../gen/hooks/putContractsId';
 import { deleteContractsId } from '../gen/hooks/deleteContractsId';
 import client from '../api/client';
@@ -48,6 +49,18 @@ export const useContractStore = defineStore('contract', () => {
     }
   }
 
+  async function fetchBUContracts(buId: string | number) {
+    loading.value = true;
+    try {
+      const contracts = await getContractsBuBuid(Number(buId), { client });
+      myContracts.value = (contracts as Contracts[]) || [];
+    } catch (error) {
+      console.error('Erro ao buscar contratos da BU:', error);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function updateContract(id: string | number, data: Partial<Contracts>) {
     loading.value = true;
     try {
@@ -87,6 +100,7 @@ export const useContractStore = defineStore('contract', () => {
     fetchMyContracts,
     fetchAllContracts,
     fetchTeamContracts,
+    fetchBUContracts,
     updateContract,
     deleteContract
   };

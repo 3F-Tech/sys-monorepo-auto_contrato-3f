@@ -1,16 +1,21 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@kubb/core';
 import { pluginOas } from '@kubb/plugin-oas';
 import { pluginTs } from '@kubb/plugin-ts';
 import { pluginZod } from '@kubb/plugin-zod';
 import { pluginClient } from '@kubb/plugin-client';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default defineConfig({
-    root: '.',
+    root: __dirname,
     input: {
-        path: './apps/api/swagger.json',
+        path: path.resolve(__dirname, './apps/api/swagger.json'),
     },
     output: {
-        path: './apps/web/src/gen',
+        path: path.resolve(__dirname, './apps/web/src/gen'),
         clean: true,
     },
     plugins: [

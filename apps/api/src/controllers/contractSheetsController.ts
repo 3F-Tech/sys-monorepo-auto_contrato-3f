@@ -4,6 +4,8 @@ import { GoogleSheetsService } from '../services/googleSheetsService';
 import { GoogleDriveService } from '../services/googleDriveService';
 import { GoogleDocsService } from '../services/googleDocsService';
 
+import { contractSubmissionSchema } from '../schemas/contractSubmissionSchema';
+
 const prisma = new PrismaClient();
 const SPREADSHEET_ID = '1ZQu2yrEEDCmuILw4GlTVVj1miHNcMKo9FgcKoWObqSk';
 
@@ -62,19 +64,31 @@ const getContractRow = (data: any, isGrowth: boolean = false) => {
 
 const handleContractSubmit = async (req: any, res: Response, sheetName: string) => {
     try {
-        const { data, bu_id, bu_name } = req.body;
+        // 1. Validar com Zod
+        const validation = contractSubmissionSchema.safeParse(req.body);
+
+        if (!validation.success) {
+            const errorMessages = validation.error.issues.map(issue => ({
+                field: issue.path.join('.'),
+                message: issue.message
+            }));
+            return res.status(400).json({
+                error: 'Falha na validação dos dados',
+                details: errorMessages
+            });
+        }
+
+        const { data, bu_id, bu_name } = validation.data;
         const user = req.user;
 
-        if (!data) return res.status(400).json({ error: 'Dados não fornecidos' });
-
-        // 1. Enviar para o Google Sheets
+        // 2. Enviar para o Google Sheets
         const isGrowth = sheetName.toLowerCase().includes('growth');
         const row = getContractRow(data, isGrowth);
         const safeSheetName = sheetName.trim();
 
         await GoogleSheetsService.appendRow(SPREADSHEET_ID, safeSheetName, row);
 
-        // 2. Automação de Cópia e Edição no Google Drive/Docs (Apenas para Plan 1 Impulse inicialmente)
+        // 3. Automação de Cópia e Edição no Google Drive/Docs (Apenas para Plan 1 Impulse inicialmente)
         let generatedFileLink = null;
         if (MODEL_IDS[sheetName as keyof typeof MODEL_IDS]) {
             const modelId = MODEL_IDS[sheetName as keyof typeof MODEL_IDS];
@@ -91,7 +105,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                     const docKey = key.replace(/ /g, '-');
                     replacements[docKey] = String(value || '');
                 }
-                
+
                 // Mapeamentos específicos extras conforme o modelo extraído
                 replacements['NOME-REPRESENTANTE-CONTRATANTE'] = data['NOME DO REPRESENTANTE'] || '';
                 replacements['CPF-REPRESENTANTE-CONTRATANTE'] = data['CPF DO REPRESENTANTE'] || '';
@@ -105,18 +119,37 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         const razaoSocial = data['RAZAO SOCIAL DO CONTRATANTE'] || 'Sem Nome';
         const finalBuName = bu_name || 'BU';
         const title = `${razaoSocial} & ${finalBuName} (${sheetName})`;
-        
+
         // Conversão de valores para o banco
-        const parseDecimal = (val: string) => {
-            if (!val) return null;
-            return parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
+        const parseDecimal = (val: any) => {
+            if (val === undefined || val === null || val === '') return null;
+            const cleaned = String(String(val)).replace(/\./g, '').replace(',', '.');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? null : parsed;
         };
 
-        const parseDate = (val: string) => {
-            if (!val) return null;
-            const [day, month, year] = String(val).split('/');
-            if (!year) return null;
-            return new Date(`${year}-${month}-${day}T12:00:00Z`);
+        const parseDate = (val: any) => {
+            if (val === undefined || val === null || val === '') return null;
+
+            // Tenta converter DD/MM/YYYY
+            if (typeof val === 'string' && val.includes('/')) {
+                const parts = val.split('/');
+                if (parts.length === 3) {
+                    const [day, month, year] = parts;
+                    const date = new Date(`${year}-${month}-${day}T12:00:00Z`);
+                    return isNaN(date.getTime()) ? null : date;
+                }
+            }
+
+            // Fallback para conversão direta (ISO strings, etc)
+            const date = new Date(val);
+            return isNaN(date.getTime()) ? null : date;
+        };
+
+        const parseInteger = (val: any) => {
+            if (val === undefined || val === null || val === '') return null;
+            const parsed = parseInt(String(val));
+            return isNaN(parsed) ? null : parsed;
         };
 
         await prisma.contracts.create({
@@ -127,7 +160,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 bu_id: Number(bu_id),
                 monthly_fee: parseDecimal(data['VALOR MENSALIDADE']),
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
-                contractual_term: isGrowth ? null : parseInt(data['PRAZO CONTRATUAL MESES']),
+                contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
                 type_contract: sheetName,
                 signed: false,
@@ -136,8 +169,8 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
             }
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: `Dados processados com sucesso. Contrato: ${generatedFileLink || 'Via Sheets'}`,
             link: generatedFileLink
         });

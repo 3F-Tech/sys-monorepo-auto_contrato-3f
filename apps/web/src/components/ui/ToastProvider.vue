@@ -22,13 +22,7 @@
             <p class="text-xs text-white/70 leading-relaxed">{{ toast.message }}</p>
           </div>
 
-          <!-- Botão Fechar -->
-          <button 
-            @click="removeToast(toast.id)"
-            class="flex-shrink-0 text-white/30 hover:text-white transition-colors"
-          >
-            <X class="h-4 w-4" />
-          </button>
+
         </div>
       </TransitionGroup>
     </div>

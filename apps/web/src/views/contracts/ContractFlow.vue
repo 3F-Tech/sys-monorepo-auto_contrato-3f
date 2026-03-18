@@ -226,6 +226,8 @@ import SeedPlanoGrowth from './steps/SeedPlanoGrowth.vue';
 
 import { useToast } from '../../composables/useToast';
 
+import { getValidationRules } from '../../utils/contractValidations';
+
 const router = useRouter();
 const authStore = useAuthStore();
 const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
@@ -239,8 +241,8 @@ const selectedTemplate = ref('');
 
 // Objeto centralizado para todos os dados dos contratos
 const contractData = ref<Record<string, any>>({});
-// Chaves que falharam na validação (os inputs correspondentes podem olhar para cá)
-const formErrors = ref<string[]>([]);
+// Mapeamento de erros: 'NOME DO CAMPO': 'Mensagem de erro'
+const formErrors = ref<Record<string, string>>({});
 
 // Mapeamento de Modelos por BU (Atualizado conforme imagem)
 const templatesByBU: Record<string, string[]> = {
@@ -343,16 +345,6 @@ const activeEndpoint = computed(() => {
   return null;
 });
 
-// Campos obrigatórios que dependendo do modelo a IA pode inferir ou nós forçamos
-// Como a regra atual diz que TODOS são obrigatórios, vamos verificar as chaves preenchidas e 
-// definir quais chaves o formulário espera.
-// Porém, para não precisar hardcoded list, podemos pedir aos componentes de step para passarem os required fields,
-// ou simplesmente faremos assim: "Quaisquer chaves que foram inicializadas com string vazia devem ser preenchidas".
-// O jeito mais seguro é definir por modelo ou usar um schema Zod. 
-// Vamos por hora olhar para as chaves mapeadas dentro do ContractFlow / Componentes.
-// Para ficar elegante, vou iterar sobre as chaves em contractData que estão vazias. MAS cuidado, algumas chaves
-// podem focar em false ou zero se formos estritas.
-
 const handleBUSelect = (bu: Business) => {
   selectedBU.value = bu;
   currentStep.value = 2;
@@ -363,9 +355,6 @@ const handleTemplateSelect = (template: string) => {
   selectedTemplate.value = template;
 
   // Auto-preenchimento Inteligente - Mapeia todas as chaves esperadas para o form de Contrato.
-  // IMPORTANTE: Aqui definimos as chaves exatas que os campos `v-model` irão amarrar,
-  // inicializando todas para que a iteração de chaves detecte todas elas durante a validação.
-
   const initialData: Record<string, any> = {
     'RAZAO SOCIAL DO CONTRATANTE': '',
     'CNPJ DO CONTRATANTE': '',
@@ -399,12 +388,10 @@ const handleTemplateSelect = (template: string) => {
   const user = authStore.user;
 
   if (user) {
-    // 1. Dados do Vendedor (Usuário Logado)
     initialData['NOME VENDEDOR'] = user.name || '';
     initialData['CPF VENDEDOR'] = user.cpf || '';
   }
 
-  // 3. Coordenador da BU Selecionada
   if (selectedBU.value?.id) {
     const buId = selectedBU.value.id;
     const coordinator = allSellers.value.find(s =>
@@ -418,7 +405,7 @@ const handleTemplateSelect = (template: string) => {
     }
   }
 
-  formErrors.value = []; // reset erros
+  formErrors.value = {}; // reset erros
   contractData.value = initialData;
   currentStep.value = 3;
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -426,25 +413,17 @@ const handleTemplateSelect = (template: string) => {
 
 // Validar formulário antes de enviar
 const validateForm = () => {
-  const errors: string[] = [];
-
-  for (const [key, value] of Object.entries(contractData.value)) {
-    // Se o valor for string vazia, null ou undefined, consideramos erro.
-    if (value === '' || value === null || value === undefined) {
-      errors.push(key);
-    }
-  }
-
+  const errors = getValidationRules(contractData.value);
   formErrors.value = errors;
 
-  if (errors.length > 0) {
+  const errorKeys = Object.keys(errors);
+  if (errorKeys.length > 0) {
     // Focus e scroll
     setTimeout(() => {
-      // Procura o input através do ID (que definimos igual a KEY)
-      const firstErrorEl = document.getElementById(errors[0]);
+      const firstErrorEl = document.getElementById(errorKeys[0]);
       if (firstErrorEl) {
         firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        firstErrorEl.focus({ preventScroll: true }); // Prevent nativo scroll jump para ter só o smooth
+        firstErrorEl.focus({ preventScroll: true });
       }
     }, 100);
     return false;
@@ -456,13 +435,19 @@ const validateForm = () => {
 // Remove os erros em tempo real conforme os campos são preenchidos
 watch(
   contractData,
-  (newData) => {
-    if (formErrors.value.length === 0) return;
-
-    formErrors.value = formErrors.value.filter(key => {
-      const val = newData[key];
-      return (val === '' || val === null || val === undefined);
-    });
+  () => {
+    // Re-valida para limpar erros que foram corrigidos
+    if (Object.keys(formErrors.value).length === 0) return;
+    const currentValidation = getValidationRules(contractData.value);
+    
+    // Mantém apenas os erros que ainda persistem no novo estado
+    const newErrors: Record<string, string> = {};
+    for (const key in formErrors.value) {
+        if (currentValidation[key]) {
+            newErrors[key] = currentValidation[key];
+        }
+    }
+    formErrors.value = newErrors;
   },
   { deep: true }
 );

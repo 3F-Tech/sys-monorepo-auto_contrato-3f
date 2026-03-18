@@ -30,7 +30,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
 export const getSellerById = async (req: Request, res: Response) => {
     try {
         const seller = await prisma.sellers.findUnique({
-            where: { id: Number(req.params.id) }, include: {
+            where: { id: BigInt(req.params.id) }, include: {
                 seller_business: {
                     include: {
                         business: true
@@ -207,8 +207,10 @@ export const login = async (req: Request, res: Response) => {
              return res.status(400).json({ error: "E-mail e senha são obrigatórios" });
         }
 
+        const normalizedEmail = email.toLowerCase().trim();
+
         const seller = await prisma.sellers.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 seller_business: true
             }
@@ -220,15 +222,33 @@ export const login = async (req: Request, res: Response) => {
 
         const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
 
-        if (hashedPassword !== seller.password) {
+        // Check password - handle both MD5 and possible plaintext (Auto-repair)
+        let isCorrect = (hashedPassword === seller.password);
+        let needsRepair = false;
+
+        if (!isCorrect && password === seller.password) {
+            isCorrect = true;
+            needsRepair = true;
+        }
+
+        if (!isCorrect) {
             return res.status(401).json({ error: "Credenciais inválidas" });
+        }
+
+        // Auto-repair plaintext passwords to MD5
+        if (needsRepair) {
+            await prisma.sellers.update({
+                where: { id: seller.id },
+                data: { password: hashedPassword }
+            });
+            console.log(`Password auto-repaired for user: ${normalizedEmail}`);
         }
 
         // Gera o token JWT
         const token = jwt.sign(
             { id: seller.id.toString(), email: seller.email, type: seller.type },
             JWT_SECRET,
-            { expiresIn: '3h' }
+            { expiresIn: '12h' } // Aumentei para 12h conforme comum em sistemas internos
         );
 
         // Remove password before sending
@@ -276,6 +296,14 @@ export const createSeller = async (req: any, res: Response) => {
 
         if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
             return res.status(403).json({ error: "Acesso negado" });
+        }
+
+        // Hashing password and normalizing email
+        if (data.password) {
+            data.password = crypto.createHash('md5').update(data.password).digest('hex');
+        }
+        if (data.email) {
+            data.email = data.email.toLowerCase().trim();
         }
 
         // Restrições específicas para Head (Coordenador agora é livre para usuários)
@@ -329,7 +357,7 @@ export const updateSeller = async (req: any, res: Response) => {
     try {
         const { data } = req.body;
         const requester = req.user;
-        const targetId = Number(req.params.id);
+        const targetId = BigInt(req.params.id);
 
         if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
             return res.status(403).json({ error: "Acesso negado" });
@@ -338,14 +366,35 @@ export const updateSeller = async (req: any, res: Response) => {
         // Validação de escopo para Head
         if (requester.type === 'head') {
             const target = await prisma.sellers.findUnique({ where: { id: targetId } });
+            
+            // Verifica se o vendedor pertence à equipe do Head
             if (!target || target.head_id?.toString() !== requester.id.toString()) {
                 return res.status(403).json({ error: "Você só pode editar vendedores da sua equipe" });
             }
-            delete data.type; // Head não pode mudar cargo
-            data.head_id = BigInt(requester.id); // Garante vínculo
+
+            delete data.type; // Seguranca: Head não pode mudar cargo nesse fluxo
+
+            // Lógica de Vínculo:
+            // 1. Se head_id for enviado como null ou "null" -> Desassociar
+            if (data.head_id === null || data.head_id === "null") {
+                data.head_id = null;
+            } 
+            // 2. Se head_id for enviado com valor (tentativa de reatribuição) -> Força o próprio Head
+            else if (data.head_id !== undefined) {
+                data.head_id = BigInt(requester.id);
+            }
+            // 3. Se head_id não for enviado -> Não altera o vínculo
         }
         
         // Coordenador (coord) não tem travas de re-atribuição de cargo ou vínculo para os usuários que vê
+
+        // Hashing password if provided and normalizing email
+        if (data.password) {
+            data.password = crypto.createHash('md5').update(data.password).digest('hex');
+        }
+        if (data.email) {
+            data.email = data.email.toLowerCase().trim();
+        }
 
         const seller = await prisma.sellers.update({
             where: {
@@ -385,7 +434,7 @@ export const updateSeller = async (req: any, res: Response) => {
 export const deleteSeller = async (req: any, res: Response) => {
     try {
         const requester = req.user;
-        const targetId = Number(req.params.id);
+        const targetId = BigInt(req.params.id);
 
         if (!requester || !['admin', 'head', 'coord'].includes(requester.type)) {
             return res.status(403).json({ error: "Acesso negado" });

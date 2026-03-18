@@ -15,7 +15,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email: string, password: string) {
     try {
-      const response = await postLogin({ email, password }, { client });
+      const normalizedEmail = email.toLowerCase().trim();
+      const response = await postLogin({ email: normalizedEmail, password }, { client });
       const { user: userData, token: userToken } = response as any;
       
       user.value = userData as Sellers;
