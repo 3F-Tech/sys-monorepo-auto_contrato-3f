@@ -244,8 +244,8 @@ export const login = async (req: Request, res: Response) => {
             token
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Erro interno do servidor" });
+        console.error('LOGIN ERROR:', error);
+        res.status(500).json({ error: "Erro interno do servidor", details: error instanceof Error ? error.message : String(error) });
     }
 }
 

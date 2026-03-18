@@ -1,9 +1,27 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { GoogleSheetsService } from '../services/googleSheetsService';
+import { GoogleDriveService } from '../services/googleDriveService';
+import { GoogleDocsService } from '../services/googleDocsService';
 
 const prisma = new PrismaClient();
 const SPREADSHEET_ID = '1ZQu2yrEEDCmuILw4GlTVVj1miHNcMKo9FgcKoWObqSk';
+
+// IDs das Pastas de Destino por BU (conforme google-drive.rule.md)
+const DESTINATION_FOLDERS = {
+    'IMPULSE': '1E2zHJstMemuUhvB-9u7AY83ioYy8Ic3H',
+    'SEED': '1zymZvOkAOgdnfz5s9m7FnMELDneTIIwF',
+    'BOMMA': '1oChogkEyQpZMZzFMPjOEuz_Dt542JRUW'
+};
+
+// IDs dos Modelos (IDs extraídos via verify_drive.ts)
+const MODEL_IDS = {
+    'Plano 1 - Impulse': '1OsvgXVgRX0kvUhFjz1a83_g63Nqkwv8bEdqKIaTpEzI',
+    'Plano 2 - Impulse': '1spS9qELVjiyJ9mnmXAHu1denp0-15yAaiZetlDj2sME',
+    'Plano 1 - Seed': '1GCXFr7e9V65SHIEprRMq2u4d2oli2rDQnwTeQ_jZPBo',
+    'Plano 2 - Seed': '1KYJ2DzZtpHILHvT4N55Gr05qU7afpnXkBy50zTVLwIw',
+    'Plano Growth - Seed': '15P5I0MhrwF4wkkFy2v9oIeB8arMyB8TMR9nzLw42iM4'
+};
 
 const getContractRow = (data: any, isGrowth: boolean = false) => {
     const row = [
@@ -56,7 +74,34 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
 
         await GoogleSheetsService.appendRow(SPREADSHEET_ID, safeSheetName, row);
 
-        // 2. Salvar no Banco de Dados
+        // 2. Automação de Cópia e Edição no Google Drive/Docs (Apenas para Plan 1 Impulse inicialmente)
+        let generatedFileLink = null;
+        if (MODEL_IDS[sheetName as keyof typeof MODEL_IDS]) {
+            const modelId = MODEL_IDS[sheetName as keyof typeof MODEL_IDS];
+            const destinationFolderId = (DESTINATION_FOLDERS as any)[bu_name?.toUpperCase()] || DESTINATION_FOLDERS.IMPULSE;
+            const razaoSocial = data['RAZAO SOCIAL DO CONTRATANTE'] || 'Sem Nome';
+            const finalBuName = bu_name || 'BU';
+            const fileName = `${razaoSocial} & ${finalBuName} (${sheetName})`;
+
+            const newFile = await GoogleDriveService.copyFile(modelId, destinationFolderId, fileName);
+            if (newFile && newFile.id) {
+                // Mapeamento de variáveis para o Google Docs (convertendo espaços para traços conforme o modelo)
+                const replacements: Record<string, string> = {};
+                for (const [key, value] of Object.entries(data)) {
+                    const docKey = key.replace(/ /g, '-');
+                    replacements[docKey] = String(value || '');
+                }
+                
+                // Mapeamentos específicos extras conforme o modelo extraído
+                replacements['NOME-REPRESENTANTE-CONTRATANTE'] = data['NOME DO REPRESENTANTE'] || '';
+                replacements['CPF-REPRESENTANTE-CONTRATANTE'] = data['CPF DO REPRESENTANTE'] || '';
+
+                await GoogleDocsService.replaceVariables(newFile.id, replacements);
+                generatedFileLink = `https://docs.google.com/document/d/${newFile.id}/edit`;
+            }
+        }
+
+        // 3. Salvar no Banco de Dados
         const razaoSocial = data['RAZAO SOCIAL DO CONTRATANTE'] || 'Sem Nome';
         const finalBuName = bu_name || 'BU';
         const title = `${razaoSocial} & ${finalBuName} (${sheetName})`;
@@ -64,13 +109,14 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         // Conversão de valores para o banco
         const parseDecimal = (val: string) => {
             if (!val) return null;
-            return parseFloat(val.replace(/\./g, '').replace(',', '.'));
+            return parseFloat(String(val).replace(/\./g, '').replace(',', '.'));
         };
 
         const parseDate = (val: string) => {
             if (!val) return null;
-            const [day, month, year] = val.split('/');
-            return new Date(`${year}-${month}-${day}T12:00:00Z`); // Meio-dia para evitar problemas de fuso
+            const [day, month, year] = String(val).split('/');
+            if (!year) return null;
+            return new Date(`${year}-${month}-${day}T12:00:00Z`);
         };
 
         await prisma.contracts.create({
@@ -86,11 +132,15 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 type_contract: sheetName,
                 signed: false,
                 change_status: null,
-                link: null
+                link: generatedFileLink
             }
         });
 
-        res.json({ success: true, message: `Dados enviados para ${sheetName} e salvos no banco com sucesso` });
+        res.json({ 
+            success: true, 
+            message: `Dados processados com sucesso. Contrato: ${generatedFileLink || 'Via Sheets'}`,
+            link: generatedFileLink
+        });
     } catch (error: any) {
         console.error(`Error submitting to ${sheetName}:`, error);
         res.status(500).json({ error: 'Falha ao processar contrato', details: error.message });

@@ -35,6 +35,7 @@ Antes de escrever qualquer linha de código, siga SEMPRE esta sequência:
 1. **Multi-tenancy:** Um vendedor só pode ver as empresas vinculadas a ele.
 2. **Role-based Access (RBAC):** Bloqueie rotas de admin para sellers. Os cargos são: `admin`, `head`, `coord`, `seller`.
 3. **Trigger de Automação:** Registro obrigatório no banco de dados + disparo para Google Sheets a cada contrato enviado.
+3a. **Automação Google Drive:** Novos contratos devem ser copiados de modelos específicos para a pasta de destino `1KF4W-RQ3CAJj4KFAAX9K9cxdRW9u6phg`.
 4. **Coordenador de BU:** Usuários com o cargo `coord` **só podem estar vinculados a uma única BU** por vez.
 5. **Automação de Formulários:** Ao iniciar a criação de um contrato, os campos "Vendedor" e "Coordenador de BU" devem ser pré-preenchidos automaticamente. Para "Testemunha 1", oferecer botões de atalho para Luís e Natália, mantendo o campo editável.
 6. **Visibilidade no Dashboard:**
@@ -69,6 +70,7 @@ Este projeto utiliza um sistema de documentação distribuída. O `.antigravityr
    - **Components de Auth:** `apps/web/src/components/auth/rules.md`
    - **Assets/Design:** `apps/web/src/assets/rule.md`
    - **Backend Controllers:** `apps/api/src/controllers/rule.md`
+   - **Backend Drive Service:** `apps/api/src/services/google-drive.rule.md`
    - **Arquitetura do projeto:** `ARCHITECTURE.md`
    - **Contexto e negócio:** `CONTEXT.md`
 
