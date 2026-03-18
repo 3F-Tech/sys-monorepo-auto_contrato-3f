@@ -102,7 +102,8 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         let generatedFileLink = null;
         if (MODEL_IDS[sheetName as keyof typeof MODEL_IDS]) {
             const modelId = MODEL_IDS[sheetName as keyof typeof MODEL_IDS];
-            const destinationFolderId = (DESTINATION_FOLDERS as any)[bu_name?.toUpperCase()] || DESTINATION_FOLDERS.IMPULSE;
+            const buKey = (bu_name?.toUpperCase() || 'IMPULSE') as keyof typeof DESTINATION_FOLDERS;
+            const destinationFolderId = DESTINATION_FOLDERS[buKey] || DESTINATION_FOLDERS.IMPULSE;
             const razaoSocial = data['RAZAO SOCIAL DO CONTRATANTE'] || 'Sem Nome';
             const finalBuName = bu_name || 'BU';
             const fileName = `${razaoSocial} & ${finalBuName} (${sheetName})`;
@@ -178,7 +179,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 signed: false,
                 change_status: null,
                 link: generatedFileLink
-            }
+            } as any
         });
 
         res.json({
