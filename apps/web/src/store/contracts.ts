@@ -61,6 +61,21 @@ export const useContractStore = defineStore('contract', () => {
     }
   }
 
+  async function fetchMultipleBUContracts(buIds: number[]) {
+    loading.value = true;
+    try {
+      const results = await Promise.all(
+        buIds.map(id => getContractsBuBuid(id, { client }))
+      );
+      // Achata os resultados de todas as BUs em um único array
+      myContracts.value = results.flat() as Contracts[];
+    } catch (error) {
+      console.error('Erro ao buscar múltiplos contratos de BUs:', error);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function updateContract(id: string | number, data: Partial<Contracts>) {
     loading.value = true;
     try {
@@ -71,6 +86,12 @@ export const useContractStore = defineStore('contract', () => {
         change_status: data.change_status === undefined ? undefined : data.change_status,
         change_description: data.change_description === undefined ? undefined : data.change_description
       } as any, { client });
+      
+      const index = myContracts.value.findIndex(c => c.id?.toString() === id.toString());
+      if (index !== -1) {
+        myContracts.value[index] = { ...myContracts.value[index], ...data };
+      }
+
       return { success: true };
     } catch (error) {
       console.error('Erro ao atualizar contrato:', error);
@@ -101,6 +122,7 @@ export const useContractStore = defineStore('contract', () => {
     fetchAllContracts,
     fetchTeamContracts,
     fetchBUContracts,
+    fetchMultipleBUContracts,
     updateContract,
     deleteContract
   };

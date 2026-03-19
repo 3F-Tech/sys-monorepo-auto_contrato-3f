@@ -76,4 +76,13 @@ export type Contracts = {
    * @type string, date-time
    */
   signed_date?: string | null;
+  /**
+   * @type string, date-time
+   */
+  first_payment_date?: string | null;
+  /**
+   * @description Decimal
+   * @type string
+   */
+  first_payment_amount?: string | null;
 };

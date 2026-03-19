@@ -38,7 +38,7 @@
 
     <!-- Loading State (Skeleton) -->
     <div v-if="loading" class="space-y-3">
-      <div v-for="i in 1" :key="i" 
+      <div v-for="i in 3" :key="i" 
         class="p-5 rounded-2xl bg-brand-surface/30 border border-brand-glass-border animate-pulse flex items-center justify-between relative overflow-hidden"
       >
         <!-- Shimmer gradient overlay -->
@@ -180,6 +180,41 @@
                     <div class="text-right space-y-1">
                       <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Mensalidade</p>
                       <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- P1 Info (Nova) -->
+                  <div class="pt-4 mt-4 border-t border-white/5 space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div class="flex items-center gap-2 mb-1">
+                          <CreditCard class="h-3 w-3 text-brand-cyan/60" />
+                          <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Valor P1</span>
+                        </div>
+                        <p class="text-xs font-bold text-white/90">{{ formatCurrency(contract.first_payment_amount) }}</p>
+                      </div>
+                      <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <div class="flex items-center gap-2 mb-1">
+                          <Calendar class="h-3 w-3 text-brand-cyan/60" />
+                          <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data P1</span>
+                        </div>
+                        <p class="text-xs font-bold text-white/90">{{ formatDate(contract.first_payment_date) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Tempo Metric (Nova) -->
+                  <div class="pt-4 border-t border-white/5">
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10">
+                      <div class="flex items-center gap-2">
+                        <Clock class="h-3.5 w-3.5 text-brand-cyan" />
+                        <span class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">
+                          {{ contract.signed ? 'Tempo até Assinatura' : 'Tempo em Aberto' }}
+                        </span>
+                      </div>
+                      <span class="text-xs font-black text-brand-cyan">
+                        {{ calculateDuration(contract) }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -379,7 +414,10 @@ import {
   Check,
   X,
   ExternalLink,
-  Trash2
+  Trash2,
+  Clock,
+  CreditCard,
+  Calendar
 } from 'lucide-vue-next';
 import { useToast } from '../../composables/useToast';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -596,6 +634,20 @@ const formatDate = (date: string | null | undefined) => {
 const formatCurrency = (value: any) => {
   const amount = parseFloat(value?.toString() || '0');
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
+};
+
+const calculateDuration = (contract: Contracts) => {
+  if (!contract.created_at) return 'N/A';
+  
+  const start = new Date(contract.created_at as string);
+  const end = contract.signed && contract.signed_date 
+    ? new Date(contract.signed_date as string) 
+    : new Date();
+    
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays === 1 ? '1 dia' : `${diffDays} dias`;
 };
 </script>
 

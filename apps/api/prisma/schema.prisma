@@ -64,6 +64,8 @@ model contracts {
   change_status      String?
   signed_date        DateTime? @db.Timestamptz(6)
   change_description String?
+  first_payment_date DateTime? @db.Timestamptz(6)
+  first_payment_amount Decimal? @db.Decimal
   business           business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   sellers            sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }

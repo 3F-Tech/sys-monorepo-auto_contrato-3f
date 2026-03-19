@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "codegen": "kubb generate",
+        "codegen": "kubb generate --config ../../kubb.config.ts",
         "build": "vue-tsc && vite build",
         "preview": "vite preview"
     },

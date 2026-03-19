@@ -393,15 +393,25 @@ const handleTemplateSelect = (template: string) => {
     'CIDADE DO CONTRATANTE': '',
     'UF DO CONTRATANTE': '',
     'NOME DO REPRESENTANTE': '',
-    'CARGO DO REPRESENTANTE': '',
     'CPF DO REPRESENTANTE': '',
     'VALOR TAXA IMPLEMENTACAO': '',
     'VALOR MENSALIDADE': '',
+    'VALOR DO PRIMEIRO PAGAMENTO': '',
     'DATA PRIMEIRO PAGAMENTO': '',
     'DIA VENCIMENTO MENSAL': '',
     'DATA ASSINATURA CONTRATO': '',
     'NOME TESTEMUNHA 1': '',
     'CPF TESTEMUNHA 1': '',
+    'NOME TESTEMUNHA 2': '',
+    'CPF TESTEMUNHA 2': '',
+    'NOME TESTEMUNHA 3': '',
+    'CPF TESTEMUNHA 3': '',
+    'NOME TESTEMUNHA 4': '',
+    'CPF TESTEMUNHA 4': '',
+    'NOME TESTEMUNHA 5': '',
+    'CPF TESTEMUNHA 5': '',
+    'NOME TESTEMUNHA 6': '',
+    'CPF TESTEMUNHA 6': '',
     'NOME VENDEDOR': '',
     'CPF VENDEDOR': '',
     'NOME COORD BU': '',
@@ -422,6 +432,25 @@ const handleTemplateSelect = (template: string) => {
 
   if (selectedBU.value?.id) {
     const buId = selectedBU.value.id;
+    const buName = selectedBU.value.name?.toLowerCase() || '';
+    
+    // Preenchimento Automático de Testemunhas e Coordenadores por BU
+    if (buName.includes('bomma')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Luís Fernando Mauri Menti';
+      initialData['CPF TESTEMUNHA 1'] = '023.275.400-46';
+      // Para Bomma, Luis Fernando também costuma ser o Coordenador se não houver outro
+      initialData['NOME COORD BU'] = 'Luís Fernando Mauri Menti';
+      initialData['CPF COORD BU'] = '023.275.400-46';
+    } else if (buName.includes('impulse')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Natália Selister Piccoli';
+      initialData['CPF TESTEMUNHA 1'] = '013.266.710-06';
+    } else if (buName.includes('seed')) {
+      initialData['NOME TESTEMUNHA 1'] = 'Erika'; // CPF será preenchido manualmente ou via botão
+      initialData['CPF TESTEMUNHA 1'] = ''; 
+      initialData['NOME TESTEMUNHA 2'] = 'Natália Selister Piccoli';
+      initialData['CPF TESTEMUNHA 2'] = '013.266.710-06';
+    }
+
     const coordinator = allSellers.value.find(s =>
       s.type === 'coord' &&
       (s as any).seller_business?.some((sb: any) => sb.business_id === buId)
@@ -483,6 +512,8 @@ watch(
 );
 
 const handleContractGenerate = async () => {
+  if (isGenerating.value) return;
+
   if (!activeEndpoint.value) {
     toastError('Endpoint não configurado para este modelo de contrato.');
     return;

@@ -66,32 +66,25 @@
 
           <div class="space-y-1.5">
             <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Cargo</label>
-            <div class="relative">
-              <select v-model="form.type"
-                class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer">
-                <option v-for="role in availableRoles" :key="role.value" :value="role.value" class="bg-brand-offset">
-                  {{ role.label }}
-                </option>
-              </select>
-              <ChevronDown
-                class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 pointer-events-none" />
-            </div>
+            <CustomSelect 
+              v-model="form.type" 
+              :options="availableRoles"
+              placeholder="Selecione o cargo"
+            />
           </div>
         </div>
 
         <!-- Seção: Hierarquia -->
         <div v-if="form.type === 'seller'" class="space-y-1.5">
           <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Head Responsável</label>
-          <div class="relative">
-            <select v-model="form.head_id" :disabled="authStore.userRole === 'head'"
-              class="w-full bg-brand-surface border border-brand-glass-border rounded-xl px-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-              <option :value="null" class="bg-brand-offset italic">Nenhum (Vendedor Independente)</option>
-              <option v-for="h in heads" :key="h.id" :value="h.id?.toString()" class="bg-brand-offset">
-                {{ h.name }}
-              </option>
-            </select>
-            <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 pointer-events-none" />
-          </div>
+          <CustomSelect 
+            v-model="form.head_id" 
+            :options="headsOptions"
+            placeholder="Selecione o Head"
+            :disabled="authStore.userRole === 'head'"
+            searchable
+            allow-clear
+          />
         </div>
 
         <!-- Seção: Vínculo com Unidades de Negócio -->
@@ -147,7 +140,8 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
-import { UserPlus, UserCog, X, Loader2, ChevronDown, Check, Building2, Save } from 'lucide-vue-next';
+import { UserPlus, UserCog, X, Loader2, Building2, Save } from 'lucide-vue-next';
+import CustomSelect from '../ui/CustomSelect.vue';
 import client from '../../api/client';
 import type { Sellers } from '../../gen/types/Sellers';
 import type { Business } from '../../gen/types/Business';
@@ -194,6 +188,16 @@ const availableRoles = computed(() => {
   // Heads só podem criar vendedores na V1
   return [
     { value: 'seller', label: 'Vendedor' }
+  ];
+});
+
+const headsOptions = computed(() => {
+  return [
+    { value: null, label: 'Nenhum (Vendedor Independente)' },
+    ...heads.value.map(h => ({
+      value: h.id?.toString(),
+      label: h.name || 'Sem nome'
+    }))
   ];
 });
 

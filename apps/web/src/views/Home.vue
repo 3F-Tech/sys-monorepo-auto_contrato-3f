@@ -87,160 +87,132 @@
 
         <div class="flex flex-wrap items-center gap-4">
           <!-- BU Filter (Admin/Coord/Head) -->
-          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="relative group/select">
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-hover/select:text-brand-cyan transition-colors">
-              <Building2 class="h-3.5 w-3.5" />
-            </div>
-            <select 
-              v-model="selectedBUId"
-              class="appearance-none bg-brand-offset/40 backdrop-blur-xl border border-brand-glass-border pl-10 pr-10 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 focus:text-brand-cyan focus:border-brand-cyan/50 focus:outline-none cursor-pointer transition-all shadow-xl min-w-[160px]"
-            >
-              <option value="">Todas as Unidades</option>
-              <option v-for="bu in filterBUOptions" :key="bu.id" :value="bu.id" class="bg-brand-deep text-white">
-                {{ bu.name }}
-              </option>
-            </select>
-            <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-hover/select:text-brand-cyan transition-colors pointer-events-none" />
+          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[200px]">
+            <CustomSelect 
+              v-model="selectedBUId" 
+              :options="buOptionsFormatted"
+              placeholder="Todas as Unidades"
+              :icon="Building2"
+            />
           </div>
 
           <!-- Searchable Seller Filter (Admin/Coord/Head) -->
-          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" ref="sellerFilterContainer" class="relative group/seller-select min-w-[220px]">
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/seller-select:text-brand-cyan transition-colors z-20">
-              <Users2 class="h-3.5 w-3.5" />
-            </div>
-            
-            <!-- Input Field -->
-            <input 
-              type="text"
-              v-model="sellerDropdownSearch"
-              @focus="isSellerDropdownOpen = true"
-              :placeholder="selectedSellerName"
-              class="w-full bg-brand-offset/40 backdrop-blur-xl border border-brand-glass-border pl-10 pr-10 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white placeholder:text-white/60 focus:text-brand-cyan focus:border-brand-cyan/50 focus:outline-none transition-all shadow-xl"
+          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[220px]">
+             <CustomSelect 
+              v-model="selectedSellerId" 
+              :options="sellerOptionsFormatted"
+              placeholder="Todos os Vendedores"
+              :icon="Users2"
+              searchable
+              allow-clear
             />
-            
-            <div 
-              class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20"
-              @click="isSellerDropdownOpen = !isSellerDropdownOpen"
-            >
-              <button v-if="selectedSellerId" @click.stop="selectedSellerId = ''" class="hover:text-red-400 transition-colors">
-                <X class="h-3 w-3 text-white/20" />
-              </button>
-              <ChevronDownIcon :class="['h-4 w-4 text-white/20 group-hover/seller-select:text-brand-cyan transition-transform duration-300 pointer-events-none', isSellerDropdownOpen ? 'rotate-180' : '']" />
-            </div>
-
-            <!-- Dropdown List -->
-            <transition
-              enter-active-class="transition duration-200 ease-out"
-              enter-from-class="transform scale-95 opacity-0 -translate-y-2"
-              enter-to-class="transform scale-100 opacity-100 translate-y-0"
-              leave-active-class="transition duration-150 ease-in"
-              leave-from-class="transform scale-100 opacity-100 translate-y-0"
-              leave-to-class="transform scale-95 opacity-0 -translate-y-2"
-            >
-              <div 
-                v-if="isSellerDropdownOpen" 
-                class="absolute top-full left-0 right-0 mt-2 py-2 bg-brand-offset/95 backdrop-blur-2xl border border-brand-glass-border rounded-2xl shadow-2xl z-[60] max-h-64 overflow-y-auto custom-scrollbar"
-              >
-                <!-- Option: All -->
-                <div 
-                  @click="selectSeller('', 'Todos os Vendedores')"
-                  :class="['px-4 py-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-between', !selectedSellerId ? 'text-brand-cyan bg-brand-cyan/5' : 'text-white/60 hover:text-white hover:bg-white/5']"
-                >
-                  Todos os Vendedores
-                  <Check v-if="!selectedSellerId" class="h-3 w-3" />
-                </div>
-
-                <!-- Dyn Options -->
-                <div 
-                  v-for="seller in filteredSellerDropdownOptions" 
-                  :key="seller.id"
-                  @click="selectSeller(seller.id!.toString(), seller.name || '')"
-                  :class="['px-4 py-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-between', selectedSellerId === seller.id?.toString() ? 'text-brand-cyan bg-brand-cyan/5' : 'text-white/60 hover:text-white hover:bg-white/5']"
-                >
-                  <span class="flex items-center gap-2">
-                    {{ seller.name }}
-                    <span v-if="seller.id === user?.id" class="text-[8px] opacity-40">(Eu)</span>
-                  </span>
-                  <Check v-if="selectedSellerId === seller.id?.toString()" class="h-3 w-3" />
-                </div>
-
-                <!-- Empty State -->
-                <div v-if="filteredSellerDropdownOptions.length === 0" class="px-4 py-8 text-center">
-                  <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Nenhum vendedor encontrado</p>
-                </div>
-              </div>
-            </transition>
           </div>
 
           <!-- Month Filter -->
-          <div class="flex items-center bg-brand-offset/40 backdrop-blur-xl border border-brand-glass-border p-1.5 rounded-2xl shadow-xl">
-          <button 
-            v-for="month in monthOptions" 
-            :key="month.value"
-            @click="selectedMonth = month.value"
-            :class="[
-              'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300',
-              selectedMonth === month.value 
-                ? 'bg-brand-cyan text-brand-deep shadow-[0_0_20px_rgba(0,212,255,0.3)]' 
-                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
-            ]"
-          >
-            {{ month.label }}
-          </button>
-          
-          <div class="w-px h-4 bg-white/10 mx-2"></div>
-
-          <div class="relative group/select">
-            <select 
-              v-model="selectedMonth"
-              class="appearance-none bg-transparent pl-3 pr-8 py-2 text-[10px] font-black uppercase tracking-widest text-white/60 focus:text-brand-cyan focus:outline-none cursor-pointer transition-colors"
-            >
-              <option v-for="opt in extendedMonthOptions" :key="opt.value" :value="opt.value" class="bg-brand-deep text-white text-xs">
-                {{ opt.labelFull }}
-              </option>
-            </select>
-            <ChevronDownIcon class="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-white/20 group-hover/select:text-brand-cyan transition-colors pointer-events-none" />
+          <div class="relative group/month-select min-w-[200px]">
+            <CustomSelect 
+              v-model="selectedMonth" 
+              :options="extendedMonthOptionsFormatted"
+              placeholder="Selecione o Mês"
+              :icon="Calendar"
+            />
           </div>
         </div>
       </div>
-    </div>
-
-      <!-- Stats Grid (Visible for everyone) -->
-      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-        <div v-for="(stat, index) in stats" :key="stat.label"
-          class="p-8 rounded-[2rem] bg-brand-offset border border-brand-glass-border hover:border-brand-cyan/30 transition-all duration-500 group relative overflow-hidden"
-          :style="{ animationDelay: (index * 100) + 'ms' }">
-          
-          <!-- Background Accent Effect -->
-          <div class="absolute -right-4 -bottom-4 opacity-[0.05] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
-            <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
+      <!-- Stats Grid (Grouped by Category) -->
+      <div class="space-y-8">
+        <!-- Indicadores Financeiros -->
+        <section>
+          <div class="flex items-center gap-3 mb-4 ml-2">
+            <div class="h-1.5 w-1.5 rounded-full bg-brand-cyan shadow-[0_0_10px_rgba(45,212,191,0.5)]"></div>
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Indicadores Financeiros</h3>
           </div>
-
-          <div class="flex items-center justify-between mb-6 relative z-10">
-            <div class="p-3 rounded-2xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
-              <component :is="stat.icon" class="h-5 w-5" />
-            </div>
-            <div class="flex flex-col items-end">
-              <span class="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Status</span>
-              <span class="text-[9px] font-bold text-brand-cyan/60 uppercase tracking-widest">Ativo</span>
-            </div>
-          </div>
-
-          <div class="space-y-2 relative z-10">
-            <p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.15em] leading-tight">{{ stat.label }}</p>
-            <div class="flex items-baseline gap-1">
-              <div v-if="contractStore.loading" class="h-9 w-32 bg-white/10 rounded-lg animate-pulse mb-1 relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            <div v-for="(stat, index) in stats.filter(s => s.type === 'finance')" :key="stat.label"
+              class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
+              :style="{ animationDelay: (index * 100) + 'ms' }">
+              
+              <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
+                <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
               </div>
-              <h3 v-else class="text-3xl font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
-                {{ stat.value }}
-              </h3>
+
+              <div class="flex items-center justify-between mb-4 relative z-10">
+                <div class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
+                  <component :is="stat.icon" class="h-5 w-5" />
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Status</span>
+                  <span class="text-[9px] font-bold text-brand-cyan/80 uppercase tracking-widest">Ativo</span>
+                </div>
+              </div>
+
+              <div class="space-y-1 relative z-10">
+                <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
+                <div class="flex items-baseline gap-1">
+                  <div v-if="isLoading" class="space-y-2 mb-1">
+                    <div class="h-8 w-32 bg-white/10 rounded-xl animate-pulse relative overflow-hidden">
+                      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+                    </div>
+                  </div>
+                  <h3 v-else class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
+                    {{ stat.value }}
+                  </h3>
+                </div>
+              </div>
+              <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
           </div>
-          
-          <!-- Progress bar decoration -->
-          <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/20 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
+        </section>
+
+        <!-- Indicadores Operacionais & Equipe -->
+        <section>
+          <div class="flex items-center gap-3 mb-4 ml-2">
+            <div class="h-1.5 w-1.5 rounded-full bg-brand-cyan shadow-[0_0_10px_rgba(45,212,191,0.5)]"></div>
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Operação e Estrutura</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-5">
+            <div v-for="(stat, index) in stats.filter(s => s.type !== 'finance')" :key="stat.label"
+              class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
+              :style="{ animationDelay: (index * 100) + 'ms' }">
+              
+              <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
+                <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
+              </div>
+
+              <div class="flex items-center justify-between mb-4 relative z-10">
+                <div class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
+                  <component :is="stat.icon" class="h-5 w-5" />
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Status</span>
+                  <span class="text-[9px] font-bold text-brand-cyan/80 uppercase tracking-widest">Ativo</span>
+                </div>
+              </div>
+
+              <div class="space-y-1 relative z-10">
+                <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
+                <div class="flex items-baseline gap-1">
+                  <div v-if="isLoading" class="space-y-2 mb-1">
+                    <div class="h-8 w-24 bg-white/10 rounded-xl animate-pulse relative overflow-hidden">
+                      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+                    </div>
+                  </div>
+                  <h3 v-else class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
+                    {{ stat.value }}
+                  </h3>
+                </div>
+              </div>
+              <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Contract Management List -->
+      <section class="space-y-6">
+        <ContractList :contracts="filteredContractsForStats" :isHead="user?.type === 'head'"
+          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :filterMode="contractFilterMode"
+          :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="isLoading" @update:filterMode="handleFilterModeChange" />
       </section>
 
       <!-- Team/BU Users Section (Admin, Head or Coord) -->
@@ -362,12 +334,7 @@
         </div>
       </section>
 
-      <!-- Contract Management List -->
-      <section class="space-y-6">
-        <ContractList :contracts="filteredContractsForStats" :isHead="user?.type === 'head'"
-          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :filterMode="contractFilterMode"
-          :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="contractStore.loading" @update:filterMode="handleFilterModeChange" />
-      </section>
+
 
       <!-- Management section for admin, head and coord -->
       <section v-if="['admin', 'head', 'coord']. some(r => r === user?.type)"
@@ -427,12 +394,18 @@ import {
   Search,
   Calendar,
   X,
-  ChevronDown as ChevronDownIcon
+  ChevronDown as ChevronDownIcon,
+  Clock,
+  Activity,
+  Construction,
+  Briefcase,
+  Target
 } from 'lucide-vue-next';
 import ProfileModal from '../components/profile/ProfileModal.vue';
 import ContractList from '../components/contracts/ContractList.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
+import CustomSelect from '../components/ui/CustomSelect.vue';
 
 const authStore = useAuthStore();
 const sellerStore = useSellerStore();
@@ -453,14 +426,31 @@ const selectedSellerId = ref<string>('');
 const dissociateConfirmOpen = ref(false);
 const sellerToDissociate = ref<string | null>(null);
 
-// Searchable Seller Dropdown State
-const sellerDropdownSearch = ref('');
-const isSellerDropdownOpen = ref(false);
-const sellerFilterContainer = ref<HTMLElement | null>(null);
+// Performance & Optimization State
+const isFiltering = ref(false);
+const isLoading = computed(() => contractStore.loading || isFiltering.value);
 
 const user = computed(() => authStore.user);
 const firstName = computed(() => user.value?.name?.split(' ')[0] || 'Usuário');
 const userInitials = computed(() => user.value?.name?.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || '??');
+
+const buOptionsFormatted = computed(() => [
+  { value: '', label: 'Todas as Unidades' },
+  ...businessList.value.map(bu => ({ value: bu.id?.toString() || '', label: bu.name || '' }))
+]);
+
+const sellerOptionsFormatted = computed(() => [
+  { value: '', label: 'Todos os Vendedores' },
+  ...sellerStore.allSellers.map(s => ({ 
+    value: s.id?.toString() || '', 
+    label: s.id?.toString() === user.value?.id?.toString() ? `${s.name} (Eu)` : (s.name || '')
+  }))
+]);
+
+const extendedMonthOptionsFormatted = computed(() => [
+  { value: '', label: 'Período Geral' },
+  ...extendedMonthOptions.value.map(m => ({ value: m.value, label: m.labelFull }))
+]);
 
 // Month Filter Logic (Native JS)
 const selectedMonth = ref(new Date().toISOString().substring(0, 7));
@@ -492,36 +482,63 @@ const extendedMonthOptions = computed(() => {
   });
 });
 
-const filteredContractsForStats = computed(() => {
-  let contracts = contractStore.myContracts;
+// Pre-processamento para evitar conversões de data repetitivas e fuso horário errado (ISO UTC)
+const getMonthISO = (dateStr: string | null | undefined) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  return `${d.getFullYear()}-${month}`;
+};
 
-  // 1. Filtragem por Mês
+const processedContracts = computed(() => {
+  return contractStore.myContracts.map(c => ({
+    ...c,
+    _monthCreated: getMonthISO(c.created_at),
+    _monthDue: getMonthISO(c.due_date)
+  }));
+});
+
+const filteredContractsForStats = computed(() => {
+  let allContracts = processedContracts.value;
+
+  // 1. Filtragem por Mês (Regra de Competência: 06 a 05)
   if (selectedMonth.value) {
-    contracts = contracts.filter(c => {
-      const createdDate = new Date(c.created_at as any);
-      const dueDate = c.due_date ? new Date(c.due_date as any) : null;
-      const createdMonth = createdDate.toISOString().substring(0, 7);
-      const dueMonth = dueDate ? dueDate.toISOString().substring(0, 7) : null;
-      return createdMonth === selectedMonth.value || dueMonth === selectedMonth.value;
+    const [year, month] = selectedMonth.value.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 6, 0, 0, 0);
+    const endDate = new Date(year, month, 5, 23, 59, 59);
+
+    allContracts = allContracts.filter(c => {
+      // Prioriza Data P1, fallback para Criação se P1 não existir (para retrocompatibilidade)
+      const targetDateStr = c.first_payment_date || c.created_at;
+      if (!targetDateStr) return false;
+      
+      const targetDate = new Date(targetDateStr);
+      return targetDate >= startDate && targetDate <= endDate;
     });
   }
 
   // 2. Filtragem por BU
   if (selectedBUId.value) {
-    contracts = contracts.filter(c => c.bu_id === Number(selectedBUId.value));
+    const buIdNum = Number(selectedBUId.value);
+    allContracts = allContracts.filter(c => c.bu_id === buIdNum);
   }
 
   // 3. Filtragem por Vendedor
   if (selectedSellerId.value) {
-    contracts = contracts.filter(c => c.seller_id === selectedSellerId.value);
+    allContracts = allContracts.filter(c => c.seller_id === selectedSellerId.value);
   }
 
   // Se for seller (sem ser leader), garante que só vê os próprios
   if (user.value?.type === 'seller') {
-     contracts = contracts.filter(c => c.seller_id === user.value?.id);
+     allContracts = allContracts.filter(c => c.seller_id === user.value?.id);
   }
 
-  return contracts;
+  return allContracts;
+});
+
+// Contratos apenas assinados para os indicadores (Stats Cards)
+const onlySignedContractsForStats = computed(() => {
+  return filteredContractsForStats.value.filter(c => c.signed);
 });
 
 // Opções Dinâmicas para os Filtros
@@ -574,24 +591,7 @@ const filterSellerOptions = computed(() => {
   return [];
 });
 
-const filteredSellerDropdownOptions = computed(() => {
-  const options = filterSellerOptions.value;
-  if (!sellerDropdownSearch.value) return options;
-  const query = sellerDropdownSearch.value.toLowerCase();
-  return options.filter(s => s.name?.toLowerCase().includes(query));
-});
-
-const selectedSellerName = computed(() => {
-  if (!selectedSellerId.value) return 'Todos os Vendedores';
-  const found = filterSellerOptions.value.find(s => s.id === selectedSellerId.value);
-  return (found ? found.name : 'Todos os Vendedores') || 'Todos os Vendedores';
-});
-
-const selectSeller = (id: string, name: string | null) => {
-  selectedSellerId.value = id;
-  sellerDropdownSearch.value = '';
-  isSellerDropdownOpen.value = false;
-};
+// Gestão do Sistema e Equipe Logic follows...
 
 const userRoleLabel = computed(() => {
   const roles = {
@@ -605,7 +605,7 @@ const userRoleLabel = computed(() => {
 
 // Stats Reais vindos da Store de Contratos
 const stats = computed(() => {
-  const contracts = filteredContractsForStats.value;
+  const contracts = onlySignedContractsForStats.value;
 
   // Cálculo de valores específicos
   const totalImplementation = contracts.reduce((acc, curr) => {
@@ -616,36 +616,100 @@ const stats = computed(() => {
     return acc + (parseFloat(curr.monthly_fee as any) || 0);
   }, 0);
 
+  const signedContracts = contracts.filter(c => c.signed && c.signed_date);
+  let averageSignatureTime = 'N/A';
+  if (signedContracts.length > 0) {
+    const totalDays = signedContracts.reduce((acc, curr) => {
+      // Usar asserção de tipo para evitar erro de 'undefined' já que filtramos acima
+      const start = new Date(curr.created_at as string);
+      const end = new Date(curr.signed_date as string);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return acc + diffDays;
+    }, 0);
+    averageSignatureTime = Number((totalDays / signedContracts.length).toFixed(1)) + ' dias';
+  }
+
+  // Cálculo de Valor P1 (Simplificado pois o array já está filtrado pela competência)
+  const totalP1 = contracts.reduce((acc, curr) => {
+    return acc + (parseFloat(curr.first_payment_amount as any) || 0);
+  }, 0);
+
+  // Cálculo de TCV (Total Contract Value) e NMRR (Normalized Monthly Recurring Revenue)
+  const totalTCV = contracts.reduce((acc, curr) => {
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    const implementation = parseFloat(curr.implementation_fee as any) || 0;
+    const term = curr.contractual_term || 12; // Default 12 meses para Growth/Indeterminado
+    return acc + (monthly * term) + implementation;
+  }, 0);
+
+  const totalNMRR = contracts.reduce((acc, curr) => {
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    const implementation = parseFloat(curr.implementation_fee as any) || 0;
+    const term = curr.contractual_term || 12;
+    // NMRR = (Implementation / Term) + Monthly
+    return acc + (implementation / term) + monthly;
+  }, 0);
+
   const baseStats = [
     {
       label: 'Contratos Gerados',
       value: contracts.length.toString(),
-      icon: FileText
+      icon: FileText,
+      type: 'operation'
+    },
+    {
+      label: 'Média de Assinatura',
+      value: averageSignatureTime,
+      icon: Clock,
+      type: 'operation'
+    },
+    {
+      label: 'Taxa de Assinatura',
+      value: filteredContractsForStats.value.length > 0
+        ? Number(((filteredContractsForStats.value.filter(c => c.signed).length / filteredContractsForStats.value.length) * 100).toFixed(1)) + '%'
+        : '0%',
+      icon: ShieldCheck,
+      type: 'operation'
     },
     {
       label: 'Total Implementação',
       value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalImplementation),
-      icon: DollarSign
+      icon: DollarSign,
+      type: 'finance'
     },
     {
       label: 'Recorrência Mensal',
       value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalMonthly),
-      icon: TrendingUp
+      icon: TrendingUp,
+      type: 'finance'
     },
     {
-      label: 'Taxa de Assinatura',
-      value: contracts.length > 0
-        ? ((contracts.filter(c => c.signed).length / contracts.length) * 100).toFixed(1) + '%'
-        : '0.0%',
-      icon: ShieldCheck
+      label: 'Valor P1',
+      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalP1),
+      icon: Activity,
+      type: 'finance'
     },
+    {
+      label: 'Valor Total (TCV)',
+      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalTCV),
+      icon: Briefcase,
+      type: 'finance'
+    },
+    {
+      label: 'NMRR',
+      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalNMRR),
+      icon: Target,
+      type: 'finance'
+    }
   ];
 
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
     baseStats.push({
       label: user.value?.type === 'admin' ? 'Total de Colaboradores' : (user.value?.type === 'head' ? 'Vendedores na Equipe' : 'Integrantes da BU'),
       value: visibleUsers.value.length.toString(),
-      icon: Users2
+      icon: Users2,
+      type: 'team'
     });
   }
 
@@ -765,9 +829,10 @@ onMounted(async () => {
       contractFilterMode.value = 'team';
       promises.push(contractStore.fetchTeamContracts(sellerId));
     } else if (user.value.type === 'coord') {
-      const myBUId = (user.value as any).seller_business?.[0]?.business_id;
-      if (myBUId) {
-        promises.push(contractStore.fetchBUContracts(myBUId));
+      const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
+      if (myBUIds.length > 0) {
+        // Busca todos os contratos de todas as BUs vinculadas para o coordenador
+        promises.push(contractStore.fetchMultipleBUContracts(myBUIds));
       } else {
         promises.push(contractStore.fetchMyContracts(sellerId));
       }
@@ -811,18 +876,8 @@ watch(selectedBUId, () => {
   selectedSellerId.value = '';
 });
 
-const handleClickOutside = (event: MouseEvent) => {
-  if (sellerFilterContainer.value && !sellerFilterContainer.value.contains(event.target as Node)) {
-    isSellerDropdownOpen.value = false;
-  }
-};
-
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  // Inicialização adicional caso necessário
 });
 </script>
 

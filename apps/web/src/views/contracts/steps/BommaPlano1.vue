@@ -166,7 +166,7 @@
     </div>
 
     <!-- Seção: TESTEMUNHAS E RESPONSÁVEIS -->
-    <div class="space-y-12 pt-6 border-t border-brand-glass-border">
+    <div class="space-y-12">
       <WitnessSection :form="form" :errors="errors" />
 
       <!-- Equipe Interna -->
@@ -180,28 +180,22 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
-            <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium"
-              placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium" placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
           </div>
           <div class="space-y-2">
             <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
-            <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full"
-              placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
           </div>
           <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA
-              BU</label>
-            <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full"
-              placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA BU</label>
+            <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full" placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
           </div>
           <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA
-              BU</label>
-            <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full"
-              placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA BU</label>
+            <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
           </div>
         </div>
