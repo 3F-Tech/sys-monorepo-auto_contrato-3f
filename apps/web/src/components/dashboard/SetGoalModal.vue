@@ -256,22 +256,19 @@ const monthOptions = [
 const yearOptions = [
   { value: 2024, label: '2024' },
   { value: 2025, label: '2025' },
-  { value: 2026, label: '2026' }
+  { value: 2026, label: '2026' },
+  { value: 2027, label: '2027' },
+  { value: 2028, label: '2028' }
 ];
 
 const targetTypeOptions = computed(() => {
   const types: { value: string; label: string; icon: any }[] = [];
   const utype = authStore.user?.type;
-  if (utype === 'admin') {
+  if (utype === 'admin' || utype === 'coord') {
     types.push({ value: 'bu', label: 'BU', icon: Building2 });
-    types.push({ value: 'head', label: 'Head', icon: User });
-    types.push({ value: 'team', label: 'Equipe', icon: Users });
     types.push({ value: 'seller', label: 'Vendedor', icon: User });
-  } else if (utype === 'coord') {
-    types.push({ value: 'bu', label: 'BU', icon: Building2 });
   } else if (utype === 'head') {
-    types.push({ value: 'team', label: 'Minha Equipe', icon: Users });
-    types.push({ value: 'seller', label: 'Meus Vendedores', icon: User });
+    types.push({ value: 'seller', label: 'Vendedores', icon: User });
   }
   return types;
 });
@@ -317,12 +314,8 @@ const targetIdOptions = computed(() => {
       options.unshift({ value: '99', label: '3F Group (Consolidado)' });
     }
     return options;
-  } else if (form.value.target_type === 'head' || form.value.target_type === 'team') {
-    if (authStore.user?.type === 'head') {
-      return [{ value: authStore.user.id?.toString() || '', label: authStore.user.name || '' }];
-    }
-    return sellerStore.allSellers.filter(s => s.type === 'head').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
   } else {
+    // Para tipo Seller
     const sellers = authStore.user?.type === 'head' ? sellerStore.teamSellers : sellerStore.allSellers;
     return sellers.filter(s => s.type === 'seller').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
   }

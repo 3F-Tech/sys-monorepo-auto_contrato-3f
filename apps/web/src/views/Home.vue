@@ -414,6 +414,7 @@ import { useAuthStore } from '../store/auth';
 import { useSellerStore } from '../store/seller';
 import { useContractStore } from '../store/contracts';
 import { useGoalStore } from '../store/goals';
+import { type Goal } from '../api/goalService';
 import type { Sellers } from '../gen/types/Sellers';
 import type { Business } from '../gen/types/Business';
 import { getBusiness } from '../gen/hooks/getBusiness';
@@ -512,35 +513,65 @@ const currentPerformance = computed(() => {
 });
 
 const activeGoal = computed(() => {
-  let targetType: string;
-  let targetId: any;
-
+  const [year, month] = selectedMonth.value.split('-').map(Number);
+  
   if (dashboardFilterType.value === 'bu') {
-    if (selectedBUId.value) {
-      targetType = 'bu';
-      targetId = selectedBUId.value;
-    } else {
-      if (user.value?.type === 'admin') return null;
-      targetType = 'bu';
-      targetId = (user.value as any)?.seller_business?.[0]?.business_id; // Default to first BU if coord
-    }
-  } else {
-    // Mode: Team/Seller
-    if (selectedSellerId.value) {
-      targetType = 'seller';
-      targetId = selectedSellerId.value;
-    } else if (selectedTeamId.value) {
-      targetType = 'team';
-      targetId = selectedTeamId.value;
-    } else {
-      if (user.value?.type === 'admin') return null;
-      targetType = user.value?.type === 'head' ? 'team' : (user.value?.type || 'seller');
-      targetId = user.value?.id;
-    }
+    const buId = selectedBUId.value || (user.value?.type === 'coord' ? (user.value as any)?.seller_business?.[0]?.business_id?.toString() : null);
+    if (!buId) return null;
+    return goalStore.getGoalByTarget('bu', buId);
   }
 
-  return goalStore.getGoalByTarget(targetType, targetId?.toString()) || null;
+  // Lógica para Equipe ou Vendedor
+  if (selectedSellerId.value) {
+    return goalStore.getGoalByTarget('seller', selectedSellerId.value);
+  }
+
+  const teamIdStr = selectedTeamId.value;
+  if (!teamIdStr) return null;
+
+  // Caso 1: Minha Meta (Head) - Soma das BUs dele
+  if (teamIdStr.startsWith('head_own_')) {
+    const headId = teamIdStr.replace('head_own_', '');
+    const head = sellerStore.allSellers.find(s => s.id?.toString() === headId);
+    const buIds = (head as any)?.seller_business?.map((sb: any) => sb.business_id.toString()) || [];
+    if (buIds.length === 0) return null;
+    
+    const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
+    return sumGoals(buGoals, 'head', headId);
+  }
+
+  // Caso 2: Meta de Equipe - Soma dos Vendedores
+  const members = sellerStore.allSellers.filter(s => s.head_id?.toString() === teamIdStr || s.id?.toString() === teamIdStr);
+  const memberIds = members.map(m => m.id?.toString() || '');
+  const memberGoals = goalStore.goals.filter(g => g.target_type === 'seller' && memberIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
+  
+  return sumGoals(memberGoals, 'team', teamIdStr);
 });
+
+const sumGoals = (goals: Goal[], type: string, id: string): Goal => {
+  const result = {
+    id: 0,
+    target_type: type,
+    target_id: id,
+    p1: 0,
+    tcv: 0,
+    nmrr: 0,
+    implementation: 0,
+    monthly: 0,
+    month: 0,
+    year: 0
+  };
+  
+  goals.forEach(g => {
+    result.p1 += Number(g.p1 || 0);
+    result.tcv += Number(g.tcv || 0);
+    result.nmrr += Number(g.nmrr || 0);
+    result.implementation += Number(g.implementation || 0);
+    result.monthly += Number(g.monthly || 0);
+  });
+  
+  return result as any;
+};
 
 const user = computed(() => authStore.user);
 const firstName = computed(() => user.value?.name?.split(' ')[0] || 'Usuário');
@@ -564,30 +595,22 @@ const buOptionsFormatted = computed(() => {
 const teamOptionsFormatted = computed(() => {
   const options: { value: string; label: string }[] = [];
   
-  // Se for Head, ele NÃO tem opção "-" e NÃO vê outras equipes
   if (user.value?.type === 'head') {
     if (user.value.id) {
-      options.push({ 
-        value: user.value.id.toString(), 
-        label: `Equipe de ${user.value.name}` 
-      });
+      options.push({ value: `head_own_${user.value.id}`, label: 'Minha Meta (Pessoal)' });
+      options.push({ value: user.value.id.toString(), label: `Minha Equipe` });
     }
-    return options; // Retorna APENAS a própria equipe garantida
+    return options;
   }
 
-  // Para outros (Admin/Coord), adiciona a opção de visão geral (-)
   options.push({ value: '', label: '-' });
-
-  // Lista todas as equipes cadastradas no sistema
   let heads = sellerStore.allSellers.filter(s => s.type === 'head');
-  
   heads.forEach(h => {
     const idStr = h.id?.toString() || '';
     if (idStr && !options.some(opt => opt.value === idStr)) {
       options.push({ value: idStr, label: `Equipe de ${h.name}` });
     }
   });
-
   return options;
 });
 
