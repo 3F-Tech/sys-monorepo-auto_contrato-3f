@@ -309,8 +309,9 @@ const targetLabel = computed(() => {
 
 const targetIdOptions = computed(() => {
   if (form.value.target_type === 'bu') {
-    const options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
+    let options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
     if (authStore.user?.type === 'admin') {
+      options = options.filter(o => o.label.toLowerCase().trim() !== '3f');
       options.unshift({ value: '99', label: '3F Group (Consolidado)' });
     }
     return options;
