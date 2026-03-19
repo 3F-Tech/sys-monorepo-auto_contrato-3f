@@ -19,6 +19,7 @@ export const contractDataSchema = z.object({
   'CIDADE DO CONTRATANTE': z.string().min(2, "Cidade obrigatória"),
   'UF DO CONTRATANTE': z.string().length(2, "UF deve ter 2 letras"),
   'NOME DO REPRESENTANTE': z.string().min(3, "Nome do representante muito curto"),
+  'EMAIL DO REPRESENTANTE': z.string().email("E-mail do representante obrigatório"),
   'CPF DO REPRESENTANTE': z.string().regex(cpfRegex, "CPF inválido (use 000.000.000-00)"),
   'VALOR TAXA IMPLEMENTACAO': z.string().min(1, "Taxa de implementação obrigatória"),
   'VALOR MENSALIDADE': z.string().min(1, "Valor da mensalidade obrigatório"),

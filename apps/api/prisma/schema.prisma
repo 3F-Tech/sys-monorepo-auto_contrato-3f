@@ -47,43 +47,44 @@ model sellers {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model contracts {
-  id                 BigInt    @id @default(autoincrement())
-  title              String?
-  link               String?
-  cnpj_client        String?
-  seller_id          BigInt
-  bu_id              Int
-  monthly_fee        Decimal?  @db.Decimal
-  implementation_fee Decimal?  @db.Decimal
-  contractual_term   Int?      @db.SmallInt
-  due_date           DateTime? @db.Date
-  type_contract      String?
-  created_at         DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
-  signed             Boolean   @default(false)
-  change_status      String?
-  signed_date        DateTime? @db.Timestamptz(6)
-  change_description String?
-  first_payment_date DateTime? @db.Timestamptz(6)
-  first_payment_amount Decimal? @db.Decimal
-  business           business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  sellers            sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  id                   BigInt    @id @default(autoincrement())
+  title                String?
+  link                 String?
+  cnpj_client          String?
+  seller_id            BigInt
+  bu_id                Int
+  monthly_fee          Decimal?  @db.Decimal
+  implementation_fee   Decimal?  @db.Decimal
+  contractual_term     Int?      @db.SmallInt
+  due_date             DateTime? @db.Date
+  type_contract        String?
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+  signed               Boolean   @default(false)
+  change_status        String?
+  signed_date          DateTime? @db.Timestamptz(6)
+  change_description   String?
+  first_payment_amount Decimal?  @db.Decimal
+  first_payment_date   DateTime? @db.Timestamptz(6)
+  legal_repre_email    String?
+  business             business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sellers              sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }
 
 model goals {
-  id              Int      @id @default(autoincrement())
-  target_type     String   // 'seller', 'head', 'bu'
-  target_id       BigInt
-  p1              Decimal? @db.Decimal
-  tcv             Decimal? @db.Decimal
-  nmrr            Decimal? @db.Decimal
-  implementation  Decimal? @db.Decimal
-  monthly         Decimal? @db.Decimal
-  month           Int
-  year            Int
-  created_by      BigInt
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  id             Int      @id @default(autoincrement())
+  target_type    String
+  target_id      BigInt
+  p1             Decimal? @db.Decimal
+  tcv            Decimal? @db.Decimal
+  nmrr           Decimal? @db.Decimal
+  implementation Decimal? @db.Decimal
+  monthly        Decimal? @db.Decimal
+  month          Int
+  year           Int
+  created_by     BigInt
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([target_type, target_id, month, year])
 }

@@ -393,6 +393,7 @@ const handleTemplateSelect = (template: string) => {
     'CIDADE DO CONTRATANTE': '',
     'UF DO CONTRATANTE': '',
     'NOME DO REPRESENTANTE': '',
+    'EMAIL DO REPRESENTANTE': '',
     'CPF DO REPRESENTANTE': '',
     'VALOR TAXA IMPLEMENTACAO': '',
     'VALOR MENSALIDADE': '',

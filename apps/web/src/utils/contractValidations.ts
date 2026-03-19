@@ -51,6 +51,7 @@ export const getValidationRules = (data: Record<string, any>) => {
   check('UF DO CONTRATANTE', data['UF DO CONTRATANTE']?.length !== 2 ? "UF inválida" : null);
   
   check('NOME DO REPRESENTANTE', validateRequired(data['NOME DO REPRESENTANTE'], 'Nome do representante'));
+  check('EMAIL DO REPRESENTANTE', validateRequired(data['EMAIL DO REPRESENTANTE'], 'E-mail do representante'));
   check('CPF DO REPRESENTANTE', validateCPF(data['CPF DO REPRESENTANTE'] || ''));
   
   check('VALOR TAXA IMPLEMENTACAO', validateRequired(data['VALOR TAXA IMPLEMENTACAO'], 'Taxa de implementação'));

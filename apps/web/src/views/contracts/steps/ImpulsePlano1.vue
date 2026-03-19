@@ -92,6 +92,11 @@
           <span v-if="errors && errors['NOME DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME DO REPRESENTANTE'] }}</span>
         </div>
         <div class="space-y-2">
+          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">EMAIL DO REPRESENTANTE</label>
+          <input type="email" id="EMAIL DO REPRESENTANTE" v-model="form['EMAIL DO REPRESENTANTE']" class="input-glass w-full" placeholder="email@empresa.com" :class="[errors && errors['EMAIL DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['EMAIL DO REPRESENTANTE']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['EMAIL DO REPRESENTANTE'] }}</span>
+        </div>
+        <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO REPRESENTANTE</label>
           <input type="text" id="CPF DO REPRESENTANTE" v-model="form['CPF DO REPRESENTANTE']" v-maska="'###.###.###-##'"
             class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF DO REPRESENTANTE'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">

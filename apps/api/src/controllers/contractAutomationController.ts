@@ -104,6 +104,9 @@ for (const [key, value] of Object.entries(data)) {
                         valStr = `R$ ${valStr}`;
                     }
 
+                    // Não envia o e-mail do representante para o Google Docs (apenas banco)
+                    if (key === 'EMAIL DO REPRESENTANTE') continue;
+
                     replacements[key.replace(/ /g, '-')] = valStr;
                     replacements[key.replace(/ /g, '_')] = valStr;
                 }
@@ -174,6 +177,7 @@ for (const [key, value] of Object.entries(data)) {
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
                 contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                legal_repre_email: data['EMAIL DO REPRESENTANTE'],
                 type_contract: sheetName,
                 signed: false,
                 change_status: null,
