@@ -63,4 +63,29 @@ export class GoogleDriveService {
       throw error;
     }
   }
+
+  /**
+   * Exporta um documento do Google Docs para PDF e retorna como Base64.
+   * @param fileId ID do arquivo no Google Drive
+   */
+  static async exportFileToPDF(fileId: string): Promise<string> {
+    const auth = this.getAuth();
+    const drive = google.drive({ version: 'v3', auth });
+
+    try {
+      const response = await drive.files.export(
+        {
+          fileId: fileId,
+          mimeType: 'application/pdf',
+        },
+        { responseType: 'arraybuffer' }
+      );
+
+      const buffer = Buffer.from(response.data as ArrayBuffer);
+      return buffer.toString('base64');
+    } catch (error) {
+      console.error('Error exporting file to PDF:', error);
+      throw error;
+    }
+  }
 }

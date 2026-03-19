@@ -4,6 +4,7 @@
 │   │   ├── prisma/         # Schema do Banco de Dados e Migrations
 │   │   └── src/
 │   │       ├── controllers/# Lógica de recebimento de requisições
+│   │       ├── services/   # Integrações (Google Drive, Docs, Clicksign)
 │   │       └── routes/     # Definição de endpoints e Swagger Config
 │   └── web/                # Front-end Vue 3
 │       └── src/

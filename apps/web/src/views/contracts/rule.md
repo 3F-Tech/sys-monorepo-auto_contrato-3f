@@ -22,7 +22,7 @@ Siga estritamente o `apps/web/design-system.md`:
 - **Máscaras:** Aplique máscaras de CPF, CNPJ e Telefone usando a biblioteca `maska`.
 - **Normalização:** Limpe os dados (remova pontos/traços) antes de enviar para a API.
 - **Formatação**: Valores monetários devem ter "R$ " e Instagram deve ter "@" nos documentos gerados (tratado no backend).
-- **Persistência Dupla (Sheets + DB):** Todo contrato confirmado é enviado simultaneamente para o Google Sheets e para o banco de dados.
+- **Assinatura Digital**: O fluxo de contratos agora inclui o envio para o **Clicksign** após a geração do Google Doc.
 - **Identificação:** O `seller_id` é extraído automaticamente do token de sessão.
 - **Título Padronizado:** Use sempre o padrão `{{ Empresa }} & {{ Nome da BU }} ({{ Plano }})` para facilitar a identificação no dashboard.
 - **Hierarquia de Acesso:**

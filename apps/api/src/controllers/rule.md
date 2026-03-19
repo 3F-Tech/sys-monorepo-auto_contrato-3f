@@ -24,18 +24,17 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **Organização**: Use blocos JSDoc separados, colocados **imediatamente acima** de cada função. Nunca agrupe múltiplos métodos em um único bloco.
 - **Componentes**: Utilize referências a schemas (ex: `$ref: '#/components/schemas/Sellers'`) sempre que possível.
 
-## 📊 Integração Google Sheets & Banco de Dados
-- **Persistência Dupla**: O `contractSheetsController.ts` é responsável por salvar os dados simultaneamente no Google Sheets e no banco de dados local via Prisma.
-- **Planilhas**: O processamento de contratos é feito via abas dinâmicas.
+## 📊 Automação Google Docs & Banco de Dados
+- **Persistência Local**: O `contractAutomationController.ts` é responsável por salvar os dados no banco de dados local via Prisma.
+- **Automação de Documentos**: O processamento de contratos gera uma cópia de um modelo no Google Docs e preenche as variáveis dinamicamente.
 - **Banco de Dados (Prisma)**:
-  - **Título Padronizado**: `{{ Razão Social }} & {{ Nome da BU }} ({{ Plano }})`. (Exceção: Contratos BOMMA seguem nomenclatura formal específica).
+  - **Título Padronizado**: `{{ Razão Social }} & {{ Nome da BU }} ({{ Plano }})`. 
+  - **Exceção BOMMA**: Contratos da BU Bomma seguem a nomenclatura: `{{ Razão Social }} & BOMMA ASSESSORIA DE MARKETING LTDA - {{ NOME FORMAL DO CONTRATO }}`.
   - **Conversão**: Valores monetários e datas brasileiros devem ser convertidos para `Decimal` e `DateTime` antes da persistência.
-33: - **Formatação p/ Google Docs**:
-34:   - **Moeda**: Adicione sempre "R$ " antes de valores monetários.
-35:   - **Instagram**: Adicione sempre "@" antes de handles de redes sociais.
-- **Mapeamento de Colunas (Sheets)**:
-  - Padrão (Plano 1/2): **25 colunas** (A até Y).
-  - Growth: **24 colunas** (A até X), com remoção automática da coluna "Prazo Contratual".
+- **Clicksign Integration**: O backend deve ser capaz de exportar o Doc gerado para PDF (via Drive API) e enviar para o Clicksign via `ClickSignService.ts`.
+- **Formatação p/ Google Docs**:
+  - **Moeda**: Adicione sempre "R$ " antes de valores monetários.
+  - **Instagram**: Adicione sempre "@" antes de handles de redes sociais.
 - **Helper**: Use sempre o helper `handleContractSubmit` para novos contratos.
 
 ## ⚙️ Melhores Práticas

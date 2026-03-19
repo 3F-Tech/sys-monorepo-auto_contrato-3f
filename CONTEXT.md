@@ -38,8 +38,8 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
    - Make.com ou outro serviço de automação processa o restante.
 
 ## 🛑 Escopo V1 vs Futuro
-- **V1 (atual):** CRUDs de usuários e BUs, autenticação JWT própria, disparo para Google Sheets, dashboard de métricas básicas com filtros por mês/BU/vendedor, fluxo de aprovação de alterações de contrato (`change_status`).
-- **Futuro:** Integração n8n, Clicksign, Conta Azul, dashboard avançado com BI.
+- **V1 (atual):** CRUDs de usuários e BUs, autenticação JWT própria, **Integração Clicksign (Fase 1: Envio de Documentos)**, dashboard de métricas avançadas com ApexCharts (NMRR, TCV, P1), fluxo de aprovação de alterações de contrato (`change_status`).
+- **Futuro:** Integração n8n, automação completa de assinaturas, Conta Azul, dashboard de BI avançado.
 
 ## 🎨 Identidade Visual (Design System)
 > **Consulte o `.antigravityrules` para os tokens completos.** Resumo essencial:
@@ -53,6 +53,6 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 
 ## 💡 Diretrizes para a IA
 - Priorize mobile-first para os formulários.
-- Não implemente lógica de geração de PDF localmente; o Make.com é o responsável.
+- **Geração de PDF:** O sistema exporta o Google Doc para PDF via Google Drive API apenas para envio ao Clicksign. Outras automações de documento continuam externas.
 - Mantenha os nomes de colunas do banco exatamente como definidos no Schema SQL fornecido.
 - Sempre consulte o Design System no `.antigravityrules` antes de criar qualquer nova tela ou componente visual.

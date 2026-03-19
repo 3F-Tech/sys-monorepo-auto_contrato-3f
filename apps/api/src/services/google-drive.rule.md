@@ -34,4 +34,5 @@ Este módulo gerencia o acesso aos modelos de contrato e a criação de novas in
 
 ## 🛠️ Implementação Técnica
 - Use o `GoogleDriveService.ts` para interações com a Drive API v3.
-- Scopes necessários: `drive.file`, `drive.readonly` (para modelos) e `drive` (para criação).
+- **Exportação PDF**: O método `exportFileToPDF` deve ser usado para obter a versão não editável do contrato para o Clicksign.
+- Scopes necessários: `drive.file`, `drive.readonly` (para modelos) e `drive` (para criação e exportação).
