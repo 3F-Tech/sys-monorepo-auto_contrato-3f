@@ -1,9 +1,7 @@
 import { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient()
+import { prisma } from '../prisma'
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
 
 /**
@@ -220,13 +218,32 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ error: "Credenciais inválidas" });
         }
 
-        const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+        const md5 = (str: string) => crypto.createHash('md5').update(str).digest('hex');
+        
+        // Atualmente no banco temos casos de 1x, 2x e até 3x MD5 (devido a bugs anteriores de hashing duplo no front + back)
+        // Vamos testar até 4 níveis para garantir acesso e auto-reparo.
+        const h1 = md5(password);
+        const h2 = md5(h1);
+        const h3 = md5(h2);
+        const h4 = md5(h3);
 
-        // Check password - handle both MD5 and possible plaintext (Auto-repair)
-        let isCorrect = (hashedPassword === seller.password);
+        let isCorrect = false;
+        let finalHashToSave = h1; // Sempre queremos normalizar para 1x MD5
         let needsRepair = false;
 
-        if (!isCorrect && password === seller.password) {
+        if (h1 === seller.password) {
+            isCorrect = true;
+        } else if (h2 === seller.password) {
+            isCorrect = true;
+            needsRepair = true;
+        } else if (h3 === seller.password) {
+            isCorrect = true;
+            needsRepair = true;
+        } else if (h4 === seller.password) {
+            isCorrect = true;
+            needsRepair = true;
+        } else if (password === seller.password) {
+             // Caso raríssimo de estar em texto plano
             isCorrect = true;
             needsRepair = true;
         }
@@ -235,13 +252,13 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ error: "Credenciais inválidas" });
         }
 
-        // Auto-repair plaintext passwords to MD5
+        // Auto-repair para normalizar o hash no banco (Sempre para 1x MD5)
         if (needsRepair) {
             await prisma.sellers.update({
                 where: { id: seller.id },
-                data: { password: hashedPassword }
+                data: { password: finalHashToSave }
             });
-            console.log(`Senha auto-reparada para o usuário: ${normalizedEmail}`);
+            console.log(`[LOGIN] Senha auto-reparada (normalizada para 1x MD5) para o usuário: ${normalizedEmail}`);
         }
 
         // Gera o token JWT

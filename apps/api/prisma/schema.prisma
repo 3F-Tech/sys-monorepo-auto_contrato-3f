@@ -69,3 +69,21 @@ model contracts {
   business           business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   sellers            sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }
+
+model goals {
+  id              Int      @id @default(autoincrement())
+  target_type     String   // 'seller', 'head', 'bu'
+  target_id       BigInt
+  p1              Decimal? @db.Decimal
+  tcv             Decimal? @db.Decimal
+  nmrr            Decimal? @db.Decimal
+  implementation  Decimal? @db.Decimal
+  monthly         Decimal? @db.Decimal
+  month           Int
+  year            Int
+  created_by      BigInt
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([target_type, target_id, month, year])
+}

@@ -7,17 +7,6 @@
           Gerenciar Contratos
         </h3>
 
-        <div v-if="isHead" class="flex items-center bg-brand-surface border border-brand-glass-border rounded-lg p-1">
-          <button @click="$emit('update:filterMode', 'own')"
-            :class="['px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all', filterMode === 'own' ? 'bg-brand-cyan text-brand-deep shadow-sm' : 'text-white/40 hover:text-white']">
-            Próprios
-          </button>
-          <button @click="$emit('update:filterMode', 'team')"
-            :class="['px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all', filterMode === 'team' ? 'bg-brand-cyan text-brand-deep shadow-sm' : 'text-white/40 hover:text-white']">
-            Equipe
-          </button>
-        </div>
-
         <button v-if="isLeadership" @click="showAlertsOnly = !showAlertsOnly"
           :class="['px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-2',
             showAlertsOnly ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm' : 'bg-brand-surface border-brand-glass-border text-white/40 hover:text-white']">
@@ -25,6 +14,18 @@
           Avisos Pendentes
         </button>
 
+        <div class="h-8 w-px bg-white/5 mx-1 hidden md:block"></div>
+
+        <div class="flex items-center gap-1 p-1 bg-black/20 border border-brand-glass-border rounded-xl">
+          <button v-for="opt in signedFilterOptions" :key="opt.value"
+            @click="signedFilter = opt.value"
+            :class="['px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
+              signedFilter === opt.value 
+                ? 'bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20' 
+                : 'text-white/30 hover:text-white/60']">
+            {{ opt.label }}
+          </button>
+        </div>
       </div>
 
       <!-- Search Input -->
@@ -73,7 +74,7 @@
     </div>
 
     <div v-else class="space-y-3">
-      <div v-for="contract in filteredContracts" :key="contract.id?.toString()"
+      <div v-for="contract in paginatedContracts" :key="contract.id?.toString()"
         :class="['group bg-brand-offset border rounded-xl transition-all overflow-hidden shadow-sm',
           contract.signed ? 'border-green-500/60 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:border-green-400' : 'border-brand-glass-border hover:border-brand-cyan/30']">
 
@@ -299,6 +300,27 @@
           </div>
         </Transition>
       </div>
+      
+      <!-- Pagination Controls -->
+      <div v-if="totalPages > 1" class="flex items-center justify-center gap-4 pt-4 pb-2">
+        <button 
+          @click="currentPage > 1 && currentPage--" 
+          :disabled="currentPage === 1"
+          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          Anterior
+        </button>
+        <span class="text-[10px] font-medium text-white/40 uppercase tracking-wider">
+          Página {{ currentPage }} de {{ totalPages }}
+        </span>
+        <button 
+          @click="currentPage < totalPages && currentPage++" 
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          Próxima
+        </button>
+      </div>
     </div>
 
     <!-- Modal Aviso Mudança -->
@@ -394,7 +416,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { Contracts } from '../../gen/types/Contracts';
 import type { Business } from '../../gen/types/Business';
 import type { Sellers } from '../../gen/types/Sellers';
@@ -424,16 +446,11 @@ import ConfirmModal from '../ui/ConfirmModal.vue';
 
 const props = defineProps<{
   contracts: Contracts[];
-  filterMode?: 'own' | 'team';
   isHead?: boolean;
   isLeadership?: boolean;
   businessUnits?: Business[];
   sellers?: Sellers[];
   loading?: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:filterMode', value: 'own' | 'team'): void;
 }>();
 
 const contractStore = useContractStore();
@@ -443,6 +460,13 @@ const editingLink = ref('');
 const changeDescriptionInput = ref('');
 const searchQuery = ref('');
 const showAlertsOnly = ref(false);
+const signedFilter = ref<'all' | 'signed' | 'pending'>('all');
+
+const signedFilterOptions = [
+  { label: 'Todas', value: 'all' },
+  { label: 'Assinados', value: 'signed' },
+  { label: 'Pendentes', value: 'pending' },
+] as const;
 
 const changeRequestModalOpen = ref(false);
 const selectedContractForChange = ref<Contracts | null>(null);
@@ -452,6 +476,13 @@ const reviewContract = ref<Contracts | null>(null);
 
 const deleteModalOpen = ref(false);
 const contractToDelete = ref<Contracts | null>(null);
+
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
+watch([searchQuery, showAlertsOnly, signedFilter], () => {
+  currentPage.value = 1;
+});
 
 const getBuImage = (buId?: number | null): string | null => {
   if (!buId || !props.businessUnits) return null;
@@ -481,6 +512,12 @@ const filteredContracts = computed(() => {
 
   if (props.isLeadership && showAlertsOnly.value) {
     displayContracts = displayContracts.filter(c => c.change_status === 'alert');
+  }
+
+  if (signedFilter.value === 'signed') {
+    displayContracts = displayContracts.filter(c => c.signed);
+  } else if (signedFilter.value === 'pending') {
+    displayContracts = displayContracts.filter(c => !c.signed);
   }
   
   if (searchQuery.value) {
@@ -513,6 +550,16 @@ const filteredContracts = computed(() => {
     const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
     return dateA - dateB;
   });
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredContracts.value.length / itemsPerPage) || 1;
+});
+
+const paginatedContracts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredContracts.value.slice(start, end);
 });
 
 const toggleExpand = (id: string) => {

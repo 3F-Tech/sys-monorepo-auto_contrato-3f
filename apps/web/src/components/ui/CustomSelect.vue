@@ -118,7 +118,9 @@ const clearSelection = () => {
 
 const selectedOptionLabel = computed(() => {
   const option = props.options.find(o => o.value === props.modelValue);
-  return option ? option.label : '';
+  // Se for a opção de "todas" (value: ''), não mostramos o label no input, forçando o placeholder
+  if (!option || option.value === '') return ''; 
+  return option.label;
 });
 
 const filteredOptions = computed(() => {

@@ -15,6 +15,8 @@ export const useSellerStore = defineStore('seller', () => {
     try {
       const sellers = await getSellers({ head_id: headId }, { client });
       teamSellers.value = sellers as Sellers[];
+      // Populate allSellers as well so list lookups work
+      allSellers.value = sellers as Sellers[];
     } catch (error) {
       console.error('Erro ao buscar equipe:', error);
     } finally {
