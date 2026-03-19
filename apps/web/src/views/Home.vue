@@ -107,23 +107,30 @@
           <!-- Head (Coordenador) Switcher -->
           <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
-              @click="selectedTeamId = `head_own_${user.id}`" 
-              :class="selectedTeamId?.startsWith('head_own_') ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              @click="dashboardFilterType = 'team'; selectedTeamId = `head_own_${user.id}`" 
+              :class="(dashboardFilterType === 'team' && selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Minha Meta
             </button>
             <button 
-              @click="selectedTeamId = user.id.toString()" 
-              :class="!selectedTeamId?.startsWith('head_own_') ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              @click="dashboardFilterType = 'team'; selectedTeamId = user.id.toString()" 
+              :class="(dashboardFilterType === 'team' && selectedTeamId && !selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Minha Equipe
             </button>
+            <button 
+              @click="dashboardFilterType = 'bu'" 
+              :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Minhas BUs
+            </button>
           </div>
 
           <!-- BU Filter (In Mode BU or Coord) -->
-          <div v-if="dashboardFilterType === 'bu' && ['admin', 'coord'].includes(user?.type || '')" class="min-w-[200px] flex-1 md:flex-none">
+          <div v-if="dashboardFilterType === 'bu' && ['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[200px] flex-1 md:flex-none">
             <CustomSelect 
               v-model="selectedBUId" 
               :options="buOptionsFormatted"
@@ -633,11 +640,18 @@ const buOptionsFormatted = computed(() => {
   }
 
   businessList.value.forEach(bu => {
-    // Evita duplicar qualquer variação de "3F", "Group" ou "Venture" se já temos a opção consolidada
+    // Para Admin, evita duplicatas de nomenclaturas de grupo
     if (user.value?.type === 'admin') {
       const name = bu.name?.toLowerCase() || '';
       if (name.includes('3f') || name.includes('group') || name.includes('venture')) return;
     }
+    
+    // Para Head (Coordenador), mostra apenas as BUs às quais ele está vinculado
+    if (user.value?.type === 'head') {
+      const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
+      if (!myBUIds.includes(bu.id)) return;
+    }
+
     options.push({ value: bu.id?.toString() || '', label: bu.name || '' });
   });
 
