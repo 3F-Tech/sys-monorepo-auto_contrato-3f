@@ -179,6 +179,13 @@
             "nullable": true
           }
         }
+      },
+      "ContractData": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Objeto dinâmico contendo os dados do formulário do contrato"
       }
     }
   },
@@ -315,6 +322,176 @@
         "responses": {
           "201": {
             "description": "Criado"
+          }
+        }
+      }
+    },
+    "/contracts-sheets/impulse-plano-1": {
+      "post": {
+        "summary": "Submeter contrato Plano 1 - Impulse",
+        "tags": [
+          "Contract Automation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/ContractData"
+                  },
+                  "bu_id": {
+                    "type": "integer"
+                  },
+                  "bu_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
+          }
+        }
+      }
+    },
+    "/contracts-sheets/impulse-plano-2": {
+      "post": {
+        "summary": "Submeter contrato Plano 2 - Impulse",
+        "tags": [
+          "Contract Automation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/ContractData"
+                  },
+                  "bu_id": {
+                    "type": "integer"
+                  },
+                  "bu_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
+          }
+        }
+      }
+    },
+    "/contracts-sheets/seed-plano-1": {
+      "post": {
+        "summary": "Submeter contrato Plano 1 - Seed",
+        "tags": [
+          "Contract Automation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/ContractData"
+                  },
+                  "bu_id": {
+                    "type": "integer"
+                  },
+                  "bu_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
+          }
+        }
+      }
+    },
+    "/contracts-sheets/seed-plano-2": {
+      "post": {
+        "summary": "Submeter contrato Plano 2 - Seed",
+        "tags": [
+          "Contract Automation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/ContractData"
+                  },
+                  "bu_id": {
+                    "type": "integer"
+                  },
+                  "bu_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
+          }
+        }
+      }
+    },
+    "/contracts-sheets/seed-plano-growth": {
+      "post": {
+        "summary": "Submeter contrato Plano Growth - Seed",
+        "tags": [
+          "Contract Automation"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/ContractData"
+                  },
+                  "bu_id": {
+                    "type": "integer"
+                  },
+                  "bu_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
           }
         }
       }

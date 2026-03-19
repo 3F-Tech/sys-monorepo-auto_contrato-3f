@@ -56,9 +56,9 @@
           <div class="relative z-10 space-y-4">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-4">
-                <div :style="{ borderColor: item.color }" class="h-12 w-12 rounded-xl bg-brand-surface border flex items-center justify-center overflow-hidden">
+                <div :style="{ borderColor: (item.color as any) }" class="h-12 w-12 rounded-xl bg-brand-surface border flex items-center justify-center overflow-hidden">
                   <img v-if="item.img_base64" :src="item.img_base64" class="h-full w-full object-cover" />
-                  <Building2 v-else class="h-6 w-6" :style="{ color: item.color }" />
+                  <Building2 v-else class="h-6 w-6" :style="{ color: (item.color as any) }" />
                 </div>
                 <div>
                   <h4 class="font-bold text-white group-hover:text-brand-cyan transition-colors">{{ item.name }}</h4>
@@ -78,7 +78,7 @@
 
             <div class="flex items-center justify-between pt-4 border-t border-white/5">
               <span class="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Identidade Visual</span>
-              <div :style="{ backgroundColor: item.color }" class="h-4 w-12 rounded-full shadow-lg"></div>
+              <div :style="{ backgroundColor: (item.color as any) }" class="h-4 w-12 rounded-full shadow-lg"></div>
             </div>
           </div>
         </div>
@@ -91,6 +91,17 @@
       :business="selectedBusiness" 
       @close="closeModal" 
       @saved="loadBusiness" 
+    />
+
+    <ConfirmModal 
+      :is-open="confirmDeleteOpen"
+      title="Excluir Empresa"
+      message="Tem certeza que deseja excluir esta empresa? Esta ação não poderá ser desfeita e pode afetar usuários vinculados."
+      confirm-text="Excluir"
+      cancel-text="Cancelar"
+      type="danger"
+      @confirm="confirmDelete"
+      @cancel="confirmDeleteOpen = false"
     />
   </div>
 </template>
@@ -107,6 +118,8 @@ import {
   ArrowLeft
 } from 'lucide-vue-next';
 import BusinessModal from '../../components/admin/BusinessModal.vue';
+import ConfirmModal from '../../components/ui/ConfirmModal.vue';
+import { useToast } from '../../composables/useToast';
 import { getBusiness } from '../../gen/hooks/getBusiness';
 import { deleteBusinessId } from '../../gen/hooks/deleteBusinessId';
 import client from '../../api/client';
@@ -116,10 +129,13 @@ const router = useRouter();
 const businessList = ref<Business[]>([]);
 const loading = ref(true);
 const searchQuery = ref('');
+const toast = useToast();
 
 // Modal state
 const modalOpen = ref(false);
 const selectedBusiness = ref<Business | null>(null);
+const confirmDeleteOpen = ref(false);
+const businessIdToDelete = ref<any>(null);
 
 const loadBusiness = async () => {
   loading.value = true;
@@ -128,6 +144,7 @@ const loadBusiness = async () => {
     businessList.value = data as Business[];
   } catch (error) {
     console.error('Falha ao buscar empresas:', error);
+    toast.error('Erro ao carregar lista de empresas.');
   } finally {
     loading.value = false;
   }
@@ -157,15 +174,24 @@ const closeModal = () => {
   selectedBusiness.value = null;
 };
 
-const handleDelete = async (id: any) => {
-  if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
-  
+const handleDelete = (id: any) => {
+  businessIdToDelete.value = id;
+  confirmDeleteOpen.value = true;
+};
+
+const confirmDelete = async () => {
+  if (!businessIdToDelete.value) return;
+
   try {
-    await deleteBusinessId(id, { client });
+    await deleteBusinessId(businessIdToDelete.value, { client });
+    toast.success('Empresa excluída com sucesso.');
     await loadBusiness();
   } catch (error) {
     console.error('Falha ao excluir empresa:', error);
-    alert('Erro ao excluir empresa.');
+    toast.error('Erro ao excluir empresa.');
+  } finally {
+    confirmDeleteOpen.value = false;
+    businessIdToDelete.value = null;
   }
 };
 

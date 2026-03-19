@@ -37,8 +37,8 @@ export const getBusinessById = async (req: Request, res: Response) => {
         });
         res.json(business);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch business" });
+        console.error('Erro ao buscar empresa por ID:', error);
+        res.status(500).json({ error: "Falha ao buscar empresa por ID" });
     }
 }
 
@@ -72,7 +72,7 @@ export const getBusiness = async (req: Request, res: Response) => {
         });
         res.json(business);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao listar empresas:', error);
         res.status(500).json({ error: "Falha ao buscar empresas" });
     }
 }
@@ -105,7 +105,7 @@ export const createBusiness = async (req: Request, res: Response) => {
         });
         res.json(business);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao criar empresa:', error);
         res.status(500).json({ error: "Falha ao criar empresa" });
     }
 }
@@ -147,7 +147,7 @@ export const updateBusiness = async (req: Request, res: Response) => {
         });
         res.json(business);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao atualizar empresa:', error);
         res.status(500).json({ error: "Falha ao atualizar empresa" });
     }
 }
@@ -178,7 +178,7 @@ export const deleteBusiness = async (req: Request, res: Response) => {
         });
         res.json(business);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao excluir empresa:', error);
         res.status(500).json({ error: "Falha ao excluir empresa" });
     }
 }

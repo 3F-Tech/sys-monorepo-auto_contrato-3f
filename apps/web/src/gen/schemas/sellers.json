@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "BigInt serializado" },
+    "name": { "type": "string", "nullable": true },
+    "cpf": { "type": "string", "nullable": true },
+    "email": { "type": "string", "nullable": true },
+    "phone": { "type": "string", "nullable": true },
+    "type": { "type": "string" },
+    "head_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "BigInt serializado"
+    },
+    "created_at": { "type": "string", "format": "date-time", "nullable": true },
+    "update_at": { "type": "string", "format": "date-time", "nullable": true }
+  },
+  "x-readme-ref-name": "Sellers"
+}

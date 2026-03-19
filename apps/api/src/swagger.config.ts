@@ -68,6 +68,13 @@ const options: swaggerJsdoc.Options = {
                         signed_date: { type: 'string', format: 'date-time', nullable: true },
                     },
                 },
+                ContractData: {
+                    type: 'object',
+                    additionalProperties: {
+                        type: 'string',
+                    },
+                    description: 'Objeto dinâmico contendo os dados do formulário do contrato',
+                },
             },
         },
     },

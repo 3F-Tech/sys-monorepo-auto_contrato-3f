@@ -7,8 +7,16 @@ import {
     submitImpulsePlano2,
     submitSeedPlano1,
     submitSeedPlano2,
-    submitSeedGrowth
-} from '../controllers/contractSheetsController';
+    submitSeedGrowth,
+    submitBommaAssessoria,
+    submitBommaConsultoria,
+    submitBommaAssessoriaSocialIlimitado,
+    submitBommaAssessoriaSocialArtes,
+    submitBommaAssessoriaSocialDeterminada,
+    submitBommaAssessoriaSocialVideos,
+    submitBommaSocialIlimitado,
+    submitBommaSocialDeterminada
+} from '../controllers/contractAutomationController';
 import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBusiness } from '../controllers/sellerBussinessController';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract } from '../controllers/contractController';
@@ -49,6 +57,14 @@ router.post('/contracts-sheets/impulse-plano-2', submitImpulsePlano2);
 router.post('/contracts-sheets/seed-plano-1', submitSeedPlano1);
 router.post('/contracts-sheets/seed-plano-2', submitSeedPlano2);
 router.post('/contracts-sheets/seed-plano-growth', submitSeedGrowth);
+router.post('/contracts-sheets/bomma-assessoria', submitBommaAssessoria);
+router.post('/contracts-sheets/bomma-consultoria', submitBommaConsultoria);
+router.post('/contracts-sheets/bomma-assessoria-social-ilimitado', submitBommaAssessoriaSocialIlimitado);
+router.post('/contracts-sheets/bomma-assessoria-social-artes', submitBommaAssessoriaSocialArtes);
+router.post('/contracts-sheets/bomma-assessoria-social-determinada', submitBommaAssessoriaSocialDeterminada);
+router.post('/contracts-sheets/bomma-assessoria-social-videos', submitBommaAssessoriaSocialVideos);
+router.post('/contracts-sheets/bomma-social-ilimitado', submitBommaSocialIlimitado);
+router.post('/contracts-sheets/bomma-social-determinada', submitBommaSocialDeterminada);
 
 // CONTRACT ROUTES
 router.get('/contracts', getContracts);

@@ -92,7 +92,7 @@
                         <img :src="bu.img_base64" class="h-full w-full object-cover" />
                     </div>
                     <div v-else class="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                        <Building2 class="h-3 w-3 text-white/20" :style="{ color: bu.color as string || undefined }" />
+                        <Building2 class="h-3 w-3 text-white/20" :style="{ color: (bu.color as string) || undefined }" />
                     </div>
 
                     <span class="text-[11px] font-bold text-white/70 group-hover/item:text-brand-cyan transition-colors truncate">{{ bu.name }}</span>
@@ -135,6 +135,7 @@ import { putSellersId } from '../../gen/hooks/putSellersId';
 import { getSellers } from '../../gen/hooks/getSellers';
 import { getBusiness } from '../../gen/hooks/getBusiness';
 import { putSellerBusiness } from '../../gen/hooks/putSellerBusiness';
+import { useToast } from '../../composables/useToast';
 import client from '../../api/client';
 import crypto from 'crypto-js';
 
@@ -156,6 +157,7 @@ const loading = ref(false);
 const allBusiness = ref<Business[]>([]);
 const heads = ref<Sellers[]>([]);
 const selectedBUs = ref<number[]>([]);
+const toast = useToast();
 
 const form = ref({
   name: '',
@@ -239,12 +241,13 @@ const handleSubmit = async () => {
         seller_business: updatedSellerBusiness as any 
     });
     
+    toast.success('Perfil atualizado com sucesso.');
     emit('updated');
     close();
   } catch (error: any) {
     console.error('Falha ao atualizar perfil:', error);
     const msg = error.response?.data?.error || 'Erro ao atualizar perfil. Verifique seus dados.';
-    alert(msg);
+    toast.error(msg);
   } finally {
     loading.value = false;
   }

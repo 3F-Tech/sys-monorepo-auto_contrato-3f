@@ -1,15 +1,14 @@
 ---
-description: Como adicionar um novo modelo de contrato ao sistema e conectar ao Google Sheets
+description: Como adicionar um novo modelo de contrato ao sistema e conectar ao Google Drive/Docs
 ---
 
-Este guia descreve os passos necessários para adicionar um novo modelo de contrato, desde a interface até a integração com a planilha.
+Este guia descreve os passos necessários para adicionar um novo modelo de contrato, desde a interface até a automação de documentos.
 
-### 1. Preparação da Planilha
-1. Abra a planilha central de contratos.
-2. Crie uma nova aba com o nome do contrato (ex: `Plano 3 - Impulse`).
-3. Garanta que as colunas sigam o padrão (A até Y) para que o mapeamento automático funcione.
-4. **IMPORTANTE**: Certifique-se de que a planilha está compartilhada com o e-mail da conta de serviço:
+### 1. Preparação do Modelo (Google Docs)
+1. Garanta que o modelo no Google Docs utilize variáveis no formato `{{VAR-NOME}}`.
+2. O arquivo deve estar em uma pasta acessível pela conta de serviço:
    `conta-antigravity@sharp-messenger-475111-k4.iam.gserviceaccount.com`
+3. Identifique o ID do arquivo (na URL do Docs).
 
 ### 2. Frontend: Criar o Formulário
 1. Crie um novo arquivo em `apps/web/src/views/contracts/steps/` (ex: `NovoContrato.vue`).
@@ -27,25 +26,26 @@ Este guia descreve os passos necessários para adicionar um novo modelo de contr
    - Importe o novo componente.
    - Adicione o nome do template no objeto `templatesByBU`.
    - Atualize a computed `activeFormComponent` para renderizar o novo componente.
-   - Atualize a computed `activeEndpoint` para definir a rota da API (ex: `/contracts/novo-contrato`).
+   - Atualize a computed `activeEndpoint` para definir a rota da API (ex: `/contracts-sheets/novo-contrato`).
 
 ### 4. Backend: Criar Schema de Validação
 No arquivo `apps/api/src/schemas/contractSubmissionSchema.ts`:
-1. Defina um novo schema Zod para o contrato (ex: `novoContratoSchema`).
-2. Adicione-o ao objeto `contractSchemas`.
+1. Certifique-se de que todos os campos utilizados no formulário estão cobertos pelo `contractDataSchema`.
 
 ### 5. Backend: Criar o Controller e Rota
-No arquivo `apps/api/src/controllers/contractSheetsController.ts`:
-1. Adicione uma nova exportação:
+No arquivo `apps/api/src/controllers/contractAutomationController.ts`:
+1. Adicione o novo `MODEL_ID` no objeto `MODEL_IDS`.
+2. Adicione uma nova exportação se necessário, ou use o padrão `handleContractSubmit`:
    ```typescript
    export const submitNovoContrato = (req: Request, res: Response) => 
-       handleContractSubmit(req, res, 'Nome Exato da Aba na Planilha', 'novoContratoSchema');
+       handleContractSubmit(req, res, 'nome-do-modelo');
    ```
 
 No arquivo `apps/api/src/routes/index.ts`:
-1. Registre a rota POST: `router.post('/contracts/novo-contrato', submitNovoContrato);`
+1. Registre a rota POST: `router.post('/contracts-sheets/novo-contrato', submitNovoContrato);`
 
 ### 6. Verificação
-1. Teste o preenchimento do CEP.
-2. Tente enviar campos vazios ou formatos inválidos (CNPJ/CPF) para garantir que as mensagens de erro apareçam.
-3. Verifique se a linha foi adicionada na aba correta da planilha após sucesso.
+1. Execute `pnpm run codegen` para gerar os tipos e hooks do frontend.
+2. Teste o preenchimento no frontend.
+3. Verifique se o link do Google Docs foi gerado e salvo corretamente no banco de dados.
+4. Confirme no Google Drive se o arquivo foi criado na pasta da BU correspondente.

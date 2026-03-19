@@ -25,7 +25,7 @@ export const getContracts = async (req: Request, res: Response) => {
         const contracts = await prisma.contracts.findMany();
         res.json(contracts);
     } catch (error: any) {
-        console.error('Error getting contracts:', error);
+        console.error('Erro ao obter contratos:', error);
         res.status(500).json({ error: 'Falha ao obter contratos', details: error.message });
     }
 };
@@ -62,7 +62,7 @@ export const getContractBySellerId = async (req: Request, res: Response) => {
         });
         res.json(contracts);
     } catch (error: any) {
-        console.error('Error getting contracts by seller ID:', error);
+        console.error('Erro ao obter contratos por ID do vendedor:', error);
         res.status(500).json({ error: 'Falha ao obter contratos', details: error.message });
     }
 };
@@ -99,7 +99,7 @@ export const getContractByBuId = async (req: Request, res: Response) => {
         });
         res.json(contracts);
     } catch (error: any) {
-        console.error('Error getting contracts by BU ID:', error);
+        console.error('Erro ao obter contratos por ID da BU:', error);
         res.status(500).json({ error: 'Falha ao obter contratos', details: error.message });
     }
 };
@@ -149,7 +149,7 @@ export const getContractByHeadId = async (req: Request, res: Response) => {
         
         res.json(contracts);
     } catch (error: any) {
-        console.error('Error getting team contracts:', error);
+        console.error('Erro ao obter contratos da equipe:', error);
         res.status(500).json({ error: 'Falha ao obter contratos da equipe', details: error.message });
     }
 };
@@ -191,7 +191,7 @@ export const createContract = async (req: Request, res: Response) => {
 
         res.json(contract);
     } catch (error: any) {
-        console.error('Error creating contract:', error);
+        console.error('Erro ao criar contrato:', error);
         res.status(500).json({ error: 'Falha ao criar contrato', details: error.message });
     }
 };
@@ -262,7 +262,7 @@ export const updateContract = async (req: Request, res: Response) => {
 
         res.json(contract);
     } catch (error: any) {
-        console.error('Error updating contract:', error);
+        console.error('Erro ao atualizar contrato:', error);
         res.status(500).json({ error: 'Falha ao atualizar contrato', details: error.message });
     }
 };
@@ -293,7 +293,7 @@ export const deleteContract = async (req: Request, res: Response) => {
         });
         res.json(contract);
     } catch (error: any) {
-        console.error('Error deleting contract:', error);
+        console.error('Erro ao deletar contrato:', error);
         res.status(500).json({ error: 'Falha ao deletar contrato', details: error.message });
     }
-};
+};

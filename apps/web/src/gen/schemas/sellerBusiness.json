@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "seller_id": { "type": "string", "description": "BigInt serializado" },
+    "business_id": { "type": "integer" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "x-readme-ref-name": "SellerBusiness"
+}

@@ -398,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../store/auth';
 import { useSellerStore } from '../store/seller';
@@ -432,11 +432,13 @@ import {
 import ProfileModal from '../components/profile/ProfileModal.vue';
 import ContractList from '../components/contracts/ContractList.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import { useToast } from '../composables/useToast';
 
 const authStore = useAuthStore();
 const sellerStore = useSellerStore();
 const contractStore = useContractStore();
 const router = useRouter();
+const toast = useToast();
 
 const profileModalOpen = ref(false);
 const isEditingTeam = ref(false);
@@ -724,8 +726,9 @@ const confirmDissociate = async () => {
     await sellerStore.fetchAllSellers();
     dissociateConfirmOpen.value = false;
     sellerToDissociate.value = null;
+    toast.success('Vendedor removido da equipe com sucesso.');
   } else {
-    alert('Não foi possível remover o vendedor da equipe. Tente novamente.');
+    toast.error('Não foi possível remover o vendedor da equipe. Tente novamente.');
   }
 };
 
@@ -804,7 +807,6 @@ const handleLogout = () => {
 };
 
 // Resetar vendedor ao trocar de BU
-import { watch } from 'vue';
 watch(selectedBUId, () => {
   selectedSellerId.value = '';
 });

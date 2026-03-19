@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "codegen": "kubb generate --config ../../kubb.config.ts",
+        "codegen": "kubb generate",
         "build": "vue-tsc && vite build",
         "preview": "vite preview"
     },
@@ -27,7 +27,7 @@
         "eslint-config-custom": "workspace:*",
         "postcss": "^8.4.35",
         "tailwindcss": "^3.4.1",
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vite": "^5.1.4",
         "vue-tsc": "^3.2.6"
     }

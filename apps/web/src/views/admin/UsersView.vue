@@ -116,6 +116,17 @@
 
     <!-- Modals -->
     <UserModal :is-open="modalOpen" :user="selectedUser" @close="closeModal" @saved="loadSellers" />
+    
+    <ConfirmModal 
+      :is-open="confirmDeleteOpen"
+      title="Excluir Usuário"
+      message="Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita."
+      confirm-text="Excluir"
+      cancel-text="Cancelar"
+      type="danger"
+      @confirm="confirmDelete"
+      @cancel="confirmDeleteOpen = false"
+    />
   </div>
 </template>
 
@@ -131,10 +142,11 @@ import {
   ArrowLeft,
   Mail,
   Calendar,
-  Loader2,
   Building2
 } from 'lucide-vue-next';
 import UserModal from '../../components/admin/UserModal.vue';
+import ConfirmModal from '../../components/ui/ConfirmModal.vue';
+import { useToast } from '../../composables/useToast';
 import { getSellers } from '../../gen/hooks/getSellers';
 import { getBusiness } from '../../gen/hooks/getBusiness';
 import { deleteSellersId } from '../../gen/hooks/deleteSellersId';
@@ -157,6 +169,7 @@ const sellers = ref<SellerWithRelations[]>([]);
 const allBusiness = ref<Business[]>([]);
 const loading = ref(true);
 const searchQuery = ref('');
+const toast = useToast();
 
 const isAdmin = computed(() => authStore.userRole === 'admin');
 const isHead = computed(() => authStore.userRole === 'head');
@@ -172,6 +185,8 @@ const panelLabel = computed(() => {
 // Modal state
 const modalOpen = ref(false);
 const selectedUser = ref<Sellers | null>(null);
+const confirmDeleteOpen = ref(false);
+const userIdToDelete = ref<any>(null);
 
 const loadSellers = async () => {
   loading.value = true;
@@ -181,9 +196,6 @@ const loadSellers = async () => {
       params.head_id = authStore.user?.id?.toString();
     }
     
-    // Se for coordenador, o backend deve filtrar pela BU do coordenador.
-    // Verificaremos se o backend suporta isso ou se precisamos filtrar no front.
-
     const [sellersData, busData] = await Promise.all([
       getSellers(params, { client }),
       getBusiness({ client })
@@ -192,6 +204,7 @@ const loadSellers = async () => {
     allBusiness.value = busData as Business[];
   } catch (error) {
     console.error('Falha ao buscar dados:', error);
+    toast.error('Erro ao carregar lista de usuários.');
   } finally {
     loading.value = false;
   }
@@ -248,15 +261,24 @@ const closeModal = () => {
   selectedUser.value = null;
 };
 
-const handleDelete = async (id: any) => {
-  if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+const handleDelete = (id: any) => {
+  userIdToDelete.value = id;
+  confirmDeleteOpen.value = true;
+};
+
+const confirmDelete = async () => {
+  if (!userIdToDelete.value) return;
 
   try {
-    await deleteSellersId(id, { client });
+    await deleteSellersId(userIdToDelete.value, { client });
+    toast.success('Usuário excluído com sucesso.');
     await loadSellers();
   } catch (error) {
     console.error('Falha ao excluir usuário:', error);
-    alert('Erro ao excluir usuário.');
+    toast.error('Erro ao excluir usuário.');
+  } finally {
+    confirmDeleteOpen.value = false;
+    userIdToDelete.value = null;
   }
 };
 

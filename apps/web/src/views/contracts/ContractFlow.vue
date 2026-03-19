@@ -188,8 +188,11 @@
             <div class="flex gap-3">
               <button @click="currentStep = 2"
                 class="px-8 py-3 rounded-2xl bg-brand-surface border border-brand-glass-border font-bold text-xs hover:bg-white/5 transition-all">Voltar</button>
-              <button @click="handleContractGenerate"
-                class="btn-primary px-10 py-3 rounded-2xl shadow-lg shadow-brand-cyan/20">Finalizar Contrato</button>
+              <button @click="handleContractGenerate" :disabled="isGenerating"
+                class="btn-primary px-10 py-3 rounded-2xl shadow-lg shadow-brand-cyan/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <Loader2 v-if="isGenerating" class="h-4 w-4 animate-spin" />
+                {{ isGenerating ? 'Gerando...' : 'Finalizar Contrato' }}
+              </button>
             </div>
           </div>
         </div>
@@ -216,13 +219,15 @@ import {
   FileText,
   ChevronRight,
   ShieldCheck,
-  Construction
+  Construction,
+  Loader2
 } from 'lucide-vue-next';
 import ImpulsePlano1 from './steps/ImpulsePlano1.vue';
 import ImpulsePlano2 from './steps/ImpulsePlano2.vue';
 import SeedPlano1 from './steps/SeedPlano1.vue';
 import SeedPlano2 from './steps/SeedPlano2.vue';
 import SeedPlanoGrowth from './steps/SeedPlanoGrowth.vue';
+import BommaTemplate from './steps/BommaTemplate.vue';
 
 import { useToast } from '../../composables/useToast';
 
@@ -238,6 +243,7 @@ const allBusiness = ref<Business[]>([]);
 const allSellers = ref<Sellers[]>([]);
 const selectedBU = ref<Business | null>(null);
 const selectedTemplate = ref('');
+const isGenerating = ref(false);
 
 // Objeto centralizado para todos os dados dos contratos
 const contractData = ref<Record<string, any>>({});
@@ -247,13 +253,14 @@ const formErrors = ref<Record<string, string>>({});
 // Mapeamento de Modelos por BU (Atualizado conforme imagem)
 const templatesByBU: Record<string, string[]> = {
   'Bomma': [
-    'Consultoria',
     'Assessoria',
-    'Assessoria + Artes',
-    'Assessoria + Edição de Vídeos',
-    'Assessoria + Social Media',
-    'Social Media',
-    'Tráfego Pago'
+    'Consultoria',
+    'Assessoria + Social Media (Qtd Min Artes)',
+    'Assessoria + Social Media (Qtd Min Determinada)',
+    'Assessoria + Social Media (Qtd Min Vídeos)',
+    'Assessoria + Social Media (Ilimitado)',
+    'Social Media (Ilimitado)',
+    'Social Media (Qtd Min Determinada)'
   ],
   'Impulse': [
     'Plano 1 - Geração de Oportunidade',
@@ -321,6 +328,11 @@ const activeFormComponent = computed(() => {
     if (templateName.includes('growth')) return SeedPlanoGrowth;
   }
 
+  if (buName.includes('bomma')) {
+    // Todos os modelos Bomma usam o mesmo componente base
+    return BommaTemplate;
+  }
+
   return null;
 });
 
@@ -340,6 +352,22 @@ const activeEndpoint = computed(() => {
     if (templateName.includes('plano 1')) return '/contracts-sheets/seed-plano-1';
     if (templateName.includes('plano 2')) return '/contracts-sheets/seed-plano-2';
     if (templateName.includes('growth')) return '/contracts-sheets/seed-plano-growth';
+  }
+
+  if (buName.includes('bomma')) {
+    // Mapeamento dinâmico para endpoints da Bomma
+    if (templateName.includes('assessoria') && !templateName.includes('social media')) return '/contracts-sheets/bomma-assessoria';
+    if (templateName.includes('consultoria')) return '/contracts-sheets/bomma-consultoria';
+    if (templateName.includes('assessoria') && templateName.includes('social media')) {
+      if (templateName.includes('artes')) return '/contracts-sheets/bomma-assessoria-social-artes';
+      if (templateName.includes('determinada')) return '/contracts-sheets/bomma-assessoria-social-determinada';
+      if (templateName.includes('vídeos')) return '/contracts-sheets/bomma-assessoria-social-videos';
+      if (templateName.includes('ilimitado')) return '/contracts-sheets/bomma-assessoria-social-ilimitado';
+    }
+    if (templateName.includes('social media') && !templateName.includes('assessoria')) {
+      if (templateName.includes('ilimitado')) return '/contracts-sheets/bomma-social-ilimitado';
+      if (templateName.includes('determinada')) return '/contracts-sheets/bomma-social-determinada';
+    }
   }
 
   return null;
@@ -432,22 +460,24 @@ const validateForm = () => {
   return true;
 };
 
-// Remove os erros em tempo real conforme os campos são preenchidos
+// Remove os erros em tempo real conforme os campos são preenchidos (com debounce)
+let validationTimeout: any = null;
 watch(
   contractData,
   () => {
-    // Re-valida para limpar erros que foram corrigidos
     if (Object.keys(formErrors.value).length === 0) return;
-    const currentValidation = getValidationRules(contractData.value);
     
-    // Mantém apenas os erros que ainda persistem no novo estado
-    const newErrors: Record<string, string> = {};
-    for (const key in formErrors.value) {
+    if (validationTimeout) clearTimeout(validationTimeout);
+    validationTimeout = setTimeout(() => {
+      const currentValidation = getValidationRules(contractData.value);
+      const newErrors: Record<string, string> = {};
+      for (const key in formErrors.value) {
         if (currentValidation[key]) {
-            newErrors[key] = currentValidation[key];
+          newErrors[key] = currentValidation[key];
         }
-    }
-    formErrors.value = newErrors;
+      }
+      formErrors.value = newErrors;
+    }, 300);
   },
   { deep: true }
 );
@@ -463,6 +493,7 @@ const handleContractGenerate = async () => {
     return;
   }
 
+  isGenerating.value = true;
   try {
     const response = await client.post(activeEndpoint.value, {
       data: contractData.value,
@@ -476,7 +507,21 @@ const handleContractGenerate = async () => {
     }
   } catch (error: any) {
     console.error('Erro ao gerar contrato:', error);
-    toastError('Erro ao enviar dados para a planilha: ' + (error.response?.data?.error || error.message));
+    const backendErrors = error.response?.data?.details;
+    if (Array.isArray(backendErrors)) {
+      const newErrors: Record<string, string> = { ...formErrors.value };
+      backendErrors.forEach((err: any) => {
+        // Mapeia o campo do backend para o campo do form (data.FIELD -> FIELD)
+        const field = err.field?.replace('data.', '');
+        if (field) newErrors[field] = err.message;
+      });
+      formErrors.value = newErrors;
+      toastWarning('Alguns campos possuem erros de validação.');
+    } else {
+      toastError('Erro ao gerar contrato: ' + (error.response?.data?.error || error.message));
+    }
+  } finally {
+    isGenerating.value = false;
   }
 };
 

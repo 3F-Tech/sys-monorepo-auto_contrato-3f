@@ -40,8 +40,8 @@ export const getSellerById = async (req: Request, res: Response) => {
         });
         res.json(seller);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch seller" });
+        console.error('Erro ao buscar vendedor por ID:', error);
+        res.status(500).json({ error: "Falha ao buscar vendedor por ID" });
     }
 }
 
@@ -79,8 +79,8 @@ export const getSellerByEmail = async (req: Request, res: Response) => {
         });
         res.json(seller);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch seller" });
+        console.error('Erro ao buscar vendedor por email:', error);
+        res.status(500).json({ error: "Falha ao buscar vendedor por email" });
     }
 }
 
@@ -170,7 +170,7 @@ export const getSellers = async (req: any, res: Response) => {
 
         res.json(serializedSellers);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao listar vendedores:', error);
         res.status(500).json({ error: "Falha ao buscar vendedores" });
     }
 }
@@ -241,7 +241,7 @@ export const login = async (req: Request, res: Response) => {
                 where: { id: seller.id },
                 data: { password: hashedPassword }
             });
-            console.log(`Password auto-repaired for user: ${normalizedEmail}`);
+            console.log(`Senha auto-reparada para o usuário: ${normalizedEmail}`);
         }
 
         // Gera o token JWT
@@ -322,7 +322,7 @@ export const createSeller = async (req: any, res: Response) => {
 
         res.json(serializedSeller);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao criar vendedor:', error);
         res.status(500).json({ error: "Falha ao criar vendedor" });
     }
 }
@@ -409,7 +409,7 @@ export const updateSeller = async (req: any, res: Response) => {
 
         res.json(serializedSeller);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao atualizar vendedor:', error);
         res.status(500).json({ error: "Falha ao atualizar vendedor" });
     }
 }
@@ -460,7 +460,7 @@ export const deleteSeller = async (req: any, res: Response) => {
 
         res.json(serializedSeller);
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao excluir vendedor:', error);
         res.status(500).json({ error: "Falha ao excluir vendedor" });
     }
 }

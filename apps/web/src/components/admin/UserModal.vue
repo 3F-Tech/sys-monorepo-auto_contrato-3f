@@ -166,6 +166,7 @@ import { getBusiness } from '../../gen/hooks/getBusiness';
 import { putSellerBusiness } from '../../gen/hooks/putSellerBusiness';
 import crypto from 'crypto-js';
 import { useAuthStore } from '../../store/auth';
+import { useToast } from '../../composables/useToast';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -175,6 +176,7 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'saved']);
 
 const authStore = useAuthStore();
+const toast = useToast();
 const loading = ref(false);
 const allBusiness = ref<Business[]>([]);
 const heads = ref<Sellers[]>([]);
@@ -312,12 +314,13 @@ const handleSubmit = async () => {
       }, { client });
     }
 
+    toast.success(props.user ? 'Vendedor atualizado com sucesso!' : 'Vendedor criado com sucesso!');
     emit('saved');
     close();
   } catch (error: any) {
     console.error('Falha ao salvar usuário e vínculos:', error);
     const msg = error.response?.data?.error || 'Erro ao salvar usuário. Verifique se o e-mail/CPF já existem.';
-    alert(msg);
+    toast.error(msg);
   } finally {
     loading.value = false;
   }

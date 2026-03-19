@@ -91,6 +91,7 @@ import type { Business } from '../../gen/types/Business';
 import { postBusiness } from '../../gen/hooks/postBusiness';
 import { putBusinessId } from '../../gen/hooks/putBusinessId';
 import client from '../../api/client';
+import { useToast } from '../../composables/useToast';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -99,6 +100,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'saved']);
 
+const toast = useToast();
 const loading = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const form = ref({
@@ -153,11 +155,12 @@ const handleSubmit = async () => {
       // Create
       await postBusiness({ data: form.value as any }, { client });
     }
+    toast.success(props.business ? 'Empresa atualizada com sucesso!' : 'Empresa criada com sucesso!');
     emit('saved');
     close();
   } catch (error) {
     console.error('Falha ao salvar empresa:', error);
-    alert('Erro ao salvar empresa. Verifique os dados.');
+    toast.error('Erro ao salvar empresa. Verifique os dados.');
   } finally {
     loading.value = false;
   }

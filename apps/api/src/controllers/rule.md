@@ -28,8 +28,11 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **Persistência Dupla**: O `contractSheetsController.ts` é responsável por salvar os dados simultaneamente no Google Sheets e no banco de dados local via Prisma.
 - **Planilhas**: O processamento de contratos é feito via abas dinâmicas.
 - **Banco de Dados (Prisma)**:
-  - **Título Padronizado**: `{{ Razão Social }} & {{ Nome da BU }} ({{ Plano }})`.
+  - **Título Padronizado**: `{{ Razão Social }} & {{ Nome da BU }} ({{ Plano }})`. (Exceção: Contratos BOMMA seguem nomenclatura formal específica).
   - **Conversão**: Valores monetários e datas brasileiros devem ser convertidos para `Decimal` e `DateTime` antes da persistência.
+33: - **Formatação p/ Google Docs**:
+34:   - **Moeda**: Adicione sempre "R$ " antes de valores monetários.
+35:   - **Instagram**: Adicione sempre "@" antes de handles de redes sociais.
 - **Mapeamento de Colunas (Sheets)**:
   - Padrão (Plano 1/2): **25 colunas** (A até Y).
   - Growth: **24 colunas** (A até X), com remoção automática da coluna "Prazo Contratual".

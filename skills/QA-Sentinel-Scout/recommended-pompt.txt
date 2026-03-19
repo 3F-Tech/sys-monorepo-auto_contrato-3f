@@ -1,0 +1,26 @@
+Ative o QA-Sentinel-Scout para Exploração Geral.
+
+1. ALVO E ACESSO:
+
+URL: [URL DE ACESSO]
+
+Login: [EMAIL PARA ACESSO] | 
+Senha: [SENHA PARA ACESSO] | 
+Role: [ROLE DO USUÁRIO (tem que ter especificado nos .md)]
+
+2. MISSÃO:
+Explore as rotas principais acessíveis para este cargo (Dashboard, Menus, Perfis). Procure por:
+
+Links ou botões que não funcionam.
+
+Erros de console ou rede (404/500).
+
+Inconsistências visuais óbvias (textos cortados, erros de grafia).
+
+3. EXECUÇÃO:
+Crie e rode o teste Playwright (apps/web/tests/scout-exploration.spec.ts) em modo --headed. Se encontrar um erro, tente entender o seletor via terminal antes de desistir.
+
+4. RESULTADO:
+Salve o relatório em test-results/scout-exploration-summary.md e me entregue apenas o Veredito do Scout aqui no chat.
+
+Use a skill @skill te auxiliar

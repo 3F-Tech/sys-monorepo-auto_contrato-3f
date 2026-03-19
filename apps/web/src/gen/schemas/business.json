@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "integer" },
+    "name": { "type": "string", "nullable": true },
+    "cnpj": { "type": "string", "nullable": true },
+    "color": { "type": "string", "nullable": true },
+    "img_base64": { "type": "string", "nullable": true },
+    "created_at": { "type": "string", "format": "date-time", "nullable": true },
+    "update_at": { "type": "string", "format": "date-time", "nullable": true }
+  },
+  "x-readme-ref-name": "Business"
+}
