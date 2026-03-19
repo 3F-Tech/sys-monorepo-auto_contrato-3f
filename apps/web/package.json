@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@meu-projeto/api-client": "workspace:*",
+        "apexcharts": "^5.10.4",
         "axios": "^1.6.0",
         "crypto-js": "^4.2.0",
         "date-fns": "^4.1.0",
@@ -17,7 +18,8 @@
         "maska": "^3.2.0",
         "pinia": "^2.1.7",
         "vue": "^3.4.19",
-        "vue-router": "^4.2.5"
+        "vue-router": "^4.2.5",
+        "vue3-apexcharts": "^1.11.1"
     },
     "devDependencies": {
         "@automacao_contrato/tsconfig": "workspace:*",

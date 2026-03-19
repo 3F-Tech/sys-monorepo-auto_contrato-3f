@@ -1,0 +1,40 @@
+# Individualizar Metas de Equipe
+
+O objetivo é garantir que a meta da equipe (alvo `head`) seja tratada de forma totalmente independente das metas dos vendedores individuais. Atualmente, o usuário relata que a meta da equipe está refletindo a soma das metas dos vendedores, e deseja que ela seja adicionada individualmente.
+
+## Propostas de Mudanças
+
+### 1. Backend (`apps/api`)
+*   **Prisma (`prisma/schema.prisma`)**: O campo `target_type` no modelo `goals` é uma string, então é compatível com novos tipos.
+*   **Zod Schema (`src/schemas/goalSchema.ts`)**: Atualizar o enum para `['seller', 'head', 'team', 'bu']`.
+*   **Controller (`src/controllers/goalController.ts`)**:
+    *   `admin`: Pode criar todos os tipos (`bu`, `head`, `team`, `seller`).
+    *   `coord`: Somente `bu`.
+    *   `head`: Somente `team` (sua própria equipe) e `seller` (seus vendedores). Ele **não** pode criar sua própria meta de `head` (esta é criada pelo Admin).
+*   **Gerar Swagger**: Após as mudanças, garantir que o `swagger.json` foi atualizado (ocorre automaticamente no `npm run dev` da API).
+
+### 2. Sincronização Kubb (`apps/web`)
+*   **Codegen**: Rodar `npm run codegen` (Kubb) na pasta web para atualizar os hooks e tipos do frontend com o novo enum de metas.
+
+### 3. Frontend Store (`apps/web/src/store/goals.ts`)
+*   Ajustar lógica se necessário para lidar com o novo enum.
+
+### 4. Dashboard (`apps/web/src/views/Home.vue`)
+*   Ajustar o `activeGoal` para buscar a meta correta:
+    *   Se um vendedor for selecionado → Alvo `seller`.
+    *   Se uma equipe for selecionada → Alvo `team`.
+    *   Se o usuário for um Head vendo seu próprio dashboard geral → Alvo `team`.
+
+### 5. Modal de Configuração (`apps/web/src/components/dashboard/SetGoalModal.vue`)
+*   Adicionar a opção "Equipe" (tipo `team`) para o Head.
+*   Garantir que o Admin consiga ver e setar metas do tipo `head` para os Heads.
+
+
+
+## Plano de Verificação
+
+### Testes Manuais
+1.  **Criar metas para vendedores**: Criar uma meta de R$ 50.000 para o "Vendedor A" e R$ 50.000 para o "Vendedor B".
+2.  **Verificar Dashboard da Equipe**: Selecionar a equipe do Head correspondente. O dashboard deve mostrar "Inativo" ou uma meta de R$ 0 (se nenhuma meta individual de Head foi criada), e NÃO a soma de R$ 100.000.
+3.  **Criar meta do Head**: Criar uma meta individual para o Head de R$ 120.000.
+4.  **Validar Dashboard**: Verificar se o dashboard da equipe agora mostra corretamente R$ 120.000 como meta, mantendo a performance real (Actual) como a soma dos contratos dos vendedores.

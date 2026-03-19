@@ -20,6 +20,7 @@ import {
 import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBusiness } from '../controllers/sellerBussinessController';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract } from '../controllers/contractController';
+import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalController';
 
 const router = Router();
 
@@ -74,6 +75,11 @@ router.get('/contracts/head/:id', getContractByHeadId);
 router.post('/contracts', createContract);
 router.put('/contracts/:id', updateContract);
 router.delete('/contracts/:id', deleteContract);
+
+// GOAL ROUTES
+router.get('/goals', getGoals);
+router.post('/goals', createOrUpdateGoal);
+router.delete('/goals/:id', deleteGoal);
 
 // AUTH ROUTES
 // (A rota de login foi movida para o topo das Rotas Públicas)

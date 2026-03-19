@@ -226,7 +226,7 @@ const handleSubmit = async () => {
     }
 
     if (form.value.password) {
-      sellerPayload.password = crypto.MD5(form.value.password).toString();
+      sellerPayload.password = form.value.password;
     }
 
     // Update Seller

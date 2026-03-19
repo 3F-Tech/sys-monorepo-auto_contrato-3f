@@ -196,6 +196,70 @@
           "type": "string"
         },
         "description": "Objeto dinâmico contendo os dados do formulário do contrato"
+      },
+      "Goal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "seller",
+              "head",
+              "team",
+              "bu"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "description": "BigInt serializado"
+          },
+          "p1": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decimal"
+          },
+          "tcv": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decimal"
+          },
+          "nmrr": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decimal"
+          },
+          "implementation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decimal"
+          },
+          "monthly": {
+            "type": "string",
+            "nullable": true,
+            "description": "Decimal"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "created_by": {
+            "type": "string",
+            "description": "BigInt serializado"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     }
   },
@@ -746,6 +810,48 @@
             "description": "Contrato deletado"
           }
         }
+      }
+    },
+    "/goals": {
+      "post": {
+        "summary": "Criar ou atualizar meta",
+        "tags": [
+          "Goals"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Goal"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar metas filtradas por visibilidade",
+        "tags": [
+          "Goals"
+        ]
+      }
+    },
+    "/goals/{id}": {
+      "delete": {
+        "summary": "Excluir uma meta",
+        "tags": [
+          "Goals"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
       }
     },
     "/health": {

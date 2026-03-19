@@ -1,11 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { GoogleDriveService } from '../services/googleDriveService';
 import { GoogleDocsService } from '../services/googleDocsService';
-
 import { contractSubmissionSchema } from '../schemas/contractSubmissionSchema';
-
-const prisma = new PrismaClient();
+import { prisma } from '../prisma';
 
 // IDs das Pastas de Destino por BU (conforme google-drive.rule.md)
 const DESTINATION_FOLDERS = {
