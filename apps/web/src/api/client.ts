@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: 'http://localhost:3007',
-  // baseURL: '/api', // Para produção
+  baseURL: (import.meta as any).env.DEV
+    ? 'http://localhost:3007'
+    : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
