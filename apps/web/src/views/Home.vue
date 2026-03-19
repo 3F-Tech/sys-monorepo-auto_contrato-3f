@@ -765,7 +765,7 @@ const contractsForP1 = computed(() => {
 
   const [year, month] = selectedMonth.value.split('-').map(Number);
   const startDate = new Date(year, month - 1, 6, 0, 0, 0); // Dia 06 do mês anterior
-  const endDate = new Date(year, month, 5, 23, 59, 59);    // Dia 05 do mês selecionado
+  const endDate = new Date(year, month, 0, 23, 59, 59);    // Último dia do mês selecionado
 
   return allContracts.filter(c => {
     const targetDateStr = c.first_payment_date || c.created_at;
