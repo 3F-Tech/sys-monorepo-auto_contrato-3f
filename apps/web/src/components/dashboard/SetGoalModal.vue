@@ -311,7 +311,10 @@ const targetIdOptions = computed(() => {
   if (form.value.target_type === 'bu') {
     let options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
     if (authStore.user?.type === 'admin') {
-      options = options.filter(o => o.label.toLowerCase().trim() !== '3f');
+      options = options.filter(o => {
+        const name = o.label.toLowerCase();
+        return !(name.includes('3f') || name.includes('group') || name.includes('venture'));
+      });
       options.unshift({ value: '99', label: '3F Venture' });
     }
     return options;

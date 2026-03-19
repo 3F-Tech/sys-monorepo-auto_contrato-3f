@@ -617,8 +617,11 @@ const buOptionsFormatted = computed(() => {
   }
 
   businessList.value.forEach(bu => {
-    // Evita duplicar "3F" se já adicionamos a opção manual de grupo para admin
-    if (user.value?.type === 'admin' && bu.name?.toLowerCase().trim() === '3f') return;
+    // Evita duplicar qualquer variação de "3F", "Group" ou "Venture" se já temos a opção consolidada
+    if (user.value?.type === 'admin') {
+      const name = bu.name?.toLowerCase() || '';
+      if (name.includes('3f') || name.includes('group') || name.includes('venture')) return;
+    }
     options.push({ value: bu.id?.toString() || '', label: bu.name || '' });
   });
 
