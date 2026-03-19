@@ -180,8 +180,8 @@ const availableRoles = computed(() => {
   if (authStore.userRole === 'admin' || authStore.userRole === 'coord') {
     return [
       { value: 'seller', label: 'Vendedor' },
-      { value: 'head', label: 'Head de Equipe' },
-      { value: 'coord', label: 'Coordenador de BU' },
+      { value: 'head', label: 'Coordenador de BU' },
+      { value: 'coord', label: 'Head de BU' },
       { value: 'admin', label: 'Administrador' }
     ];
   }

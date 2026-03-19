@@ -798,8 +798,8 @@ const filterSellerOptions = computed(() => {
 const userRoleLabel = computed(() => {
   const roles = {
     'seller': 'Vendedor',
-    'head': 'Head de Equipe',
-    'coord': 'Coordenador de BU',
+    'head': 'Coordenador de BU',
+    'coord': 'Head de BU',
     'admin': 'Administrador do Sistema'
   };
   return roles[user.value?.type as keyof typeof roles] || 'Colaborador';
@@ -921,8 +921,8 @@ const stats = computed(() => {
 const getRoleLabel = (type?: string) => {
   const roles = {
     'seller': 'Vendedor',
-    'head': 'Head de Equipe',
-    'coord': 'Coordenador de BU',
+    'head': 'Coordenador de BU',
+    'coord': 'Head de BU',
     'admin': 'Administrador'
   };
   return roles[type as keyof typeof roles] || 'Colaborador';
