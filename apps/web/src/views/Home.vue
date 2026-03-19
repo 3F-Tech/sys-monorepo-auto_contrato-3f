@@ -78,14 +78,23 @@
         <!-- Dynamic Filter Bar (Now Sticky for the whole dashboard) -->
         <div class="sticky top-20 z-40 py-4 -mx-2 px-4 bg-brand-deep/80 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-brand-deep/50 flex flex-wrap items-center gap-4">
           
-          <!-- Mode Toggle (Only for Admin/Coord) -->
-          <div v-if="['admin', 'coord'].includes(user?.type || '')" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <!-- Mode Toggle (Only for Admin/Coord/Head) -->
+          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
+              v-if="['admin', 'coord'].includes(user?.type || '')"
               @click="dashboardFilterType = 'bu'" 
               :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Por BU
+            </button>
+            <button 
+              v-if="user?.type === 'admin'"
+              @click="dashboardFilterType = 'coord'" 
+              :class="dashboardFilterType === 'coord' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Por Coordenador
             </button>
             <button 
               @click="dashboardFilterType = 'team'" 
@@ -96,13 +105,24 @@
             </button>
           </div>
 
-          <!-- BU Filter (In Mode BU) -->
+          <!-- BU Filter (In Mode BU or Coord) -->
           <div v-if="dashboardFilterType === 'bu' && ['admin', 'coord'].includes(user?.type || '')" class="min-w-[200px] flex-1 md:flex-none">
             <CustomSelect 
               v-model="selectedBUId" 
               :options="buOptionsFormatted"
               placeholder="Selecionar BU"
               :icon="Building2"
+            />
+          </div>
+
+          <!-- Coordinator Filter (Admin only) -->
+          <div v-if="dashboardFilterType === 'coord' && user?.type === 'admin'" class="min-w-[260px] flex-1 md:flex-none">
+            <CustomSelect 
+              v-model="selectedCoordId" 
+              :options="coordOptionsFormatted"
+              placeholder="Selecionar Coordenador"
+              :icon="Users"
+              searchable
             />
           </div>
 
@@ -469,8 +489,9 @@ const contractFilterMode = ref<'own' | 'team'>('own');
 const businessList = ref<Business[]>([]);
 
 // Dashboard Filters State
-const dashboardFilterType = ref<'bu' | 'team'>((authStore.user?.type === 'coord' || authStore.user?.type === 'admin') ? 'bu' : 'team');
+const dashboardFilterType = ref<'bu' | 'team' | 'coord'>((authStore.user?.type === 'coord' || authStore.user?.type === 'admin') ? 'bu' : 'team');
 const selectedBUId = ref<string | null>(authStore.user?.type === 'admin' ? '99' : null);
+const selectedCoordId = ref<string | null>(null);
 const selectedTeamId = ref<string | null>(authStore.user?.type === 'head' ? (authStore.user?.id?.toString() || null) : null);
 const selectedSellerId = ref<string | null>(null);
 
@@ -519,6 +540,16 @@ const activeGoal = computed(() => {
     const buId = selectedBUId.value || (user.value?.type === 'coord' ? (user.value as any)?.seller_business?.[0]?.business_id?.toString() : null);
     if (!buId) return null;
     return goalStore.getGoalByTarget('bu', buId);
+  }
+
+  if (dashboardFilterType.value === 'coord') {
+    if (!selectedCoordId.value) return null;
+    const head = sellerStore.allSellers.find(s => s.id?.toString() === selectedCoordId.value);
+    const buIds = (head as any)?.seller_business?.map((sb: any) => sb.business_id.toString()) || [];
+    if (buIds.length === 0) return null;
+    
+    const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
+    return sumGoals(buGoals, 'head', selectedCoordId.value);
   }
 
   // Lógica para Equipe ou Vendedor
@@ -589,6 +620,16 @@ const buOptionsFormatted = computed(() => {
     options.push({ value: bu.id?.toString() || '', label: bu.name || '' });
   });
 
+  return options;
+});
+
+const coordOptionsFormatted = computed(() => {
+  const options = [{ value: '', label: '-' }];
+  sellerStore.allSellers
+    .filter(s => s.type === 'head')
+    .forEach(h => {
+      options.push({ value: h.id?.toString() || '', label: h.name || '' });
+    });
   return options;
 });
 
@@ -1087,9 +1128,10 @@ watch(selectedBUId, () => {
   selectedSellerId.value = '';
 });
 
-// Resetar filtros ao trocar o modo (BU vs Equipe)
+// Resetar filtros ao trocar o modo (BU vs Coordenador vs Equipe)
 watch(dashboardFilterType, (newMode) => {
   selectedBUId.value = '';
+  selectedCoordId.value = '';
   selectedSellerId.value = '';
   // Se for head, mantém sua equipe, senão reseta.
   if (authStore.user?.type !== 'head') {
