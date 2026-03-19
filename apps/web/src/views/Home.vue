@@ -118,7 +118,7 @@
               :class="(dashboardFilterType === 'team' && selectedTeamId && !selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
-              Minha Equipe
+              Minhas Equipes
             </button>
             <button 
               @click="dashboardFilterType = 'bu'" 
@@ -152,15 +152,15 @@
 
           <!-- Team/Seller Filters (In Mode Team or for Coord/Seller) -->
           <template v-if="dashboardFilterType === 'team' || !['admin', 'coord'].includes(user?.type || '')">
-            <!-- Team Filter (Hidden for Head, now using Switcher) -->
-            <div v-if="['admin', 'coord'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
+            <!-- Team Filter -->
+            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
                <CustomSelect 
                 v-model="selectedTeamId" 
                 :options="teamOptionsFormatted"
                 placeholder="Selecionar Equipe"
                 :icon="Users"
                 searchable
-                allow-clear
+                :allow-clear="user?.type !== 'head'"
               />
             </div>
 
@@ -673,7 +673,6 @@ const teamOptionsFormatted = computed(() => {
   
   if (user.value?.type === 'head') {
     if (user.value.id) {
-      options.push({ value: `head_own_${user.value.id}`, label: 'Minha Meta (Pessoal)' });
       options.push({ value: user.value.id.toString(), label: `Minha Equipe` });
     }
     return options;
