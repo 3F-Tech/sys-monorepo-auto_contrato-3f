@@ -49,8 +49,8 @@
         <div class="hidden sm:block h-12 w-px bg-brand-cyan/10"></div>
         
         <div class="hidden sm:flex flex-col items-start">
-          <span class="text-[12px] font-black text-white/70 uppercase tracking-[0.3em]">Dia 05</span>
-          <p class="text-[8px] font-bold text-brand-cyan uppercase tracking-widest leading-none">Fechamento do Ciclo</p>
+          <span class="text-[12px] font-black text-white/70 uppercase tracking-[0.3em]">Fechamento</span>
+          <p class="text-[8px] font-bold text-brand-cyan uppercase tracking-widest leading-none">Último dia do Mês</p>
         </div>
       </div>
       
@@ -239,16 +239,11 @@ const updateCountdown = () => {
   let year = now.getFullYear();
   let month = now.getMonth(); 
 
-  // Se passou do dia 05, a meta é para o próximo mês
-  if (now.getDate() >= 5) {
-    month += 1;
-    if (month > 11) {
-      month = 0;
-      year += 1;
-    }
-  }
+  // O encerramento agora é sempre no último dia do mês selecionado
+  // Pegamos o último dia do mês atual
+  const lastDay = new Date(year, month + 1, 0, 23, 59, 59);
   
-  const target = new Date(year, month, 5, 23, 59, 59);
+  const target = lastDay;
   const diff = target.getTime() - now.getTime();
   
   if (diff <= 0) {
