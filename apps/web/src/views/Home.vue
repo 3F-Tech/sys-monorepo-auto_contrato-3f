@@ -296,7 +296,7 @@
 
       <!-- Contract Management List -->
       <section class="space-y-6">
-        <ContractList :contracts="filteredContractsForStats" :isHead="user?.type === 'head'"
+        <ContractList :contracts="filteredGeneralContracts" :isHead="user?.type === 'head'"
           :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :filterMode="contractFilterMode"
           :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="isLoading" @update:filterMode="handleFilterModeChange" />
       </section>
@@ -535,23 +535,27 @@ const isFiltering = ref(false);
 const isLoading = computed(() => contractStore.loading || isFiltering.value);
 
 const currentPerformance = computed(() => {
-  const contracts = onlySignedContractsForStats.value;
+  const p1Contracts = signedP1Contracts.value;
+  const genContracts = signedGeneralContracts.value;
   
-  const p1 = contracts.reduce((acc, curr) => acc + (parseFloat(curr.first_payment_amount as any) || 0), 0);
-  const tcv = contracts.reduce((acc, curr) => {
+  const p1 = p1Contracts.reduce((acc, curr) => acc + (parseFloat(curr.first_payment_amount as any) || 0), 0);
+  
+  const tcv = genContracts.reduce((acc, curr) => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
     const implementation = parseFloat(curr.implementation_fee as any) || 0;
     const term = curr.contractual_term || 12;
     return acc + (monthly * term) + implementation;
   }, 0);
-  const nmrr = contracts.reduce((acc, curr) => {
+
+  const nmrr = genContracts.reduce((acc, curr) => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
     const implementation = parseFloat(curr.implementation_fee as any) || 0;
     const term = curr.contractual_term || 12;
     return acc + (implementation / term) + monthly;
   }, 0);
-  const implementation = contracts.reduce((acc, curr) => acc + (parseFloat(curr.implementation_fee as any) || 0), 0);
-  const monthly = contracts.reduce((acc, curr) => acc + (parseFloat(curr.monthly_fee as any) || 0), 0);
+
+  const implementation = genContracts.reduce((acc, curr) => acc + (parseFloat(curr.implementation_fee as any) || 0), 0);
+  const monthly = genContracts.reduce((acc, curr) => acc + (parseFloat(curr.monthly_fee as any) || 0), 0);
 
   return { p1, tcv, nmrr, implementation, monthly };
 });
@@ -755,31 +759,47 @@ const processedContracts = computed(() => {
   }));
 });
 
-const filteredContractsForStats = computed(() => {
+const contractsForP1 = computed(() => {
   let allContracts = processedContracts.value;
+  if (!selectedMonth.value) return allContracts;
 
-  // 1. Filtragem por Mês (Regra de Competência: 06 a 05)
-  if (selectedMonth.value) {
-    const [year, month] = selectedMonth.value.split('-').map(Number);
-    const startDate = new Date(year, month - 1, 6, 0, 0, 0);
-    const endDate = new Date(year, month, 5, 23, 59, 59);
+  const [year, month] = selectedMonth.value.split('-').map(Number);
+  const startDate = new Date(year, month - 1, 6, 0, 0, 0); // Dia 06 do mês anterior
+  const endDate = new Date(year, month, 5, 23, 59, 59);    // Dia 05 do mês selecionado
 
-    allContracts = allContracts.filter(c => {
-      // Prioriza Data P1, fallback para Criação se P1 não existir (para retrocompatibilidade)
-      const targetDateStr = c.first_payment_date || c.created_at;
-      if (!targetDateStr) return false;
-      
-      const targetDate = new Date(targetDateStr);
-      return targetDate >= startDate && targetDate <= endDate;
-    });
-  }
+  return allContracts.filter(c => {
+    const targetDateStr = c.first_payment_date || c.created_at;
+    if (!targetDateStr) return false;
+    const targetDate = new Date(targetDateStr);
+    return targetDate >= startDate && targetDate <= endDate;
+  });
+});
+
+const contractsForGeneralPerformance = computed(() => {
+  let allContracts = processedContracts.value;
+  if (!selectedMonth.value) return allContracts;
+
+  const [year, month] = selectedMonth.value.split('-').map(Number);
+  const startDate = new Date(year, month - 1, 1, 0, 0, 0); // Dia 01 do mês selecionado
+  const endDate = new Date(year, month, 0, 23, 59, 59);    // Último dia do mês
+
+  return allContracts.filter(c => {
+    // Para performance geral, usamos a data de criação ou data de assinatura
+    const targetDateStr = c.created_at;
+    if (!targetDateStr) return false;
+    const targetDate = new Date(targetDateStr);
+    return targetDate >= startDate && targetDate <= endDate;
+  });
+});
+
+const applyFilters = (contracts: any[]) => {
+  let filtered = contracts;
 
   // 2. Filtragem por BU
   if (selectedBUId.value) {
     const buIdNum = Number(selectedBUId.value);
-    // Se ID for 99 (3F Group), mostra TODOS os contratos (Geral)
     if (buIdNum !== 99) {
-      allContracts = allContracts.filter(c => c.bu_id === buIdNum);
+      filtered = filtered.filter(c => c.bu_id === buIdNum);
     }
   }
 
@@ -787,33 +807,33 @@ const filteredContractsForStats = computed(() => {
   if (selectedTeamId.value) {
     const teamMembersSet = new Set<string>();
     teamMembersSet.add(selectedTeamId.value);
-    
     sellerStore.allSellers.forEach(s => {
       if (s.head_id?.toString() === selectedTeamId.value) {
         teamMembersSet.add(s.id?.toString() || '');
       }
     });
-
-    allContracts = allContracts.filter(c => c.seller_id && teamMembersSet.has(c.seller_id.toString()));
+    filtered = filtered.filter(c => c.seller_id && teamMembersSet.has(c.seller_id.toString()));
   }
 
   // 4. Filtragem por Vendedor
   if (selectedSellerId.value) {
-    allContracts = allContracts.filter(c => c.seller_id === selectedSellerId.value);
+    filtered = filtered.filter(c => c.seller_id === selectedSellerId.value);
   }
 
   // Se for seller (sem ser leader), garante que só vê os próprios
   if (user.value?.type === 'seller') {
-     allContracts = allContracts.filter(c => c.seller_id === user.value?.id);
+    filtered = filtered.filter(c => c.seller_id === user.value?.id);
   }
 
-  return allContracts;
-});
+  return filtered;
+};
 
-// Contratos apenas assinados para os indicadores (Stats Cards)
-const onlySignedContractsForStats = computed(() => {
-  return filteredContractsForStats.value.filter(c => c.signed);
-});
+const filteredP1Contracts = computed(() => applyFilters(contractsForP1.value));
+const filteredGeneralContracts = computed(() => applyFilters(contractsForGeneralPerformance.value));
+
+// Contratos assinados apenas para os cálculos de valores
+const signedP1Contracts = computed(() => filteredP1Contracts.value.filter(c => c.signed));
+const signedGeneralContracts = computed(() => filteredGeneralContracts.value.filter(c => c.signed));
 
 // Opções Dinâmicas para os Filtros
 const filterBUOptions = computed(() => {
@@ -882,56 +902,56 @@ const userRoleLabel = computed(() => {
 
 // Stats Reais vindos da Store de Contratos
 const stats = computed(() => {
-  const contracts = onlySignedContractsForStats.value;
+  const p1Contracts = filteredP1Contracts.value;
+  const genContracts = filteredGeneralContracts.value;
+  const signedGenContracts = signedGeneralContracts.value;
 
-  // Cálculo de valores específicos
-  const totalImplementation = contracts.reduce((acc, curr) => {
+  // Cálculo de valores específicos (General Month)
+  const totalImplementation = genContracts.filter(c => c.signed).reduce((acc, curr) => {
     return acc + (parseFloat(curr.implementation_fee as any) || 0);
   }, 0);
 
-  const totalMonthly = contracts.reduce((acc, curr) => {
+  const totalMonthly = genContracts.filter(c => c.signed).reduce((acc, curr) => {
     return acc + (parseFloat(curr.monthly_fee as any) || 0);
   }, 0);
 
-  const signedContracts = contracts.filter(c => c.signed && c.signed_date);
+  const signedContractsForTime = genContracts.filter(c => c.signed && c.signed_date);
   let averageSignatureTime = 'N/A';
-  if (signedContracts.length > 0) {
-    const totalDays = signedContracts.reduce((acc, curr) => {
-      // Usar asserção de tipo para evitar erro de 'undefined' já que filtramos acima
+  if (signedContractsForTime.length > 0) {
+    const totalDays = signedContractsForTime.reduce((acc, curr) => {
       const start = new Date(curr.created_at as string);
       const end = new Date(curr.signed_date as string);
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return acc + diffDays;
     }, 0);
-    averageSignatureTime = Number((totalDays / signedContracts.length).toFixed(1)) + ' dias';
+    averageSignatureTime = Number((totalDays / signedContractsForTime.length).toFixed(1)) + ' dias';
   }
 
-  // Cálculo de Valor P1 (Simplificado pois o array já está filtrado pela competência)
-  const totalP1 = contracts.reduce((acc, curr) => {
+  // Cálculo de Valor P1 (Window 06 to 05)
+  const totalP1 = p1Contracts.filter(c => c.signed).reduce((acc, curr) => {
     return acc + (parseFloat(curr.first_payment_amount as any) || 0);
   }, 0);
 
-  // Cálculo de TCV (Total Contract Value) e NMRR (Normalized Monthly Recurring Revenue)
-  const totalTCV = contracts.reduce((acc, curr) => {
-    const monthly = parseFloat(curr.monthly_fee as any) || 0;
-    const implementation = parseFloat(curr.implementation_fee as any) || 0;
-    const term = curr.contractual_term || 12; // Default 12 meses para Growth/Indeterminado
-    return acc + (monthly * term) + implementation;
-  }, 0);
-
-  const totalNMRR = contracts.reduce((acc, curr) => {
+  // Cálculo de TCV e NMRR (General Month)
+  const totalTCV = genContracts.filter(c => c.signed).reduce((acc, curr) => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
     const implementation = parseFloat(curr.implementation_fee as any) || 0;
     const term = curr.contractual_term || 12;
-    // NMRR = (Implementation / Term) + Monthly
+    return acc + (monthly * term) + implementation;
+  }, 0);
+
+  const totalNMRR = genContracts.filter(c => c.signed).reduce((acc, curr) => {
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    const implementation = parseFloat(curr.implementation_fee as any) || 0;
+    const term = curr.contractual_term || 12;
     return acc + (implementation / term) + monthly;
   }, 0);
 
   const baseStats = [
     {
       label: 'Contratos Gerados',
-      value: contracts.length.toString(),
+      value: genContracts.length.toString(),
       icon: FileText,
       type: 'operation'
     },
@@ -943,8 +963,8 @@ const stats = computed(() => {
     },
     {
       label: 'Taxa de Assinatura',
-      value: filteredContractsForStats.value.length > 0
-        ? Number(((filteredContractsForStats.value.filter(c => c.signed).length / filteredContractsForStats.value.length) * 100).toFixed(1)) + '%'
+      value: genContracts.length > 0
+        ? Number(((genContracts.filter(c => c.signed).length / genContracts.length) * 100).toFixed(1)) + '%'
         : '0%',
       icon: ShieldCheck,
       type: 'operation'
