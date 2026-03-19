@@ -312,7 +312,7 @@ const targetIdOptions = computed(() => {
     let options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
     if (authStore.user?.type === 'admin') {
       options = options.filter(o => o.label.toLowerCase().trim() !== '3f');
-      options.unshift({ value: '99', label: '3F Group (Consolidado)' });
+      options.unshift({ value: '99', label: '3F Venture' });
     }
     return options;
   } else {

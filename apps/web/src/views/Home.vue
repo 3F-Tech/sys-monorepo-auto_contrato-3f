@@ -613,7 +613,7 @@ const buOptionsFormatted = computed(() => {
   
   // Opção consolidada para Administradores
   if (user.value?.type === 'admin') {
-    options.push({ value: '99', label: '3F Group (Geral)' });
+    options.push({ value: '99', label: '3F Venture' });
   }
 
   businessList.value.forEach(bu => {
