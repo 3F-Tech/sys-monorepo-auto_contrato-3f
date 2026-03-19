@@ -78,10 +78,9 @@
         <!-- Dynamic Filter Bar (Now Sticky for the whole dashboard) -->
         <div class="sticky top-20 z-40 py-4 -mx-2 px-4 bg-brand-deep/80 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-brand-deep/50 flex flex-wrap items-center gap-4">
           
-          <!-- Mode Toggle (Only for Admin/Coord/Head) -->
-          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <!-- Mode Toggle (Only for Admin/Coord) -->
+          <div v-if="['admin', 'coord'].includes(user?.type || '')" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
-              v-if="['admin', 'coord'].includes(user?.type || '')"
               @click="dashboardFilterType = 'bu'" 
               :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
@@ -102,6 +101,24 @@
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Por Equipe
+            </button>
+          </div>
+
+          <!-- Head (Coordenador) Switcher -->
+          <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+            <button 
+              @click="selectedTeamId = `head_own_${user.id}`" 
+              :class="selectedTeamId?.startsWith('head_own_') ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Minha Meta
+            </button>
+            <button 
+              @click="selectedTeamId = user.id.toString()" 
+              :class="!selectedTeamId?.startsWith('head_own_') ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Minha Equipe
             </button>
           </div>
 
@@ -126,22 +143,21 @@
             />
           </div>
 
-          <!-- Team/Seller Filters (In Mode Team or for Head) -->
+          <!-- Team/Seller Filters (In Mode Team or for Coord/Seller) -->
           <template v-if="dashboardFilterType === 'team' || !['admin', 'coord'].includes(user?.type || '')">
-            <!-- Team Filter -->
-            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
+            <!-- Team Filter (Hidden for Head, now using Switcher) -->
+            <div v-if="['admin', 'coord'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
                <CustomSelect 
                 v-model="selectedTeamId" 
                 :options="teamOptionsFormatted"
                 placeholder="Selecionar Equipe"
                 :icon="Users"
                 searchable
-                :allow-clear="user?.type !== 'head'"
-                :disabled="user?.type === 'head'"
+                allow-clear
               />
             </div>
 
-            <!-- Seller Filter -->
+            <!-- Seller Filter (For Admin, Coord, Head, etc) -->
             <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
                <CustomSelect 
                 v-model="selectedSellerId" 
@@ -497,7 +513,7 @@ const selectedSellerId = ref<string | null>(null);
 
 watch(() => authStore.user, (u) => {
   if (u?.type === 'head' && !selectedTeamId.value) {
-    selectedTeamId.value = u.id?.toString() || '';
+    selectedTeamId.value = `head_own_${u.id}`; // Default to "Minha Meta" for Coordenador (Head)
   }
   if (u?.type === 'admin' && !selectedBUId.value) {
     selectedBUId.value = '99';
