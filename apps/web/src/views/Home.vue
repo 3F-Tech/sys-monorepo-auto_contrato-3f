@@ -165,7 +165,7 @@
             </div>
 
             <!-- Seller Filter (For Admin, Coord, Head, etc) -->
-            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
+            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '') && !(user?.type === 'head' && selectedTeamId?.startsWith('head_own_'))" class="min-w-[260px] flex-1 md:flex-none">
                <CustomSelect 
                 v-model="selectedSellerId" 
                 :options="sellerOptionsFormatted"
@@ -1171,6 +1171,13 @@ watch(dashboardFilterType, (newMode) => {
   // Se for head, mantém sua equipe, senão reseta.
   if (authStore.user?.type !== 'head') {
     selectedTeamId.value = '';
+  }
+});
+
+// Resetar vendedor ao selecionar "Minha Meta" (Coordenador)
+watch(selectedTeamId, (newVal) => {
+  if (newVal?.startsWith('head_own_')) {
+    selectedSellerId.value = '';
   }
 });
 
