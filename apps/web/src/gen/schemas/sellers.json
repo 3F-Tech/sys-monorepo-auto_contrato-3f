@@ -12,6 +12,7 @@
       "nullable": true,
       "description": "BigInt serializado"
     },
+    "team_id": { "type": "integer", "nullable": true },
     "created_at": { "type": "string", "format": "date-time", "nullable": true },
     "update_at": { "type": "string", "format": "date-time", "nullable": true }
   },

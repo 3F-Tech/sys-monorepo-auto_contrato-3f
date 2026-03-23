@@ -36,7 +36,24 @@
 
     <!-- Modals -->
     <ProfileModal :is-open="profileModalOpen" @close="profileModalOpen = false" @updated="handleProfileUpdated" />
-    <SetGoalModal :is-open="goalModalOpen" @close="goalModalOpen = false" />
+    <SetGoalModal 
+      :is-open="goalModalOpen" 
+      :show-periods-only="goalModalMode === 'periods'"
+      :initial-view="goalModalMode === 'periods' ? 'form' : 'list'"
+      :initial-target="activeTarget"
+      @saved="handleGoalSaved"
+      @close="goalModalOpen = false" 
+    />
+    <SetCacModal 
+      :is-open="cacModalOpen"
+      :month="selectedMonthNum"
+      :year="selectedYearNum"
+      @close="cacModalOpen = false"
+      @saved="handleCacSaved"
+    />
+
+
+
     <ConfirmModal 
       :is-open="dissociateConfirmOpen" 
       title="Remover da Equipe"
@@ -88,14 +105,6 @@
               Por BU
             </button>
             <button 
-              v-if="user?.type === 'admin'"
-              @click="dashboardFilterType = 'coord'" 
-              :class="dashboardFilterType === 'coord' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Por Coordenador
-            </button>
-            <button 
               @click="dashboardFilterType = 'team'" 
               :class="dashboardFilterType === 'team' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
@@ -107,25 +116,36 @@
           <!-- Head (Coordenador) Switcher -->
           <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
-              @click="dashboardFilterType = 'team'; selectedTeamId = `head_own_${user.id}`" 
-              :class="(dashboardFilterType === 'team' && selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Minha Meta
-            </button>
-            <button 
-              @click="dashboardFilterType = 'team'; selectedTeamId = user.id.toString()" 
+              @click="dashboardFilterType = 'team'; selectedTeamId = (teamStore.teams.length === 1 ? 'team_' + teamStore.teams[0].id : user.id.toString())" 
               :class="(dashboardFilterType === 'team' && selectedTeamId && !selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Minhas Equipes
             </button>
             <button 
-              @click="dashboardFilterType = 'bu'" 
+              @click="dashboardFilterType = 'bu'; selectedBUId = '99'" 
               :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Minhas BUs
+            </button>
+          </div>
+
+          <!-- Seller Mode Toggle -->
+          <div v-if="user?.type === 'seller' && user.team_id" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+            <button 
+              @click="selectedSellerId = user.id.toString(); selectedTeamId = ''" 
+              :class="selectedSellerId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Minha Meta
+            </button>
+            <button 
+              @click="selectedSellerId = ''; selectedTeamId = 'team_' + user.team_id" 
+              :class="selectedTeamId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
+            >
+              Meta Equipe
             </button>
           </div>
 
@@ -150,19 +170,24 @@
             />
           </div>
 
-          <!-- Team/Seller Filters (In Mode Team or for Coord/Seller) -->
-          <template v-if="dashboardFilterType === 'team' || !['admin', 'coord'].includes(user?.type || '')">
+          <!-- Team/Seller Filters (In Mode Team or for Seller) -->
+          <template v-if="dashboardFilterType === 'team' || (user?.type === 'seller')">
             <!-- Team Filter -->
             <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
                <CustomSelect 
                 v-model="selectedTeamId" 
                 :options="teamOptionsFormatted"
-                placeholder="Selecionar Equipe"
+                :placeholder="user?.type === 'seller' ? 'Minha Meta vs Equipe' : 'Selecionar Equipe'"
                 :icon="Users"
                 searchable
-                :allow-clear="user?.type !== 'head'"
+                :allow-clear="true"
               />
+
             </div>
+            
+            <!-- Hidden filter when in Minha Meta to ensure logic clarity -->
+            <div v-if="user?.type === 'head' && selectedTeamId?.startsWith('head_own_')" class="hidden"></div>
+
 
             <!-- Seller Filter (For Admin, Coord, Head, etc) -->
             <div v-if="['admin', 'coord', 'head'].includes(user?.type || '') && !(user?.type === 'head' && selectedTeamId?.startsWith('head_own_'))" class="min-w-[260px] flex-1 md:flex-none">
@@ -193,8 +218,12 @@
         <GoalsDashboard 
           :goal="activeGoal" 
           :actuals="currentPerformance"
-          @open-settings="goalModalOpen = true"
+          :contracts="filteredP1Contracts"
+          @open-settings="handleOpenGoalSettings('goals')"
+          @open-periods="handleOpenGoalSettings('periods')"
         />
+
+
 
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4">
         <div class="space-y-1">
@@ -216,8 +245,16 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             <div v-for="(stat, index) in stats.filter(s => s.type === 'finance')" :key="stat.label"
               class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
+              :class="stat.isCac && user?.type === 'admin' ? 'cursor-pointer active:scale-95' : ''"
+              @click="stat.isCac && user?.type === 'admin' ? (cacModalOpen = true) : null"
               :style="{ animationDelay: (index * 100) + 'ms' }">
               
+              <div v-if="stat.isCac && user?.type === 'admin'" class="absolute top-4 right-4 z-20">
+                <div class="p-1.5 rounded-lg bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
+                  <Settings2 class="h-3 w-3" />
+                </div>
+              </div>
+
               <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
                 <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
               </div>
@@ -301,87 +338,38 @@
           :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="isLoading" @update:filterMode="handleFilterModeChange" />
       </section>
 
-      <!-- Team/BU Users Section (Admin, Head or Coord) -->
-      <section v-if="['admin', 'head', 'coord'].includes(user?.type || '')" class="space-y-6">
+      <!-- Team/BU Users Section (Legacy removed for all Leadership) -->
+      <section v-if="false" class="space-y-6">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-bold flex items-center gap-2">
             <Users2 class="h-5 w-5 text-brand-cyan" />
-            {{ teamSectionTitle }}
+            Integrantes da BU
           </h3>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center justify-between gap-4">
             <div class="relative group/search">
-              <Search
-                class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20 group-focus-within/search:text-brand-cyan transition-colors" />
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20 group-focus-within/search:text-brand-cyan transition-colors" />
               <input v-model="searchQuery" type="text" placeholder="Buscar por nome..."
                 class="pl-9 pr-4 py-1.5 rounded-lg bg-brand-surface border border-brand-glass-border text-[10px] text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan/50 focus:bg-brand-cyan/5 transition-all w-48" />
             </div>
-            <button v-if="user?.type === 'head'" @click="isEditingTeam = !isEditingTeam"
-              :class="['flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-wider',
-                isEditingTeam ? 'bg-brand-cyan text-brand-deep border-brand-cyan' : 'bg-brand-surface border-brand-glass-border text-brand-cyan hover:bg-white/5']">
-              <Settings2 v-if="!isEditingTeam" class="h-3.5 w-3.5" />
-              <Check v-else class="h-3.5 w-3.5" />
-              {{ isEditingTeam ? 'Finalizar Edição' : 'Editar Equipe' }}
-            </button>
-            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">{{ visibleUsers.length }}
-              Integrantes</span>
+            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">{{ visibleUsers.length }} Integrantes</span>
           </div>
         </div>
 
         <div v-if="sellerStore.loading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div v-for="i in 3" :key="i"
-            class="h-32 rounded-2xl bg-brand-offset/50 animate-pulse border border-brand-glass-border"></div>
+          <div v-for="i in 3" :key="i" class="h-32 rounded-2xl bg-brand-offset/50 animate-pulse border border-brand-glass-border"></div>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div v-for="seller in visibleUsers" :key="seller.id"
             class="p-6 rounded-2xl bg-brand-offset border border-brand-glass-border hover:border-brand-cyan/30 transition-all flex items-center justify-between group">
             <div class="flex items-center gap-4">
-              <div
-                class="h-12 w-12 rounded-full bg-brand-surface border border-brand-glass-border flex items-center justify-center text-brand-cyan font-bold group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
+              <div class="h-12 w-12 rounded-full bg-brand-surface border border-brand-glass-border flex items-center justify-center text-brand-cyan font-bold group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
                 {{ seller.name ? seller.name[0] : '?' }}
               </div>
               <div>
                 <h4 class="font-bold text-sm">{{ seller.name }}</h4>
-                <p class="text-[10px] text-white/40 uppercase tracking-wider font-medium">{{ getRoleLabel(seller.type)
-                }}
-                </p>
+                <p class="text-[10px] text-white/40 uppercase tracking-wider font-medium">{{ getRoleLabel(seller.type) }}</p>
               </div>
-            </div>
-            <button v-if="isEditingTeam && user?.type === 'head'" @click="handleDissociateMember(seller.id!)"
-              class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-500/20"
-              title="Remover da Equipe">
-              <UserMinus class="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Available Sellers (Only in Edit Mode for Head) -->
-        <div v-if="isEditingTeam && user?.type === 'head' && availableSellers.length > 0" class="pt-8 space-y-6">
-          <div class="flex items-center gap-3">
-            <div class="h-px flex-1 bg-brand-glass-border"></div>
-            <h4 class="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Vendedores Disponíveis</h4>
-            <div class="h-px flex-1 bg-brand-glass-border"></div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div v-for="seller in availableSellers" :key="seller.id"
-              class="p-6 rounded-2xl bg-brand-surface/30 border border-brand-glass-border border-dashed hover:border-brand-cyan/50 hover:bg-brand-cyan/5 transition-all flex items-center justify-between group">
-              <div class="flex items-center gap-4">
-                <div
-                  class="h-12 w-12 rounded-full bg-brand-offset border border-brand-glass-border flex items-center justify-center text-white/20 font-bold group-hover:text-brand-cyan transition-all">
-                  {{ seller.name ? seller.name[0] : '?' }}
-                </div>
-                <div>
-                  <h4 class="font-bold text-sm text-white/60 group-hover:text-white transition-colors">{{ seller.name }}
-                  </h4>
-                  <p class="text-[10px] text-white/20 uppercase tracking-wider font-medium">Sem Líder</p>
-                </div>
-              </div>
-              <button @click="handleAssociateMember(seller.id!)"
-                class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan hover:bg-brand-cyan hover:text-brand-deep transition-all shadow-lg hover:shadow-brand-cyan/20"
-                title="Puxar para Equipe">
-                <UserPlus class="h-4 w-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -419,6 +407,12 @@
           </button>
         </div>
       </section>
+      
+      <!-- Team Manager (Dynamic placement) -->
+      <section v-if="['admin', 'head', 'coord'].includes(user?.type || '')" class="pt-4">
+        <TeamManager />
+      </section>
+
 
 
 
@@ -494,19 +488,31 @@ import GoalsDashboard from '../components/dashboard/GoalsDashboard.vue';
 import SetGoalModal from '../components/dashboard/SetGoalModal.vue';
 import ContractList from '../components/contracts/ContractList.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import TeamManager from '../components/dashboard/TeamManager.vue';
 import { useToast } from '../composables/useToast';
 import CustomSelect from '../components/ui/CustomSelect.vue';
+import { useTeamStore } from '../store/team';
+import { useCacStore } from '../store/cac';
+import SetCacModal from '../components/dashboard/SetCacModal.vue';
+
 
 const authStore = useAuthStore();
 const sellerStore = useSellerStore();
 const contractStore = useContractStore();
 const goalStore = useGoalStore();
+const teamStore = useTeamStore();
+const cacStore = useCacStore();
 const router = useRouter();
 const toast = useToast();
 
 const profileModalOpen = ref(false);
 const goalModalOpen = ref(false);
+const cacModalOpen = ref(false);
+const goalModalMode = ref<'goals' | 'periods'>('goals');
+const activeTarget = ref<{ type: string; id: string } | null>(null);
 const isEditingTeam = ref(false);
+
+
 const searchQuery = ref('');
 const contractFilterMode = ref<'own' | 'team'>('own');
 const businessList = ref<Business[]>([]);
@@ -515,19 +521,36 @@ const businessList = ref<Business[]>([]);
 const dashboardFilterType = ref<'bu' | 'team' | 'coord'>((authStore.user?.type === 'coord' || authStore.user?.type === 'admin') ? 'bu' : 'team');
 const selectedBUId = ref<string | null>(authStore.user?.type === 'admin' ? '99' : null);
 const selectedCoordId = ref<string | null>(null);
-const selectedTeamId = ref<string | null>(authStore.user?.type === 'head' ? (authStore.user?.id?.toString() || null) : null);
+const selectedTeamId = ref<string | null>(null);
 const selectedSellerId = ref<string | null>(null);
 
 watch(() => authStore.user, (u) => {
-  if (u?.type === 'head' && !selectedTeamId.value) {
-    selectedTeamId.value = `head_own_${u.id}`; // Default to "Minha Meta" for Coordenador (Head)
+  if (u?.type === 'head') {
+    dashboardFilterType.value = 'bu';
+    selectedBUId.value = '99'; // Default to "Todas" for Coordenador (Head)
   }
   if (u?.type === 'admin' && !selectedBUId.value) {
     selectedBUId.value = '99';
   }
 }, { immediate: true });
 
+const handleOpenGoalSettings = (mode: 'goals' | 'periods') => {
+  if (mode === 'periods' && activeGoal.value) {
+    activeTarget.value = {
+      type: activeGoal.value.target_type,
+      id: activeGoal.value.target_id.toString()
+    };
+  } else {
+    activeTarget.value = null;
+  }
+  
+  goalModalMode.value = mode;
+  goalModalOpen.value = true;
+};
+
+
 const dissociateConfirmOpen = ref(false);
+
 const sellerToDissociate = ref<string | null>(null);
 
 // Performance & Optimization State
@@ -560,12 +583,40 @@ const currentPerformance = computed(() => {
   return { p1, tcv, nmrr, implementation, monthly };
 });
 
+const selectedMonthNum = computed(() => {
+  const [_, month] = selectedMonth.value.split('-').map(Number);
+  return month;
+});
+
+const selectedYearNum = computed(() => {
+  const [year, _] = selectedMonth.value.split('-').map(Number);
+  return year;
+});
+
+const currentCacValue = computed(() => {
+  // Se filtrado por BU específica (não 3F)
+  if (dashboardFilterType.value === 'bu' && selectedBUId.value && selectedBUId.value !== '99') {
+    const buCac = cacStore.getBuCac(Number(selectedBUId.value));
+    return buCac ? Number(buCac.amount) : 0;
+  }
+  // Caso contrário, mostra o total (3F)
+  return cacStore.totalCac;
+});
+
 const activeGoal = computed(() => {
   const [year, month] = selectedMonth.value.split('-').map(Number);
   
   if (dashboardFilterType.value === 'bu') {
     const buId = selectedBUId.value || (user.value?.type === 'coord' ? (user.value as any)?.seller_business?.[0]?.business_id?.toString() : null);
     if (!buId) return null;
+
+    // Se for 'Todas' (99) e for Coordenador (Head/Coord), soma suas BUs
+    if (buId === '99' && (user.value?.type === 'head' || user.value?.type === 'coord')) {
+      const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id.toString()) || [];
+      const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && myBUIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
+      return sumGoals(buGoals, user.value.type, user.value.id.toString(), month, year);
+    }
+
     return goalStore.getGoalByTarget('bu', buId);
   }
 
@@ -576,7 +627,7 @@ const activeGoal = computed(() => {
     if (buIds.length === 0) return null;
     
     const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
-    return sumGoals(buGoals, 'head', selectedCoordId.value);
+    return sumGoals(buGoals, 'head', selectedCoordId.value, month, year);
   }
 
   // Lógica para Equipe ou Vendedor
@@ -595,52 +646,108 @@ const activeGoal = computed(() => {
     if (buIds.length === 0) return null;
     
     const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
-    return sumGoals(buGoals, 'head', headId);
+    return sumGoals(buGoals, 'head', headId, month, year);
   }
 
   // Caso 2: Meta de Equipe - Soma dos Vendedores
+  if (teamIdStr.startsWith('team_')) {
+    const teamId = parseInt(teamIdStr.replace('team_', ''));
+    const team = teamStore.teams.find(t => t.id === teamId);
+    if (!team) return null;
+
+    // Tenta encontrar uma meta definida diretamente para a Equipe
+    const directTeamGoal = goalStore.goals.find(g => 
+      g.target_type === 'team' && 
+      (g.target_id.toString() === teamIdStr || g.target_id.toString() === teamId.toString()) && 
+      g.month === month && 
+      g.year === year
+    );
+    if (directTeamGoal) return directTeamGoal;
+    
+    const memberIds = team.sellers_sellers_team_idToteams?.map((m: any) => m.id.toString()) || [];
+    const memberGoals = goalStore.goals.filter(g => 
+      g.target_type === 'seller' && 
+      memberIds.includes(g.target_id.toString()) && 
+      g.month === month && 
+      g.year === year
+    );
+    
+    return sumGoals(memberGoals, 'team', teamId.toString(), month, year);
+  }
+
   const members = sellerStore.allSellers.filter(s => s.head_id?.toString() === teamIdStr || s.id?.toString() === teamIdStr);
   const memberIds = members.map(m => m.id?.toString() || '');
-  const memberGoals = goalStore.goals.filter(g => g.target_type === 'seller' && memberIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
   
-  return sumGoals(memberGoals, 'team', teamIdStr);
+  // Tenta encontrar uma meta definida diretamente para o Head/Equipe
+  const directGoal = goalStore.goals.find(g => 
+    (g.target_type === 'head' || g.target_type === 'team') && 
+    (g.target_id.toString() === teamIdStr || 
+     g.target_id.toString() === teamIdStr.replace('team_', '').replace('head_own_', '')) && 
+    g.month === month && 
+    g.year === year
+  );
+  
+  if (directGoal) return directGoal;
+
+  // Se não houver meta direta, soma as metas individuais dos vendedores
+  const memberGoals = goalStore.goals.filter(g => 
+    g.target_type === 'seller' && 
+    memberIds.includes(g.target_id.toString()) && 
+    g.month === month && 
+    g.year === year
+  );
+  
+  return sumGoals(memberGoals, 'team', teamIdStr, month, year);
 });
 
-const sumGoals = (goals: Goal[], type: string, id: string): Goal => {
-  const result = {
-    id: 0,
-    target_type: type,
-    target_id: id,
-    p1: 0,
-    tcv: 0,
-    nmrr: 0,
-    implementation: 0,
-    monthly: 0,
-    month: 0,
-    year: 0
-  };
+const sumGoals = (goals: Goal[], type: string, id: string, month: number, year: number): Goal | null => {
+  if (!goals.length) return null;
+  // Limpa o ID de qualquer prefixo (ex: team_123 -> 123)
+  const cleanId = id.replace('team_', '').replace('head_own_', '');
   
-  goals.forEach(g => {
-    result.p1 += Number(g.p1 || 0);
-    result.tcv += Number(g.tcv || 0);
-    result.nmrr += Number(g.nmrr || 0);
-    result.implementation += Number(g.implementation || 0);
-    result.monthly += Number(g.monthly || 0);
-  });
+  const init = { p1: 0, tcv: 0, nmrr: 0, implementation: 0, monthly: 0 };
   
-  return result as any;
+  const result = goals.reduce((acc, g) => {
+    acc.p1 += Number(g.p1 || 0);
+    acc.tcv += Number(g.tcv || 0);
+    acc.nmrr += Number(g.nmrr || 0);
+    acc.implementation += Number(g.implementation || 0);
+    acc.monthly += Number(g.monthly || 0);
+    return acc;
+  }, { ...init });
+
+  // Retornamos os períodos como null para que o gráfico da equipe/BU
+  // siga uma linha linear baseada no total somado, sem "herdar" conflitos
+  // de curvas individuais dos vendedores, a menos que uma meta específica
+  // seja criada para o grupo.
+  return { 
+    ...result, 
+    id: 0, 
+    target_type: type, 
+    target_id: cleanId, 
+    month, 
+    year,
+    p1_period_1: null,
+    p1_period_2: null,
+    p1_period_3: null,
+    p1_period_4: null
+  } as any;
 };
+
 
 const user = computed(() => authStore.user);
 const firstName = computed(() => user.value?.name?.split(' ')[0] || 'Usuário');
 const userInitials = computed(() => user.value?.name?.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || '??');
 
 const buOptionsFormatted = computed(() => {
-  const options = [{ value: '', label: '-' }];
+  const options: { value: string; label: string }[] = [];
+
   
-  // Opção consolidada para Administradores
+  // Opção consolidada para Administradores e Coordenadores
   if (user.value?.type === 'admin') {
     options.push({ value: '99', label: '3F Venture' });
+  } else if (user.value?.type === 'head' || user.value?.type === 'coord') {
+    options.push({ value: '99', label: 'Todas' });
   }
 
   businessList.value.forEach(bu => {
@@ -650,8 +757,8 @@ const buOptionsFormatted = computed(() => {
       if (name.includes('3f') || name.includes('group') || name.includes('venture')) return;
     }
     
-    // Para Head (Coordenador), mostra apenas as BUs às quais ele está vinculado
-    if (user.value?.type === 'head') {
+    // Para Head e Coord, mostra apenas as BUs às quais ele está vinculado
+    if (user.value?.type === 'head' || user.value?.type === 'coord') {
       const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
       if (!myBUIds.includes(bu.id)) return;
     }
@@ -663,7 +770,8 @@ const buOptionsFormatted = computed(() => {
 });
 
 const coordOptionsFormatted = computed(() => {
-  const options = [{ value: '', label: '-' }];
+  const options: { value: string; label: string }[] = [];
+
   sellerStore.allSellers
     .filter(s => s.type === 'head')
     .forEach(h => {
@@ -675,21 +783,20 @@ const coordOptionsFormatted = computed(() => {
 const teamOptionsFormatted = computed(() => {
   const options: { value: string; label: string }[] = [];
   
-  if (user.value?.type === 'head') {
-    if (user.value.id) {
-      options.push({ value: user.value.id.toString(), label: `Minha Equipe` });
-    }
+  // Para ADMIN, HEAD e COORD, mostramos as equipes REAIS cadastradas
+  if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
+    teamStore.teams.forEach(t => {
+      options.push({ value: `team_${t.id}`, label: t.name });
+    });
     return options;
   }
+  
+  // Para Vendedor, permite alternar entre sua meta individual e a da sua equipe
+  if (user.value?.type === 'seller' && user.value.team_id) {
+    const myTeam = teamStore.teams.find(t => t.id === user.value?.team_id);
+    options.push({ value: `team_${user.value.team_id}`, label: myTeam?.name || 'Minha Equipe' });
+  }
 
-  options.push({ value: '', label: '-' });
-  let heads = sellerStore.allSellers.filter(s => s.type === 'head');
-  heads.forEach(h => {
-    const idStr = h.id?.toString() || '';
-    if (idStr && !options.some(opt => opt.value === idStr)) {
-      options.push({ value: idStr, label: `Equipe de ${h.name}` });
-    }
-  });
   return options;
 });
 
@@ -697,11 +804,18 @@ const sellerOptionsFormatted = computed(() => {
   let sellers = sellerStore.allSellers;
   
   if (selectedTeamId.value) {
-    sellers = sellers.filter(s => s.id?.toString() === selectedTeamId.value || s.head_id?.toString() === selectedTeamId.value);
+    if (selectedTeamId.value.startsWith('head_own_')) {
+      const headId = selectedTeamId.value.replace('head_own_', '');
+      sellers = sellers.filter(s => s.id?.toString() === headId);
+    } else if (selectedTeamId.value.startsWith('team_')) {
+      const teamId = parseInt(selectedTeamId.value.replace('team_', ''));
+      sellers = sellers.filter(s => s.team_id === teamId);
+    } else {
+      sellers = sellers.filter(s => s.id?.toString() === selectedTeamId.value || s.head_id?.toString() === selectedTeamId.value);
+    }
   }
 
   return [
-    { value: '', label: '-' },
     ...sellers.map(s => ({ 
       value: s.id?.toString() || '', 
       label: s.id?.toString() === user.value?.id?.toString() ? `${s.name} (Eu)` : (s.name || '')
@@ -764,8 +878,10 @@ const contractsForP1 = computed(() => {
   if (!selectedMonth.value) return allContracts;
 
   const [year, month] = selectedMonth.value.split('-').map(Number);
-  const startDate = new Date(year, month - 1, 6, 0, 0, 0); // Dia 06 do mês anterior
-  const endDate = new Date(year, month, 0, 23, 59, 59);    // Último dia do mês selecionado
+  // Início: dia 06 do mês selecionado
+  const startDate = new Date(year, month - 1, 6, 0, 0, 0); 
+  // Fim: dia 05 do mês subsequente
+  const endDate = new Date(year, month, 5, 23, 59, 59);
 
   return allContracts.filter(c => {
     const targetDateStr = c.first_payment_date || c.created_at;
@@ -795,32 +911,49 @@ const contractsForGeneralPerformance = computed(() => {
 const applyFilters = (contracts: any[]) => {
   let filtered = contracts;
 
-  // 2. Filtragem por BU
-  if (selectedBUId.value) {
+  // 1. Filtragem por BU
+  if (dashboardFilterType.value === 'bu' && selectedBUId.value) {
     const buIdNum = Number(selectedBUId.value);
-    if (buIdNum !== 99) {
+    if (buIdNum === 99) {
+      // Se for Coordenador (Head ou Coord), filtra apenas pelas BUs dele
+      if (user.value?.type === 'head' || user.value?.type === 'coord') {
+        const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
+        filtered = filtered.filter(c => myBUIds.includes(c.bu_id));
+      }
+      // Se for Admin, 99 (Venture) vê tudo, então não filtra.
+    } else {
       filtered = filtered.filter(c => c.bu_id === buIdNum);
     }
   }
 
-  // 3. Filtragem por Equipe
-  if (selectedTeamId.value) {
+  // 2. Filtragem por Equipe
+  if (dashboardFilterType.value === 'team' && selectedTeamId.value) {
+    const teamIdStr = selectedTeamId.value;
     const teamMembersSet = new Set<string>();
-    teamMembersSet.add(selectedTeamId.value);
-    sellerStore.allSellers.forEach(s => {
-      if (s.head_id?.toString() === selectedTeamId.value) {
-        teamMembersSet.add(s.id?.toString() || '');
-      }
-    });
+
+    if (teamIdStr.startsWith('team_')) {
+      const teamId = parseInt(teamIdStr.replace('team_', ''));
+      const team = teamStore.teams.find(t => t.id === teamId);
+      team?.sellers_sellers_team_idToteams?.forEach((m: any) => teamMembersSet.add(m.id.toString()));
+    } else {
+      // Caso clássico: Head ID ou "Minha Meta" (head_own_X)
+      const cleanId = teamIdStr.replace('head_own_', '');
+      teamMembersSet.add(cleanId);
+      sellerStore.allSellers.forEach(s => {
+        if (s.head_id?.toString() === cleanId) {
+          teamMembersSet.add(s.id?.toString() || '');
+        }
+      });
+    }
     filtered = filtered.filter(c => c.seller_id && teamMembersSet.has(c.seller_id.toString()));
   }
 
-  // 4. Filtragem por Vendedor
+  // 3. Filtragem por Vendedor Individual
   if (selectedSellerId.value) {
-    filtered = filtered.filter(c => c.seller_id === selectedSellerId.value);
+    filtered = filtered.filter(c => c.seller_id.toString() === selectedSellerId.value.toString());
   }
 
-  // Se for seller (sem ser leader), garante que só vê os próprios
+  // 4. Segurança de Papel: Se for vendedor comum, vê só os próprios
   if (user.value?.type === 'seller') {
     filtered = filtered.filter(c => c.seller_id === user.value?.id);
   }
@@ -998,13 +1131,31 @@ const stats = computed(() => {
       value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalNMRR),
       icon: Target,
       type: 'finance'
+    },
+    {
+      label: 'Custo por Aquisição (CAC)',
+      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentCacValue.value),
+      icon: DollarSign,
+      type: 'finance',
+      isCac: true
+    },
+    {
+      label: 'ROI P1',
+      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+        (p1Contracts.filter(c => c.signed).length > 0 
+          ? (totalP1 / p1Contracts.filter(c => c.signed).length) 
+          : 0) - currentCacValue.value
+      ),
+      icon: TrendingUp,
+      type: 'finance'
     }
   ];
 
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
+    const userCount = visibleUsers.value.length;
     baseStats.push({
       label: user.value?.type === 'admin' ? 'Total de Colaboradores' : (user.value?.type === 'head' ? 'Vendedores na Equipe' : 'Integrantes da BU'),
-      value: visibleUsers.value.length.toString(),
+      value: userCount > 0 ? userCount.toString() : '0',
       icon: Users2,
       type: 'team'
     });
@@ -1077,7 +1228,7 @@ const availableSellers = computed(() => {
 
 const handleAssociateMember = async (sellerId: string) => {
   if (!user.value?.id) return;
-  const res = await sellerStore.updateSeller(sellerId, { head_id: user.value.id });
+  const res = await sellerStore.updateSeller(sellerId, { head_id: user.value.id.toString() });
   if (res.success) {
     await sellerStore.fetchAllSellers();
   }
@@ -1119,6 +1270,7 @@ onMounted(async () => {
 
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
     promises.push(sellerStore.fetchAllSellers());
+    promises.push(cacStore.fetchCac(selectedMonthNum.value, selectedYearNum.value));
   }
 
   // Busca as BUs para exibir imagens nos contratos
@@ -1134,6 +1286,7 @@ onMounted(async () => {
     } else if (user.value.type === 'head') {
       contractFilterMode.value = 'team';
       promises.push(contractStore.fetchTeamContracts(sellerId));
+      promises.push(teamStore.fetchTeams());
     } else if (user.value.type === 'coord') {
       const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
       if (myBUIds.length > 0) {
@@ -1172,10 +1325,21 @@ const handleProfileUpdated = () => {
   }
 };
 
+const handleGoalSaved = async () => {
+  goalModalOpen.value = false;
+  const [year, month] = selectedMonth.value.split('-').map(Number);
+  await goalStore.fetchGoals(month, year);
+};
+
+const handleCacSaved = async () => {
+  await cacStore.fetchCac(selectedMonthNum.value, selectedYearNum.value);
+};
+
 const handleLogout = () => {
   authStore.logout();
   router.push('/login');
 };
+
 
 // Resetar vendedor ao trocar de BU
 watch(selectedBUId, () => {
@@ -1193,19 +1357,23 @@ watch(dashboardFilterType, (newMode) => {
   }
 });
 
-// Resetar vendedor ao selecionar "Minha Meta" (Coordenador)
+// Resetar vendedor ao selecionar uma equipe ou "Minha Meta" (Coordenador/Vendedor)
 watch(selectedTeamId, (newVal) => {
-  if (newVal?.startsWith('head_own_')) {
+  if (newVal?.startsWith('head_own_') || newVal?.startsWith('team_')) {
     selectedSellerId.value = '';
   }
 });
 
 onMounted(async () => {
+  if (user.value?.type === 'seller') {
+    selectedSellerId.value = user.value.id?.toString() || null;
+  }
   const promises: Promise<any>[] = [];
 
   if (user.value) {
-    if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
+    if (['admin', 'head', 'coord', 'seller'].includes(user.value?.type || '')) {
       promises.push(sellerStore.fetchAllSellers());
+      promises.push(teamStore.fetchTeams());
     }
 
     // Busca as BUs para exibir imagens nos contratos
@@ -1248,6 +1416,9 @@ watch(selectedMonth, async (newVal) => {
   if (!newVal) return;
   const [year, month] = newVal.split('-').map(Number);
   await goalStore.fetchGoals(month, year);
+  if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
+    await cacStore.fetchCac(month, year);
+  }
 });
 </script>
 

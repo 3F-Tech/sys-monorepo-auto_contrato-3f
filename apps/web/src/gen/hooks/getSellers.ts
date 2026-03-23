@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  GetSellersQueryResponse,
+  GetSellersQueryParams,
+} from "../types/GetSellers.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  GetSellersQueryResponse,
-  GetSellersQueryParams,
-} from "../types/GetSellers.ts";
 
 function getGetSellersUrl() {
   const res = { method: "GET", url: `/sellers` as const };

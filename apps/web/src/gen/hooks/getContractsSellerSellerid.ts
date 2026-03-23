@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  GetContractsSellerSelleridQueryResponse,
+  GetContractsSellerSelleridPathParams,
+} from "../types/GetContractsSellerSellerid.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  GetContractsSellerSelleridQueryResponse,
-  GetContractsSellerSelleridPathParams,
-} from "../types/GetContractsSellerSellerid.ts";
 
 function getGetContractsSellerSelleridUrl(
   sellerId: GetContractsSellerSelleridPathParams["sellerId"],

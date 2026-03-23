@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  GetContractsBuBuidQueryResponse,
+  GetContractsBuBuidPathParams,
+} from "../types/GetContractsBuBuid.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  GetContractsBuBuidQueryResponse,
-  GetContractsBuBuidPathParams,
-} from "../types/GetContractsBuBuid.ts";
 
 function getGetContractsBuBuidUrl(buId: GetContractsBuBuidPathParams["buId"]) {
   const res = { method: "GET", url: `/contracts/bu/${buId}` as const };

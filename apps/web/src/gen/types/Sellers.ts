@@ -35,6 +35,10 @@ export type Sellers = {
    */
   head_id?: string | null;
   /**
+   * @type integer
+   */
+  team_id?: number | null;
+  /**
    * @type string, date-time
    */
   created_at?: string | null;

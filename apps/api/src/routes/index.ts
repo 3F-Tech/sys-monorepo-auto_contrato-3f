@@ -21,6 +21,8 @@ import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBus
 import { authMiddleware } from '../middleware/authMiddleware';
 import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract } from '../controllers/contractController';
 import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalController';
+import { getTeams, createTeam, updateTeam, addTeamMember, removeTeamMember, deleteTeam } from '../controllers/teamController';
+import { getCac, upsertCac } from '../controllers/cacController';
 
 const router = Router();
 
@@ -80,6 +82,18 @@ router.delete('/contracts/:id', deleteContract);
 router.get('/goals', getGoals);
 router.post('/goals', createOrUpdateGoal);
 router.delete('/goals/:id', deleteGoal);
+
+// TEAM ROUTES
+router.get('/teams', getTeams);
+router.post('/teams', createTeam);
+router.put('/teams/:id', updateTeam);
+router.post('/teams/:id/members', addTeamMember);
+router.delete('/teams/:id/members/:sellerId', removeTeamMember);
+router.delete('/teams/:id', deleteTeam);
+
+// CAC ROUTES
+router.get('/cac', getCac);
+router.post('/cac', upsertCac);
 
 // AUTH ROUTES
 // (A rota de login foi movida para o topo das Rotas Públicas)

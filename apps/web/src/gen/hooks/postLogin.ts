@@ -5,15 +5,15 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  Client,
-  RequestConfig,
-  ResponseErrorConfig,
-} from "@kubb/plugin-client/clients/axios";
-import type {
   PostLoginMutationRequest,
   PostLoginMutationResponse,
   PostLogin401,
 } from "../types/PostLogin.ts";
+import type {
+  Client,
+  RequestConfig,
+  ResponseErrorConfig,
+} from "@kubb/plugin-client/clients/axios";
 
 function getPostLoginUrl() {
   const res = { method: "POST", url: `/login` as const };

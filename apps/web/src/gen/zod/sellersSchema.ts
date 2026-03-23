@@ -13,6 +13,7 @@ export const sellersSchema = z.object({
   phone: z.string().nullish(),
   type: z.optional(z.string()),
   head_id: z.string().describe("BigInt serializado").nullish(),
+  team_id: z.number().int().nullish(),
   created_at: z.string().datetime().nullish(),
   update_at: z.string().datetime().nullish(),
 });

@@ -174,6 +174,8 @@ for (const [key, value] of Object.entries(data)) {
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
                 contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
                 type_contract: sheetName,
                 signed: false,
                 change_status: null,
