@@ -53,11 +53,19 @@
         </div>
       </div>
       
-      <button v-if="canSetGoals" @click="$emit('open-settings')"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-brand-glass-border hover:bg-white/10 transition-all text-xs font-semibold text-brand-cyan hover:text-brand-cyan/80">
-        <Settings2 class="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
-        Configurar Metas
-      </button>
+      <div v-if="canSetGoals" class="flex flex-col sm:flex-row items-center gap-3">
+        <button @click="$emit('open-costs')"
+          class="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20 hover:brightness-110 active:scale-95 transition-all duration-300 transform">
+          <DollarSign class="h-4 w-4 transition-transform duration-500 group-hover:rotate-12" />
+          <span class="text-[11px] font-black uppercase tracking-wider">Configurar Custos</span>
+        </button>
+
+        <button @click="$emit('open-settings')"
+          class="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20 hover:brightness-110 active:scale-95 transition-all duration-300 transform">
+          <Settings2 class="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
+          <span class="text-[11px] font-black uppercase tracking-wider">Configurar Metas</span>
+        </button>
+      </div>
     </div>
 
     <div v-if="hasGoal" class="space-y-8">
@@ -235,7 +243,7 @@ const props = defineProps<{
   contracts: any[];
 }>();
 
-defineEmits(['open-settings', 'open-periods']);
+defineEmits(['open-settings', 'open-periods', 'open-costs']);
 
 const authStore = useAuthStore();
 const canSetGoals = computed(() => {

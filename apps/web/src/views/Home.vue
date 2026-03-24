@@ -44,12 +44,12 @@
       @saved="handleGoalSaved"
       @close="goalModalOpen = false" 
     />
-    <SetCacModal 
-      :is-open="cacModalOpen"
+    <SetCostsModal 
+      :is-open="costsModalOpen"
       :month="selectedMonthNum"
       :year="selectedYearNum"
-      @close="cacModalOpen = false"
-      @saved="handleCacSaved"
+      @close="costsModalOpen = false"
+      @saved="handleCostsSaved"
     />
 
 
@@ -221,6 +221,7 @@
           :contracts="filteredP1Contracts"
           @open-settings="handleOpenGoalSettings('goals')"
           @open-periods="handleOpenGoalSettings('periods')"
+          @open-costs="costsModalOpen = true"
         />
 
 
@@ -245,15 +246,8 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             <div v-for="(stat, index) in stats.filter(s => s.type === 'finance')" :key="stat.label"
               class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
-              :class="stat.isCac && user?.type === 'admin' ? 'cursor-pointer active:scale-95' : ''"
-              @click="stat.isCac && user?.type === 'admin' ? (cacModalOpen = true) : null"
               :style="{ animationDelay: (index * 100) + 'ms' }">
               
-              <div v-if="stat.isCac && user?.type === 'admin'" class="absolute top-4 right-4 z-20">
-                <div class="p-1.5 rounded-lg bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
-                  <Settings2 class="h-3 w-3" />
-                </div>
-              </div>
 
               <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
                 <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
@@ -467,7 +461,6 @@ import {
   DollarSign,
   ShieldCheck,
   Settings,
-  Settings2,
   Users2,
   User as UserIcon,
   UserPlus,
@@ -493,7 +486,8 @@ import { useToast } from '../composables/useToast';
 import CustomSelect from '../components/ui/CustomSelect.vue';
 import { useTeamStore } from '../store/team';
 import { useCacStore } from '../store/cac';
-import SetCacModal from '../components/dashboard/SetCacModal.vue';
+import { useCostsStore } from '../store/costs';
+import SetCostsModal from '../components/dashboard/SetCostsModal.vue';
 
 
 const authStore = useAuthStore();
@@ -501,13 +495,14 @@ const sellerStore = useSellerStore();
 const contractStore = useContractStore();
 const goalStore = useGoalStore();
 const teamStore = useTeamStore();
+const costsStore = useCostsStore();
 const cacStore = useCacStore();
 const router = useRouter();
 const toast = useToast();
 
 const profileModalOpen = ref(false);
 const goalModalOpen = ref(false);
-const cacModalOpen = ref(false);
+const costsModalOpen = ref(false);
 const goalModalMode = ref<'goals' | 'periods'>('goals');
 const activeTarget = ref<{ type: string; id: string } | null>(null);
 const isEditingTeam = ref(false);
@@ -561,7 +556,13 @@ const currentPerformance = computed(() => {
   const p1Contracts = signedP1Contracts.value;
   const genContracts = signedGeneralContracts.value;
   
-  const p1 = p1Contracts.reduce((acc, curr) => acc + (parseFloat(curr.first_payment_amount as any) || 0), 0);
+  const p1 = p1Contracts.reduce((acc, curr) => {
+    const fpa = parseFloat(curr.first_payment_amount as any) || 0;
+    if (fpa > 0) return acc + fpa;
+    const impl = parseFloat(curr.implementation_fee as any) || 0;
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    return acc + impl + monthly;
+  }, 0);
   
   const tcv = genContracts.reduce((acc, curr) => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
@@ -594,13 +595,20 @@ const selectedYearNum = computed(() => {
 });
 
 const currentCacValue = computed(() => {
-  // Se filtrado por BU específica (não 3F)
-  if (dashboardFilterType.value === 'bu' && selectedBUId.value && selectedBUId.value !== '99') {
-    const buCac = cacStore.getBuCac(Number(selectedBUId.value));
-    return buCac ? Number(buCac.amount) : 0;
-  }
-  // Caso contrário, mostra o total (3F)
-  return cacStore.totalCac;
+  // Conforme solicitado, CAC = Valor Total P1 / Número de Contratos Assinados
+  const p1Contracts = signedP1Contracts.value;
+  const totalP1 = p1Contracts.reduce((acc, curr) => {
+    const fpa = parseFloat(curr.first_payment_amount as any) || 0;
+    if (fpa > 0) return acc + fpa;
+    const impl = parseFloat(curr.implementation_fee as any) || 0;
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    return acc + impl + monthly;
+  }, 0);
+
+  const signedCount = signedGeneralContracts.value.length;
+
+  if (signedCount === 0) return 0;
+  return totalP1 / signedCount;
 });
 
 const activeGoal = computed(() => {
@@ -878,13 +886,15 @@ const contractsForP1 = computed(() => {
   if (!selectedMonth.value) return allContracts;
 
   const [year, month] = selectedMonth.value.split('-').map(Number);
-  // Início: dia 06 do mês selecionado
-  const startDate = new Date(year, month - 1, 6, 0, 0, 0); 
-  // Fim: dia 05 do mês subsequente
-  const endDate = new Date(year, month, 5, 23, 59, 59);
+  // O Mês P1 (ex: Abril, month 4) cobre de 06 do mês anterior (Março) até 05 do mês corrente (Abril).
+  // Em JS Date (0-indexed): month 4 -> Março é index 2 (4 - 2), Abril é index 3 (4 - 1)
+  const startDate = new Date(year, month - 2, 6, 0, 0, 0); 
+  const endDate = new Date(year, month - 1, 5, 23, 59, 59);
 
   return allContracts.filter(c => {
-    const targetDateStr = c.first_payment_date || c.created_at;
+    // Prioridade: first_payment_date > signed_date > created_at
+    // signed_date: contratos assinados dentro da janela P1 sem first_payment_date preenchido
+    const targetDateStr = c.first_payment_date || c.signed_date || c.created_at;
     if (!targetDateStr) return false;
     const targetDate = new Date(targetDateStr);
     return targetDate >= startDate && targetDate <= endDate;
@@ -1062,8 +1072,14 @@ const stats = computed(() => {
   }
 
   // Cálculo de Valor P1 (Window 06 to 05)
+  // first_payment_amount é o valor ideal; fallback: implementation_fee + monthly_fee
   const totalP1 = p1Contracts.filter(c => c.signed).reduce((acc, curr) => {
-    return acc + (parseFloat(curr.first_payment_amount as any) || 0);
+    const fpa = parseFloat(curr.first_payment_amount as any) || 0;
+    if (fpa > 0) return acc + fpa;
+    // Fallback: soma implantação + primeira mensalidade
+    const impl = parseFloat(curr.implementation_fee as any) || 0;
+    const monthly = parseFloat(curr.monthly_fee as any) || 0;
+    return acc + impl + monthly;
   }, 0);
 
   // Cálculo de TCV e NMRR (General Month)
@@ -1141,11 +1157,9 @@ const stats = computed(() => {
     },
     {
       label: 'ROI P1',
-      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-        (p1Contracts.filter(c => c.signed).length > 0 
-          ? (totalP1 / p1Contracts.filter(c => c.signed).length) 
-          : 0) - currentCacValue.value
-      ),
+      value: costsStore.totalCommercialCosts > 0 
+        ? new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(totalP1 / costsStore.totalCommercialCosts) + 'x'
+        : '0x',
       icon: TrendingUp,
       type: 'finance'
     }
@@ -1270,7 +1284,6 @@ onMounted(async () => {
 
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
     promises.push(sellerStore.fetchAllSellers());
-    promises.push(cacStore.fetchCac(selectedMonthNum.value, selectedYearNum.value));
   }
 
   // Busca as BUs para exibir imagens nos contratos
@@ -1331,8 +1344,8 @@ const handleGoalSaved = async () => {
   await goalStore.fetchGoals(month, year);
 };
 
-const handleCacSaved = async () => {
-  await cacStore.fetchCac(selectedMonthNum.value, selectedYearNum.value);
+const handleCostsSaved = async () => {
+  await costsStore.fetchCosts(selectedMonthNum.value, selectedYearNum.value);
 };
 
 const handleLogout = () => {
@@ -1360,56 +1373,7 @@ watch(dashboardFilterType, (newMode) => {
 // Resetar vendedor ao selecionar uma equipe ou "Minha Meta" (Coordenador/Vendedor)
 watch(selectedTeamId, (newVal) => {
   if (newVal?.startsWith('head_own_') || newVal?.startsWith('team_')) {
-    selectedSellerId.value = '';
   }
-});
-
-onMounted(async () => {
-  if (user.value?.type === 'seller') {
-    selectedSellerId.value = user.value.id?.toString() || null;
-  }
-  const promises: Promise<any>[] = [];
-
-  if (user.value) {
-    if (['admin', 'head', 'coord', 'seller'].includes(user.value?.type || '')) {
-      promises.push(sellerStore.fetchAllSellers());
-      promises.push(teamStore.fetchTeams());
-    }
-
-    // Busca as BUs para exibir imagens nos contratos
-    promises.push(getBusiness({ client }).then(data => {
-      businessList.value = data as Business[];
-    }).catch(e => console.error('Erro ao buscar BUs:', e)));
-
-    // Metas do mês atual (extraindo do formato YYYY-MM)
-    const [year, month] = Math.max(0, selectedMonth.value.indexOf('-')) > 0 
-      ? selectedMonth.value.split('-').map(Number)
-      : [new Date().getFullYear(), new Date().getMonth() + 1];
-
-    promises.push(goalStore.fetchGoals(month, year));
-
-    // Carrega contratos baseados no perfil
-    const sellerId = user.value.id?.toString();
-    if (sellerId) {
-      if (user.value.type === 'admin') {
-        promises.push(contractStore.fetchAllContracts());
-      } else if (user.value.type === 'head') {
-        contractFilterMode.value = 'team';
-        promises.push(contractStore.fetchTeamContracts(sellerId));
-      } else if (user.value.type === 'coord') {
-        const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
-        if (myBUIds.length > 0) {
-          promises.push(contractStore.fetchMultipleBUContracts(myBUIds));
-        } else {
-          promises.push(contractStore.fetchMyContracts(sellerId));
-        }
-      } else {
-        promises.push(contractStore.fetchMyContracts(sellerId));
-      }
-    }
-  }
-
-  await Promise.all(promises);
 });
 
 watch(selectedMonth, async (newVal) => {
@@ -1418,8 +1382,9 @@ watch(selectedMonth, async (newVal) => {
   await goalStore.fetchGoals(month, year);
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
     await cacStore.fetchCac(month, year);
+    await costsStore.fetchCosts(month, year);
   }
-});
+}, { immediate: true });
 </script>
 
 <style scoped>

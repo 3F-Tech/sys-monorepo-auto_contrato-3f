@@ -441,6 +441,20 @@
         ]
       }
     },
+    "/commercial-costs": {
+      "get": {
+        "summary": "Listar custos comerciais para um mês específico",
+        "tags": [
+          "Commercial Costs"
+        ]
+      },
+      "post": {
+        "summary": "Definir custos comerciais para um mês",
+        "tags": [
+          "Commercial Costs"
+        ]
+      }
+    },
     "/contracts-sheets/impulse-plano-1": {
       "post": {
         "summary": "Submeter contrato Plano 1 - Impulse",

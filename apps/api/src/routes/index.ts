@@ -23,6 +23,7 @@ import { getContracts, getContractBySellerId, getContractByBuId, getContractByHe
 import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalController';
 import { getTeams, createTeam, updateTeam, addTeamMember, removeTeamMember, deleteTeam } from '../controllers/teamController';
 import { getCac, upsertCac } from '../controllers/cacController';
+import { getCommercialCosts, upsertCommercialCosts } from '../controllers/commercialCostsController';
 
 const router = Router();
 
@@ -94,6 +95,10 @@ router.delete('/teams/:id', deleteTeam);
 // CAC ROUTES
 router.get('/cac', getCac);
 router.post('/cac', upsertCac);
+
+// COMMERCIAL COSTS ROUTES
+router.get('/commercial-costs', getCommercialCosts);
+router.post('/commercial-costs', upsertCommercialCosts);
 
 // AUTH ROUTES
 // (A rota de login foi movida para o topo das Rotas Públicas)

@@ -71,6 +71,7 @@ model contracts {
   first_payment_amount Decimal?  @db.Decimal
   first_payment_date   DateTime? @db.Timestamptz(6)
   legal_repre_email    String?
+  envelope_id          String?   @map("document_id")
   business             business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   sellers              sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
 }
@@ -109,6 +110,7 @@ model teams {
   sellers_sellers_team_idToteams sellers[] @relation("sellers_team_idToteams")
   sellers_teams_head_idTosellers sellers?  @relation("teams_head_idTosellers", fields: [head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
 model bu_cac {
   id          Int      @id @default(autoincrement())
   bu_id       Int
@@ -121,4 +123,27 @@ model bu_cac {
   business    business @relation(fields: [bu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([bu_id, month, year])
+}
+
+model commercial_costs {
+  id                       Int      @id @default(autoincrement())
+  month                    Int
+  year                     Int
+  media_investment         Decimal? @db.Decimal
+  commercial_tools         Decimal? @db.Decimal
+  remuneration_pre_sales_1 Decimal? @db.Decimal
+  remuneration_pre_sales_2 Decimal? @db.Decimal
+  remuneration_closer_1    Decimal? @db.Decimal
+  remuneration_closer_2    Decimal? @db.Decimal
+  remuneration_coord       Decimal? @db.Decimal
+  referral_commission      Decimal? @db.Decimal
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([month, year], name: "month_year")
+}
+
+model witnesses_email {
+  id    BigInt @id @default(autoincrement())
+  email String @unique
 }

@@ -186,22 +186,13 @@
                   
                   <!-- P1 Info (Nova) -->
                   <div class="pt-4 mt-4 border-t border-white/5 space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3">
                       <div class="p-3 rounded-xl bg-white/5 border border-white/10">
                         <div class="flex items-center gap-2 mb-1">
                           <CreditCard class="h-3 w-3 text-brand-cyan/60" />
                           <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Valor P1</span>
                         </div>
                         <p class="text-xs font-bold text-white/90">{{ formatCurrency(contract.first_payment_amount) }}</p>
-                      </div>
-                      <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <div class="flex items-center gap-2 mb-1">
-                          <TrendingUp class="h-3 w-3 text-brand-cyan/60" />
-                          <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">ROI P1</span>
-                        </div>
-                        <p class="text-xs font-black" :class="getRoiP1(contract) >= 0 ? 'text-green-400' : 'text-red-400'">
-                          {{ formatCurrency(getRoiP1(contract)) }}
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -423,7 +414,6 @@ import type { Contracts } from '../../gen/types/Contracts';
 import type { Business } from '../../gen/types/Business';
 import type { Sellers } from '../../gen/types/Sellers';
 import { useContractStore } from '../../store/contracts';
-import { useCacStore } from '../../store/cac';
 import {
   FileStack,
   FileCheck,
@@ -442,8 +432,7 @@ import {
   Trash2,
   Clock,
   CreditCard,
-  Calendar,
-  TrendingUp
+  Calendar
 } from 'lucide-vue-next';
 import { useToast } from '../../composables/useToast';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -458,7 +447,6 @@ const props = defineProps<{
 }>();
 
 const contractStore = useContractStore();
-const cacStore = useCacStore();
 const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
 const expandedId = ref<string | null>(null);
 const editingLink = ref('');
@@ -702,13 +690,6 @@ const calculateDuration = (contract: Contracts) => {
   return diffDays === 1 ? '1 dia' : `${diffDays} dias`;
 };
 
-const getRoiP1 = (contract: Contracts) => {
-  if (!contract.bu_id) return 0;
-  const buCac = cacStore.getBuCac(contract.bu_id);
-  const cac = buCac ? Number(buCac.amount) : 0;
-  const p1 = parseFloat(contract.first_payment_amount?.toString() || '0');
-  return p1 - cac;
-};
 </script>
 
 <style scoped>
