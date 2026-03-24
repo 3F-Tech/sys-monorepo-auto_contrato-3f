@@ -131,17 +131,17 @@
             </button>
           </div>
 
-          <!-- Seller Mode Toggle -->
-          <div v-if="user?.type === 'seller' && user.team_id" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <!-- Seller/SDR Mode Toggle -->
+          <div v-if="['seller', 'sdr'].includes(user?.type || '') && user?.team_id" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
-              @click="selectedSellerId = user.id.toString(); selectedTeamId = ''" 
+              @click="selectedSellerId = user?.id?.toString() || ''; selectedTeamId = ''" 
               :class="selectedSellerId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
               Minha Meta
             </button>
             <button 
-              @click="selectedSellerId = ''; selectedTeamId = 'team_' + user.team_id" 
+              @click="selectedSellerId = ''; selectedTeamId = 'team_' + user?.team_id" 
               :class="selectedTeamId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
               class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
             >
@@ -177,7 +177,7 @@
                <CustomSelect 
                 v-model="selectedTeamId" 
                 :options="teamOptionsFormatted"
-                :placeholder="user?.type === 'seller' ? 'Minha Meta vs Equipe' : 'Selecionar Equipe'"
+                :placeholder="['seller', 'sdr'].includes(user?.type || '') ? 'Minha Meta vs Equipe' : 'Selecionar Equipe'"
                 :icon="Users"
                 searchable
                 :allow-clear="true"
@@ -963,8 +963,8 @@ const applyFilters = (contracts: any[]) => {
     filtered = filtered.filter(c => c.seller_id.toString() === selectedSellerId.value.toString());
   }
 
-  // 4. Segurança de Papel: Se for vendedor comum, vê só os próprios
-  if (user.value?.type === 'seller') {
+  // 4. Segurança de Papel: Se for vendedor comum ou sdr, vê só os próprios
+  if (user.value?.type === 'seller' || user.value?.type === 'sdr') {
     filtered = filtered.filter(c => c.seller_id === user.value?.id);
   }
 
@@ -1036,6 +1036,7 @@ const filterSellerOptions = computed(() => {
 const userRoleLabel = computed(() => {
   const roles = {
     'seller': 'Vendedor',
+    'sdr': 'SDR',
     'head': 'Coordenador de BU',
     'coord': 'Head de BU',
     'admin': 'Administrador do Sistema'
@@ -1181,6 +1182,7 @@ const stats = computed(() => {
 const getRoleLabel = (type?: string) => {
   const roles = {
     'seller': 'Vendedor',
+    'sdr': 'SDR',
     'head': 'Coordenador de BU',
     'coord': 'Head de BU',
     'admin': 'Administrador'
@@ -1204,7 +1206,7 @@ const visibleUsers = computed(() => {
   const all = sellerStore.allSellers;
 
   if (user.value.type === 'head') {
-    users = all.filter(s => s.type === 'seller' && s.head_id === user.value?.id);
+    users = all.filter(s => (s.type === 'seller' || s.type === 'sdr') && s.head_id === user.value?.id);
   } else if (user.value.type === 'coord') {
     const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
     users = all.filter(s => {
@@ -1230,7 +1232,7 @@ const visibleUsers = computed(() => {
 
 const availableSellers = computed(() => {
   if (user.value?.type !== 'head') return [];
-  let available = sellerStore.allSellers.filter((s: Sellers) => s.type === 'seller' && !s.head_id);
+  let available = sellerStore.allSellers.filter((s: Sellers) => (s.type === 'seller' || s.type === 'sdr') && !s.head_id);
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
@@ -1322,7 +1324,7 @@ const actions = [
     title: 'Novo Contrato',
     description: 'Acesse o formulário inteligente para preenchimento de novos contratos.',
     icon: FileText,
-    roles: ['seller', 'head', 'coord', 'admin'],
+    roles: ['seller', 'sdr', 'head', 'coord', 'admin'],
     handler: () => router.push('/contratos/novo')
   }
 ];

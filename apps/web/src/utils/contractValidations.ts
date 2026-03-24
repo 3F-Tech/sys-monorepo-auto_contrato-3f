@@ -75,6 +75,10 @@ export const getValidationRules = (data: Record<string, any>) => {
   check('NOME COORD BU', validateRequired(data['NOME COORD BU'], 'Nome do coordenador'));
   check('CPF COORD BU', validateCPF(data['CPF COORD BU'] || ''));
 
+  if (data['NOME SDR']) {
+    check('CPF SDR', validateCPF(data['CPF SDR'] || ''));
+  }
+
   if (data['PRAZO CONTRATUAL MESES'] !== undefined) {
     const prazo = Number(data['PRAZO CONTRATUAL MESES']);
     if (isNaN(prazo) || prazo <= 0) {

@@ -55,15 +55,15 @@
       
       <div v-if="canSetGoals" class="flex flex-col sm:flex-row items-center gap-3">
         <button @click="$emit('open-costs')"
-          class="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20 hover:brightness-110 active:scale-95 transition-all duration-300 transform">
-          <DollarSign class="h-4 w-4 transition-transform duration-500 group-hover:rotate-12" />
-          <span class="text-[11px] font-black uppercase tracking-wider">Configurar Custos</span>
+          class="group flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 shadow-2xl shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform">
+          <DollarSign class="h-4 w-4 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+          <span class="text-[10px] font-black uppercase tracking-[0.2em]">Configurar Custos</span>
         </button>
 
         <button @click="$emit('open-settings')"
-          class="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20 hover:brightness-110 active:scale-95 transition-all duration-300 transform">
-          <Settings2 class="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
-          <span class="text-[11px] font-black uppercase tracking-wider">Configurar Metas</span>
+          class="group flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 shadow-2xl shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform">
+          <Settings2 class="h-4 w-4 transition-transform duration-500 group-hover:rotate-90 group-hover:scale-110" />
+          <span class="text-[10px] font-black uppercase tracking-[0.2em]">Configurar Metas</span>
         </button>
       </div>
     </div>
@@ -138,8 +138,8 @@
                 </div>
               </div>
               <button v-if="canSetGoals" @click="$emit('open-periods')"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-cyan/5 border border-brand-cyan/20 hover:bg-brand-cyan/10 hover:border-brand-cyan/40 text-[9px] font-black text-brand-cyan uppercase tracking-wider transition-all">
-                <Settings2 class="h-3 w-3" />
+                class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 text-[9px] font-black uppercase tracking-widest transition-all duration-300">
+                <Settings2 class="h-3 w-3 transition-transform duration-500 group-hover:rotate-90" />
                 Configurar Períodos
               </button>
             </div>

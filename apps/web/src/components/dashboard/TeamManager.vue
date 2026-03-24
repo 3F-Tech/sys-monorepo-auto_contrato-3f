@@ -140,7 +140,7 @@
               </div>
               <div class="space-y-2">
                 <label class="text-[10px] font-black text-brand-cyan/60 uppercase tracking-[0.2em] ml-1">Descrição</label>
-                <textarea v-model="form.description" rows="3" placeholder="Foco da equipe, objetivos..." class="w-full px-6 py-4 rounded-2xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:outline-none focus:border-brand-cyan/50 focus:bg-brand-cyan/5 transition-all resize-none"></textarea>
+                <textarea v-model="form.description" rows="3" placeholder="Ex: Os maiores odiadores de Churny da empresa." class="w-full px-6 py-4 rounded-2xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:outline-none focus:border-brand-cyan/50 focus:bg-brand-cyan/5 transition-all resize-none"></textarea>
               </div>
             </div>
           </div>
@@ -264,7 +264,7 @@ const availableSellers = computed(() => {
   // Se for Coordenador (Head de Equipe)
   if (u.type === 'head') {
     return sellerStore.allSellers.filter(s => 
-      s.type === 'seller' && 
+      (s.type === 'seller' || s.type === 'sdr') && 
       s.head_id?.toString() === u.id?.toString() && 
       !(s as any).team_id
     );
@@ -274,7 +274,7 @@ const availableSellers = computed(() => {
   if (u.type === 'coord') {
     const myBUIds = (u as any).seller_business?.map((sb: any) => sb.business_id) || [];
     return sellerStore.allSellers.filter(s => 
-      s.type === 'seller' && 
+      (s.type === 'seller' || s.type === 'sdr') && 
       (s as any).seller_business?.some((sb: any) => myBUIds.includes(sb.business_id)) &&
       !(s as any).team_id
     );
@@ -282,7 +282,7 @@ const availableSellers = computed(() => {
 
   // Admin vê todos sem equipe
   if (u.type === 'admin') {
-    return sellerStore.allSellers.filter(s => s.type === 'seller' && !(s as any).team_id);
+    return sellerStore.allSellers.filter(s => (s.type === 'seller' || s.type === 'sdr') && !(s as any).team_id);
   }
 
   return [];

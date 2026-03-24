@@ -48,10 +48,13 @@ export const contractDataSchema = z.object({
   'LINK INSTAGRAM CONTRATANTE': z.string().optional(),
   'QTD ARTES': z.string().optional(),
   'QTD VIDEOS': z.string().optional(),
+  'NOME SDR': z.string().optional().or(z.literal('')),
+  'CPF SDR': z.string().regex(cpfRegex, "CPF do SDR inválido").optional().or(z.literal('')),
 });
 
 export const contractSubmissionSchema = z.object({
   data: contractDataSchema,
   bu_id: z.number({ required_error: "ID da BU é obrigatório" }),
   bu_name: z.string().optional(),
+  sdr_id: z.union([z.string(), z.number()]).optional().nullable(),
 });

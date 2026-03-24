@@ -75,8 +75,8 @@
         </div>
 
         <!-- Seção: Hierarquia -->
-        <div v-if="form.type === 'seller'" class="space-y-1.5">
-          <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Head Responsável</label>
+        <div v-if="form.type === 'seller' || form.type === 'sdr'" class="space-y-1.5">
+          <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Coordenador Responsável</label>
           <CustomSelect 
             v-model="form.head_id" 
             :options="headsOptions"
@@ -180,6 +180,7 @@ const availableRoles = computed(() => {
   if (authStore.userRole === 'admin' || authStore.userRole === 'coord') {
     return [
       { value: 'seller', label: 'Vendedor' },
+      { value: 'sdr', label: 'SDR' },
       { value: 'head', label: 'Coordenador de BU' },
       { value: 'coord', label: 'Head de BU' },
       { value: 'admin', label: 'Administrador' }
@@ -187,7 +188,8 @@ const availableRoles = computed(() => {
   }
   // Heads só podem criar vendedores na V1
   return [
-    { value: 'seller', label: 'Vendedor' }
+    { value: 'seller', label: 'Vendedor' },
+    { value: 'sdr', label: 'SDR' }
   ];
 });
 

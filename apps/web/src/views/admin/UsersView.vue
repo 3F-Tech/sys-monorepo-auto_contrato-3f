@@ -234,6 +234,7 @@ const filteredSellers = computed(() => {
 const getRoleLabel = (role?: string) => {
   const roles = {
     'seller': 'Vendedor',
+    'sdr': 'SDR',
     'head': 'Coordenador de BU',
     'admin': 'Administrador',
     'coord': 'Head de BU'

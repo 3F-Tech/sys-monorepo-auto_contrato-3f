@@ -1147,7 +1147,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filtrar por tipo de usuário (seller, head, coord, admin)"
+            "description": "Filtrar por tipo de usuário (seller, sdr, head, coord, admin)"
           }
         ],
         "responses": {

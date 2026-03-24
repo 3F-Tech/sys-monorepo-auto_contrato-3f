@@ -64,7 +64,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
             });
         }
 
-        const { data, bu_id, bu_name } = validation.data;
+        const { data, bu_id, bu_name, sdr_id } = validation.data;
         const user = req.user;
 
         // 2. Automação de Cópia e Edição no Google Drive/Docs
@@ -169,6 +169,7 @@ for (const [key, value] of Object.entries(data)) {
                 title,
                 cnpj_client: data['CNPJ DO CONTRATANTE'] || '',
                 seller_id: BigInt(user.id),
+                sdr_id: sdr_id ? BigInt(sdr_id) : null,
                 bu_id: Number(bu_id),
                 monthly_fee: parseDecimal(data['VALOR MENSALIDADE']),
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),

@@ -368,7 +368,7 @@ const targetIdOptions = computed(() => {
   } else {
     // Para tipo Seller
     const sellers = authStore.user?.type === 'head' ? sellerStore.teamSellers : sellerStore.allSellers;
-    return sellers.filter(s => s.type === 'seller').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
+    return sellers.filter(s => s.type === 'seller' || s.type === 'sdr').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
   }
 });
 

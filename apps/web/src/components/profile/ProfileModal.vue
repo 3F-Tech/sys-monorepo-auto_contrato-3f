@@ -60,11 +60,11 @@
 
         <div v-if="canEditHierarchy" class="space-y-6 pt-4 border-t border-white/5">
             <div class="space-y-1.5">
-                <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Head Responsável</label>
+                <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Coordenador Responsável</label>
                 <CustomSelect 
                   v-model="form.head_id" 
                   :options="headsOptions"
-                  placeholder="Selecione o Head"
+                  placeholder="Selecione o Coordenador"
                   searchable
                   allow-clear
                 />

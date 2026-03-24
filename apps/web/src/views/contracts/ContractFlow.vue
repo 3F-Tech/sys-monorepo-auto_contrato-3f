@@ -161,7 +161,7 @@
           </section>
 
           <!-- Render Condicional do Form (por enquanto apenas Impulse Plano 1) -->
-          <component v-if="activeFormComponent" :is="activeFormComponent" :form="contractData" :errors="formErrors" />
+          <component v-if="activeFormComponent" :is="activeFormComponent" :form="contractData" :errors="formErrors" :sellers="allSellers" @update-sdr-id="sdr_id = $event" />
 
           <div v-else class="text-center py-20 bg-brand-surface/20 rounded-3xl border border-brand-glass-border">
             <Construction class="h-12 w-12 mx-auto text-brand-cyan opacity-20 mb-4" />
@@ -244,6 +244,7 @@ const allSellers = ref<Sellers[]>([]);
 const selectedBU = ref<Business | null>(null);
 const selectedTemplate = ref('');
 const isGenerating = ref(false);
+const sdr_id = ref<string | null>(null);
 
 // Objeto centralizado para todos os dados dos contratos
 const contractData = ref<Record<string, any>>({});
@@ -415,7 +416,9 @@ const handleTemplateSelect = (template: string) => {
     'NOME VENDEDOR': '',
     'CPF VENDEDOR': '',
     'NOME COORD BU': '',
-    'CPF COORD BU': ''
+    'CPF COORD BU': '',
+    'NOME SDR': '',
+    'CPF SDR': ''
   };
 
   // Se não for Growth, adiciona o prazo
@@ -529,7 +532,8 @@ const handleContractGenerate = async () => {
     const response = await client.post(activeEndpoint.value, {
       data: contractData.value,
       bu_id: selectedBU.value?.id,
-      bu_name: selectedBU.value?.name
+      bu_name: selectedBU.value?.name,
+      sdr_id: sdr_id.value
     });
 
     if (response.data.success) {
