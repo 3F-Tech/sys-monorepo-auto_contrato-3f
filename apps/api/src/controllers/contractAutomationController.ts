@@ -552,6 +552,7 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                 step: 'Contrato finalizado com sucesso!',
                 log: `Finalizado em ${Date.now() - startTime}ms`
             });
+            progressTracker.clearHistory(trackingId);
         }
 
         res.json({
@@ -569,6 +570,7 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                 step: 'Erro na geração do contrato',
                 error: error instanceof Error ? error.message : String(error)
             });
+            progressTracker.clearHistory(trackingId);
         }
         res.status(500).json({ error: 'Falha ao processar contrato', details: error.message });
     }

@@ -34,19 +34,28 @@ router.get('/health', checkHealth);
 // Rota de Webhook para Clicksign (Pública)
 router.post('/webhooks/clicksign', handleClicksignWebhook);
 
-/**
- * Endpoint SSE para acompanhar o progresso de geração de contratos
- */
 router.get('/contracts/progress/:trackingId', (req: Request, res: Response) => {
     const { trackingId } = req.params;
 
+    // Headers primordiais para SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for Nginx/Proxies
+    res.setHeader('X-Accel-Buffering', 'no');
 
     // Enviar mensagem inicial para confirmar a conexão
     res.write(`data: ${JSON.stringify({ status: 'connected', step: 'Conectado ao servidor', progress: 0 })}\n\n`);
+
+    // Enviar histórico (mensagens que já ocorreram entre o POST e o SSE conectar)
+    const history = progressTracker.getHistory(trackingId);
+    history.forEach(data => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    });
+
+    // Heartbeat a cada 20 segundos para evitar que proxies (Nginx/Cloudflare) derrubem a conexão por inatividade
+    const heartbeat = setInterval(() => {
+        res.write(': keep-alive\n\n');
+    }, 20000);
 
     const onProgress = (data: any) => {
         res.write(`data: ${JSON.stringify(data)}\n\n`);
@@ -55,6 +64,7 @@ router.get('/contracts/progress/:trackingId', (req: Request, res: Response) => {
     progressTracker.on(`progress:${trackingId}`, onProgress);
 
     req.on('close', () => {
+        clearInterval(heartbeat);
         progressTracker.off(`progress:${trackingId}`, onProgress);
         res.end();
     });
