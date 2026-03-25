@@ -325,6 +325,7 @@
 
             <div class="flex gap-3">
               <button
+                v-if="Number(user?.id) === 46"
                 @click="debugFillData"
                 class="px-4 py-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500 hover:text-white transition-all"
               >
@@ -402,6 +403,7 @@ const selectedBU = ref<Business | null>(null);
 const selectedTemplate = ref("");
 const isGenerating = ref(false);
 const sdr_id = ref<string | null>(null);
+const user = authStore.user;
 
 // @ts-ignore
 const serverUrl = import.meta.env.VITE_API_URL || "http://localhost:3007";
@@ -740,15 +742,14 @@ const handleContractGenerate = async () => {
       bu_name: selectedBU.value?.name,
       sdr_id: sdr_id.value,
     });
-    
+
     toastSuccess("Contrato gerado com sucesso! Redirecionando...");
-    
+
     // Redireciona para home após sucesso
     setTimeout(() => {
       isGenerating.value = false;
       router.push("/");
     }, 1500);
-
   } catch (error: any) {
     console.error("Erro ao iniciar geração de contrato:", error);
     isGenerating.value = false;
