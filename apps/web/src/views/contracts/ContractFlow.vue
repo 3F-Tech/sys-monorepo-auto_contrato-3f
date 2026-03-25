@@ -350,16 +350,7 @@
       </template>
     </main>
 
-    <!-- Progress Modal -->
-    <ProgressModal
-      ref="progressModalRef"
-      :show="isProgressModalVisible"
-      :trackingId="trackingId"
-      :serverUrl="serverUrl"
-      @close="handleProgressClose"
-      @completed="handleProgressComplete"
-      @error="handleProgressError"
-    />
+    <!-- Removido ProgressModal conforme solicitação de simplificação -->
   </div>
 </template>
 
@@ -410,9 +401,6 @@ const allSellers = ref<Sellers[]>([]);
 const selectedBU = ref<Business | null>(null);
 const selectedTemplate = ref("");
 const isGenerating = ref(false);
-const isProgressModalVisible = ref(false);
-const trackingId = ref<string | null>(null);
-const progressModalRef = ref<any>(null);
 const sdr_id = ref<string | null>(null);
 
 // @ts-ignore
@@ -743,10 +731,6 @@ const handleContractGenerate = async () => {
     return;
   }
 
-  // Preparar Tracking para SSE
-  const newTrackingId = crypto.randomUUID();
-  trackingId.value = newTrackingId;
-  isProgressModalVisible.value = true;
   isGenerating.value = true;
 
   try {
@@ -754,10 +738,17 @@ const handleContractGenerate = async () => {
       data: contractData.value,
       bu_id: selectedBU.value?.id,
       bu_name: selectedBU.value?.name,
-      trackingId: newTrackingId,
       sdr_id: sdr_id.value,
     });
-    // O sucesso agora é gerenciado pelo modal via SSE
+    
+    toastSuccess("Contrato gerado com sucesso! Redirecionando...");
+    
+    // Redireciona para home após sucesso
+    setTimeout(() => {
+      isGenerating.value = false;
+      router.push("/");
+    }, 1500);
+
   } catch (error: any) {
     console.error("Erro ao iniciar geração de contrato:", error);
     isGenerating.value = false;
@@ -773,29 +764,10 @@ const handleContractGenerate = async () => {
       });
       formErrors.value = newErrors;
       toastWarning("Alguns campos possuem erros de validação.");
-      // Nesse caso de validação, podemos fechar o modal para o usuário corrigir
-      isProgressModalVisible.value = false;
     } else {
-      // Para erros críticos (backend down, script fail), mantemos o modal aberto com o erro
-      progressModalRef.value?.setError(errorMessage);
+      toastError(`Falha ao gerar contrato: ${errorMessage}`);
     }
   }
-};
-
-const handleProgressComplete = () => {
-  // Redirecionar após 3 segundos de exibição do sucesso (sem interação do user)
-  setTimeout(() => {
-    isProgressModalVisible.value = false;
-    isGenerating.value = false;
-    router.push("/");
-  }, 3000);
-};
-
-// Ao fechar o modal manualmente (botão "Fechar"), ir direto para home
-const handleProgressClose = () => {
-  isProgressModalVisible.value = false;
-  isGenerating.value = false;
-  router.push("/");
 };
 
 const handleProgressError = (errorMsg: string) => {
