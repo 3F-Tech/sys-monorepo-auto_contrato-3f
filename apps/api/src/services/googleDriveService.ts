@@ -1,4 +1,6 @@
 import { google } from "googleapis";
+import fs from "fs";
+import path from "path";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/drive",
@@ -10,7 +12,25 @@ export class GoogleDriveService {
 
   private static getAuth() {
     if (this.auth) return this.auth;
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || "{}");
+    const rawCredentials = process.env.GOOGLE_SERVICE_ACCOUNT || "{}";
+    let credentials;
+
+    try {
+      // Tenta interpretar como JSON direto
+      credentials = JSON.parse(rawCredentials);
+    } catch (e) {
+      // Se falhar, tenta interpretar como um caminho de arquivo
+      const possiblePath = path.isAbsolute(rawCredentials) 
+        ? rawCredentials 
+        : path.join(process.cwd(), rawCredentials);
+        
+      if (fs.existsSync(possiblePath)) {
+        credentials = JSON.parse(fs.readFileSync(possiblePath, 'utf8'));
+      } else {
+        throw new Error("GOOGLE_SERVICE_ACCOUNT não é um JSON válido nem um arquivo existente.");
+      }
+    }
+
     this.auth = google.auth.fromJSON(credentials);
     this.auth.scopes = SCOPES;
     return this.auth;

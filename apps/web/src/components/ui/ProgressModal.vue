@@ -74,8 +74,11 @@ const connectSSE = (id: string) => {
 
   eventSource.onerror = (err) => {
     console.error('Erro na conexão SSE:', err);
-    currentStatus.value.status = 'error';
-    currentStatus.value.error = 'Conexão com o servidor perdida.';
+    // Só mostramos erro se não tiver finalizado com sucesso (resolvendo fechamento prematuro pela VPS)
+    if (currentStatus.value.status !== 'completed') {
+      currentStatus.value.status = 'error';
+      currentStatus.value.error = 'Conexão com o servidor perdida.';
+    }
     eventSource?.close();
   };
 };
