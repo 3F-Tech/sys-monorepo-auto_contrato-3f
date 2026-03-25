@@ -44,7 +44,8 @@ model sellers {
   update_at                    DateTime?         @default(now()) @db.Timestamp(6)
   head_id                      BigInt?
   team_id                      Int?
-  contracts                    contracts[]
+  contracts                    contracts[]       @relation("seller_contracts")
+  sdr_contracts                contracts[]       @relation("sdr_contracts")
   seller_business              seller_business[]
   teams_sellers_team_idToteams teams?            @relation("sellers_team_idToteams", fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   teams_teams_head_idTosellers teams[]           @relation("teams_head_idTosellers")
@@ -77,8 +78,10 @@ model contracts {
   envelope_id          String?           @unique
   signed_count         Int               @default(0)
   total_signers        Int               @default(0)
+  sdr_id               BigInt?
   business             business          @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  sellers              sellers           @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sellers              sellers           @relation("seller_contracts", fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sdr                  sellers?          @relation("sdr_contracts", fields: [sdr_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   witnesses_email      witnesses_email[]
 }
 

@@ -64,12 +64,17 @@ export const contractDataSchema = z.object({
   'QTD ARTES': z.string().optional(),
   'QTD VIDEOS': z.string().optional(),
   'ID DO DOCUMENTO CLICKSIGN': z.string().optional().or(z.literal('')),
+  'NOME SDR': z.string().optional().or(z.literal('')),
+  'CPF SDR': z.string().regex(cpfRegex, "CPF do SDR inválido").optional().or(z.literal('')),
+  'NOME COORD BU': z.string().optional().or(z.literal('')),
+  'CPF COORD BU': z.string().regex(cpfRegex, "CPF do Coord inválido").optional().or(z.literal('')),
 });
 
 export const contractSubmissionSchema = z.object({
   data: contractDataSchema,
   bu_id: z.number({ required_error: "ID da BU é obrigatório" }),
   bu_name: z.string().optional(),
+  sdr_id: z.union([z.string(), z.number()]).optional().nullable(),
 }).superRefine((val, ctx) => {
   const isBomma = val.bu_name?.toUpperCase().includes('BOMMA');
   const instagram = val.data['LINK INSTAGRAM CONTRATANTE'];

@@ -41,8 +41,9 @@
       <button @click="$emit('add')"
         class="flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-cyan text-brand-deep text-[11px] font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-brand-cyan/20">
         <Plus class="h-4 w-4" />
-        Nova Meta
+        Adicionar Nova Meta
       </button>
+
     </div>
 
     <!-- Goals Table Wrapper -->
@@ -55,9 +56,8 @@
                 <th class="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Alvo do Objetivo</th>
                 <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em] text-center">Tipo</th>
                 <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Mês Base</th>
-                <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Meta de NMRR</th>
-                <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Meta de TCV</th>
-                <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">P1 / Mensal</th>
+                <th class="px-6 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Meta de P1</th>
+
                 <th class="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.3em] text-right">Controle</th>
               </tr>
             </thead>
@@ -99,35 +99,27 @@
                     <div class="text-[12px] font-black text-brand-cyan tabular-nums leading-none">
                       {{ formatCurrency(goal.nmrr) }}
                     </div>
-                    <div class="text-[8px] font-bold text-white/20 uppercase tracking-widest">Recorrência</div>
+                    <div class="text-[8px] font-bold text-white/20 uppercase tracking-widest">NMRR</div>
                   </div>
                 </td>
+
                 <td class="px-6 py-5">
                   <div class="space-y-1">
                     <div class="text-[12px] font-black text-white tabular-nums leading-none">
                       {{ formatCurrency(goal.tcv) }}
                     </div>
-                    <div class="text-[8px] font-bold text-white/20 uppercase tracking-widest">Valor Total</div>
+                    <div class="text-[8px] font-bold text-white/20 uppercase tracking-widest">TCV</div>
                   </div>
                 </td>
                 <td class="px-6 py-5">
-                  <div class="inline-flex flex-col gap-2 min-w-[140px]">
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] flex-shrink-0"></div>
-                        <span class="text-[9px] font-black text-white/40 uppercase tracking-widest whitespace-nowrap">P1</span>
-                      </div>
-                      <span class="text-[11px] font-bold text-white/80 tabular-nums whitespace-nowrap">{{ formatCurrency(goal.p1) }}</span>
+                  <div class="space-y-1">
+                    <div class="text-[12px] font-black text-brand-blue tabular-nums leading-none">
+                      {{ formatCurrency(goal.p1) }}
                     </div>
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] flex-shrink-0"></div>
-                        <span class="text-[9px] font-black text-white/40 uppercase tracking-widest whitespace-nowrap">Mensal</span>
-                      </div>
-                      <span class="text-[11px] font-bold text-white/80 tabular-nums whitespace-nowrap">{{ formatCurrency(goal.monthly) }}</span>
-                    </div>
+                    <div class="text-[8px] font-bold text-white/20 uppercase tracking-widest">P1</div>
                   </div>
                 </td>
+
                 <td class="px-8 py-5 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button @click="$emit('edit', goal)" 
@@ -207,6 +199,7 @@ import CustomSelect from '../ui/CustomSelect.vue';
 import { useSellerStore } from '../../store/seller';
 import { useGoalStore } from '../../store/goals';
 import { useAuthStore } from '../../store/auth';
+import { useTeamStore } from '../../store/team';
 import type { Goal } from '../../api/goalService';
 import type { Business } from '../../gen/types/Business';
 
@@ -220,6 +213,7 @@ const emit = defineEmits(['add', 'edit']);
 const sellerStore = useSellerStore();
 const goalStore = useGoalStore();
 const authStore = useAuthStore();
+const teamStore = useTeamStore();
 
 const activeType = ref('all');
 const filterYear = ref(new Date().getFullYear());
@@ -255,8 +249,6 @@ const itemsPerPage = 5;
 const typeFilters = computed(() => {
   const filters = [
     { value: 'all', label: 'Todas' },
-    { value: 'team', label: 'Equipes' },
-    { value: 'head', label: 'Heads' },
     { value: 'seller', label: 'Vendedores' },
   ];
   
@@ -277,7 +269,9 @@ const monthOptions = [
 const yearOptions = [
   { value: 2024, label: '2024' },
   { value: 2025, label: '2025' },
-  { value: 2026, label: '2026' }
+  { value: 2026, label: '2026' },
+  { value: 2027, label: '2027' },
+  { value: 2028, label: '2028' }
 ];
 
 const filteredGoals = computed(() => {
@@ -304,6 +298,9 @@ watch([activeType, filterYear, filterMonth], () => {
 const getTargetName = (goal: Goal) => {
   if (goal.target_type === 'bu') {
     return props.business.find(b => b.id === Number(goal.target_id))?.name || 'BU Desconhecida';
+  }
+  if (goal.target_type === 'team') {
+    return teamStore.teams.find(t => t.id.toString() === goal.target_id.toString())?.name || 'Equipe Desconhecida';
   }
   return sellerStore.allSellers.find(s => s.id?.toString() === goal.target_id?.toString())?.name || 'Vendedor Desconhecido';
 };

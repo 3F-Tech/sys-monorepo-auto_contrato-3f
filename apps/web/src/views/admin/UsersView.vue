@@ -234,9 +234,10 @@ const filteredSellers = computed(() => {
 const getRoleLabel = (role?: string) => {
   const roles = {
     'seller': 'Vendedor',
-    'head': 'Head de Equipe',
+    'sdr': 'SDR',
+    'head': 'Coordenador de BU',
     'admin': 'Administrador',
-    'coord': 'Coordenador de BU'
+    'coord': 'Head de BU'
   };
   return roles[role as keyof typeof roles] || 'Colaborador';
 };

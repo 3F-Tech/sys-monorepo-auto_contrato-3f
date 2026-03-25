@@ -215,7 +215,7 @@
 
                   <!-- P1 Info (Nova) -->
                   <div class="pt-4 mt-4 border-t border-white/5 space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3">
                       <div class="p-3 rounded-xl bg-white/5 border border-white/10">
                         <div class="flex items-center gap-2 mb-1">
                           <CreditCard class="h-3 w-3 text-brand-cyan/60" />
@@ -223,13 +223,6 @@
                         </div>
                         <p class="text-xs font-bold text-white/90">{{ formatCurrency(contract.first_payment_amount) }}
                         </p>
-                      </div>
-                      <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <div class="flex items-center gap-2 mb-1">
-                          <Calendar class="h-3 w-3 text-brand-cyan/60" />
-                          <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data P1</span>
-                        </div>
-                        <p class="text-xs font-bold text-white/90">{{ formatDate(contract.first_payment_date) }}</p>
                       </div>
                     </div>
                   </div>
@@ -992,6 +985,7 @@ const calculateDuration = (contract: Contracts) => {
   return diffDays === 1 ? '1 dia' : `${diffDays} dias`;
 };
 
+<<<<<<< HEAD
 const getSignaturesStatus = (contract: Contracts) => {
   if (!contract.total_signers) return {
     dot: 'bg-white/20',
@@ -1025,6 +1019,8 @@ const getSignaturesStatus = (contract: Contracts) => {
     text: 'text-red-400'
   };
 };
+=======
+>>>>>>> d379b244f46b6918fb8bb2b96d096caba898852c
 </script>
 
 <style scoped>

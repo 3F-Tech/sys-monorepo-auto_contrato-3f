@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  PostContractsMutationRequest,
+  PostContractsMutationResponse,
+} from "../types/PostContracts.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  PostContractsMutationRequest,
-  PostContractsMutationResponse,
-} from "../types/PostContracts.ts";
 
 function getPostContractsUrl() {
   const res = { method: "POST", url: `/contracts` as const };

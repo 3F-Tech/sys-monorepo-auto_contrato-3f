@@ -77,7 +77,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
             });
         }
 
-        const { data, bu_id, bu_name } = validation.data;
+        const { data, bu_id, bu_name, sdr_id } = validation.data;
         const user = req.user;
 
         // Declarations moved to function scope
@@ -492,12 +492,15 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                 title,
                 cnpj_client: data['CNPJ DO CONTRATANTE'] || '',
                 seller_id: BigInt(user.id),
+                sdr_id: sdr_id ? BigInt(sdr_id) : null,
                 bu_id: Number(bu_id),
                 monthly_fee: parseDecimal(data['VALOR MENSALIDADE']),
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
                 contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
                 legal_repre_email: data['EMAIL DO REPRESENTANTE'],
+                first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
+                first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
                 document_id: envelopeIdForDb,
                 envelope_id: envelopeIdToSave,
                 type_contract: sheetName,

@@ -9,8 +9,12 @@
     <div 
       v-if="!searchable"
       @click="toggleDropdown"
-      class="w-full bg-brand-offset/40 backdrop-blur-xl border border-brand-glass-border py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white cursor-pointer hover:border-brand-cyan/30 transition-all shadow-xl flex items-center justify-between"
-      :class="[icon ? 'pl-10' : 'pl-4', disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10']"
+      :class="[
+        'w-full backdrop-blur-xl border border-brand-glass-border text-white cursor-pointer transition-all shadow-xl flex items-center justify-between',
+        variant === 'form' ? 'bg-brand-surface py-3 px-4 rounded-xl hover:border-brand-cyan/40 text-sm font-medium' : 'bg-brand-offset/40 py-2.5 px-4 rounded-2xl hover:border-brand-cyan/30 text-[10px] font-black uppercase tracking-widest',
+        icon ? 'pl-10' : '',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10'
+      ]"
     >
       <span class="truncate">{{ selectedOptionLabel || placeholder }}</span>
     </div>
@@ -23,16 +27,20 @@
       @click="isOpen = true"
       :placeholder="selectedOptionLabel || placeholder"
       :disabled="disabled"
-      class="w-full bg-brand-offset/40 backdrop-blur-xl border border-brand-glass-border py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white placeholder:text-white/60 focus:text-brand-cyan focus:border-brand-cyan/50 focus:outline-none transition-all shadow-xl"
-      :class="[icon ? 'pl-10' : 'pl-4', disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10']"
+      :class="[
+        'w-full backdrop-blur-xl border border-brand-glass-border text-white focus:outline-none transition-all shadow-xl',
+        variant === 'form' ? 'bg-brand-surface py-3 px-4 rounded-xl focus:border-brand-cyan/40 placeholder:text-white/20 text-sm font-medium' : 'bg-brand-offset/40 py-2.5 px-4 rounded-2xl focus:text-brand-cyan focus:border-brand-cyan/50 placeholder:text-white/60 text-[10px] font-black uppercase tracking-widest',
+        icon ? 'pl-10' : '',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10'
+      ]"
     />
     
     <!-- Seta e botão de limpar -->
-    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
-      <button v-if="allowClear && modelValue && !disabled" @click.stop="clearSelection" class="hover:text-red-400 transition-colors mr-1">
+    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20 pointer-events-none">
+      <button v-if="allowClear && modelValue && !disabled" @click.stop="clearSelection" class="hover:text-red-400 transition-colors mr-1 pointer-events-auto">
         <X class="h-3 w-3 text-white/20 hover:text-red-400" />
       </button>
-      <ChevronDown :class="['h-4 w-4 text-white/20 group-hover/custom-select:text-brand-cyan transition-transform duration-300 pointer-events-none', isOpen ? 'rotate-180' : '']" />
+      <ChevronDown :class="['h-4 w-4 text-white/20 group-hover/custom-select:text-brand-cyan transition-transform duration-300', isOpen ? 'rotate-180' : '']" />
     </div>
 
     <!-- Lista Dropdown -->
@@ -53,7 +61,8 @@
           :key="option.value"
           @click="selectOption(option)"
           :class="[
-            'px-4 py-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-between',
+            'px-4 py-2 cursor-pointer transition-colors flex items-center justify-between',
+            variant === 'form' ? 'text-xs font-semibold' : 'text-[10px] font-bold uppercase tracking-widest',
             modelValue === option.value ? 'text-brand-cyan bg-brand-cyan/5' : 'text-white/60 hover:text-white hover:bg-white/5'
           ]"
         >
@@ -90,6 +99,7 @@ const props = defineProps<{
   searchable?: boolean;
   disabled?: boolean;
   allowClear?: boolean;
+  variant?: 'default' | 'form';
 }>();
 
 const emit = defineEmits(['update:modelValue', 'change']);

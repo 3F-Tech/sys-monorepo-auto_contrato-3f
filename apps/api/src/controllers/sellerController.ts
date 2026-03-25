@@ -99,7 +99,7 @@ export const getSellerByEmail = async (req: Request, res: Response) => {
  *         name: type
  *         schema:
  *           type: string
- *         description: Filtrar por tipo de usuário (seller, head, coord, admin)
+ *         description: Filtrar por tipo de usuário (seller, sdr, head, coord, admin)
  *     responses:
  *       200:
  *         description: Sucesso
@@ -325,7 +325,7 @@ export const createSeller = async (req: any, res: Response) => {
 
         // Restrições específicas para Head (Coordenador agora é livre para usuários)
         if (requester.type === 'head') {
-            data.type = 'seller'; // Head só cria seller
+            if (data.type !== 'sdr') data.type = 'seller'; // Head só cria seller ou sdr
             data.head_id = BigInt(requester.id); // Vendedor vinculado ao head
         }
 
@@ -389,7 +389,10 @@ export const updateSeller = async (req: any, res: Response) => {
                 return res.status(403).json({ error: "Você só pode editar vendedores da sua equipe" });
             }
 
-            delete data.type; // Seguranca: Head não pode mudar cargo nesse fluxo
+            // Head não pode mudar cargo nesse fluxo, a menos que seja seller <-> sdr? 
+            // Para simplificar, vamos manter a trava mas permitir sdr se o alvo for da equipe.
+            // Atualmente o head_id trava o escopo.
+            delete data.type; // Segurança: Head não pode mudar cargo nesse fluxo
 
             // Lógica de Vínculo:
             // 1. Se head_id for enviado como null ou "null" -> Desassociar

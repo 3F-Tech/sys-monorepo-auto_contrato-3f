@@ -101,6 +101,10 @@ export const getValidationRules = (data: Record<string, any>, buName?: string, t
   check('NOME VENDEDOR', validateRequired(data['NOME VENDEDOR'], 'Nome do vendedor'));
   check('CPF VENDEDOR', validateCPF(data['CPF VENDEDOR'] || ''));
 
+  if (data['NOME SDR']) {
+    check('CPF SDR', validateCPF(data['CPF SDR'] || ''));
+  }
+
   if (data['PRAZO CONTRATUAL MESES'] !== undefined) {
     const prazo = Number(data['PRAZO CONTRATUAL MESES']);
     if (isNaN(prazo) || prazo <= 0) {

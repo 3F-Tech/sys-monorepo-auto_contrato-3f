@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  DeleteBusinessIdMutationResponse,
+  DeleteBusinessIdPathParams,
+} from "../types/DeleteBusinessId.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  DeleteBusinessIdMutationResponse,
-  DeleteBusinessIdPathParams,
-} from "../types/DeleteBusinessId.ts";
 
 function getDeleteBusinessIdUrl(id: DeleteBusinessIdPathParams["id"]) {
   const res = { method: "DELETE", url: `/business/${id}` as const };

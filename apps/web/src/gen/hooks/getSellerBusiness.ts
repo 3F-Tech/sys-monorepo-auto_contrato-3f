@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
+import type { GetSellerBusinessQueryResponse } from "../types/GetSellerBusiness.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type { GetSellerBusinessQueryResponse } from "../types/GetSellerBusiness.ts";
 
 function getGetSellerBusinessUrl() {
   const res = { method: "GET", url: `/seller-business` as const };

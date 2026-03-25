@@ -51,8 +51,15 @@ export const createOrUpdateGoal = async (req: any, res: Response) => {
             if (data.target_type === 'bu' || data.target_type === 'head') {
                 return res.status(403).json({ error: "Heads não definem metas de BU ou metas pessoais de Head (estas são definidas pelo Admin)" });
             }
-            if (data.target_type === 'team' && data.target_id.toString() !== requester.id.toString()) {
-                return res.status(403).json({ error: "Heads só definem metas para sua própria equipe" });
+            if (data.target_type === 'team') {
+                const teamId = Number(data.target_id);
+                const team = await prisma.teams.findUnique({ where: { id: teamId } });
+                if (!team || team.head_id?.toString() !== requester.id.toString()) {
+                    // Fallback para o caso onde head_id é usado como target_id (legado/pessoal)
+                    if (data.target_id.toString() !== requester.id.toString()) {
+                        return res.status(403).json({ error: "Você só pode definir metas para equipes sob sua gestão" });
+                    }
+                }
             }
             if (data.target_type === 'seller') {
                 const seller = await prisma.sellers.findUnique({ where: { id: data.target_id } });
@@ -125,22 +132,67 @@ export const getGoals = async (req: any, res: Response) => {
                 return res.json([]);
             }
         } else if (requester.type === 'head') {
-            // Vê sua própria meta de Equipe (team) + sua meta pessoal (head) + metas dos seus sellers
+            // Vê sua própria meta de Equipe (team e head) + metas dos seus sellers + metas de suas BUs
             const teamSellers = await prisma.sellers.findMany({
                 where: { head_id: BigInt(requester.id) },
                 select: { id: true }
             });
             const sellerIds = teamSellers.map(s => s.id);
             
+            const myBUs = await prisma.seller_business.findMany({
+                where: { seller_id: BigInt(requester.id) },
+                select: { business_id: true }
+            });
+            const buIds = myBUs.map(sb => sb.business_id);
+            
             where.OR = [
                 { target_type: 'head', target_id: BigInt(requester.id) },
                 { target_type: 'team', target_id: BigInt(requester.id) },
-                { target_type: 'seller', target_id: { in: sellerIds } }
+                { target_type: 'seller', target_id: { in: sellerIds } },
+                { target_type: 'bu', target_id: { in: buIds } }
             ];
+            
+            // Também vê se estiver em uma equipe específica pelo ID da equipe (teams liderados ou onde é membro)
+            const managedTeams = await prisma.teams.findMany({
+                where: { head_id: BigInt(requester.id) },
+                select: { id: true }
+            });
+            const managedTeamIds = managedTeams.map(t => BigInt(t.id));
+
+            const me = await prisma.sellers.findUnique({ where: { id: BigInt(requester.id) }, select: { team_id: true } });
+            
+            if (managedTeamIds.length > 0) {
+                where.OR.push({ target_type: 'team', target_id: { in: managedTeamIds } });
+            }
+            if (me?.team_id) {
+                where.OR.push({ target_type: 'team', target_id: BigInt(me.team_id) });
+            }
+
         } else {
-            // Seller vê apenas a sua
-            where.target_type = 'seller';
-            where.target_id = BigInt(requester.id);
+            // Seller vê a sua + a de sua equipe (se houver) + vendedores da mesma equipe + metas das BUs vinculadas
+            const me = await prisma.sellers.findUnique({
+                where: { id: BigInt(requester.id) },
+                include: { seller_business: true }
+            });
+
+            const buIds = me?.seller_business.map(sb => sb.business_id) || [];
+            const orConditions: any[] = [
+                { target_type: 'seller', target_id: BigInt(requester.id) },
+                { target_type: 'bu', target_id: { in: buIds } }
+            ];
+
+            if (me?.team_id) {
+                const teamSellers = await prisma.sellers.findMany({
+                    where: { team_id: me.team_id },
+                    select: { id: true }
+                });
+                const teammateIds = teamSellers.map(s => s.id);
+
+                orConditions.push({ target_type: 'seller', target_id: { in: teammateIds } });
+                orConditions.push({ target_type: 'team', target_id: BigInt(me.team_id) });
+            }
+
+            where.OR = orConditions;
         }
 
         const goals = await prisma.goals.findMany({ where });

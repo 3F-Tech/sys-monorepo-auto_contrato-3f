@@ -77,6 +77,10 @@
             "nullable": true,
             "description": "BigInt serializado"
           },
+          "team_id": {
+            "type": "integer",
+            "nullable": true
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -264,6 +268,29 @@
             "format": "date-time"
           }
         }
+      },
+      "BuCac": {
+        "type": "object",
+        "properties": {
+          "bu_id": {
+            "type": "integer"
+          },
+          "bu_name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "is_inherited": {
+            "type": "boolean"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "year": {
+            "type": "integer"
+          }
+        }
       }
     }
   },
@@ -402,6 +429,34 @@
             "description": "Criado"
           }
         }
+      }
+    },
+    "/cac": {
+      "get": {
+        "summary": "Listar CAC por BU para um mês específico (com fallback histórico)",
+        "tags": [
+          "CAC"
+        ]
+      },
+      "post": {
+        "summary": "Definir valor de CAC para uma BU",
+        "tags": [
+          "CAC"
+        ]
+      }
+    },
+    "/commercial-costs": {
+      "get": {
+        "summary": "Listar custos comerciais para um mês específico",
+        "tags": [
+          "Commercial Costs"
+        ]
+      },
+      "post": {
+        "summary": "Definir custos comerciais para um mês",
+        "tags": [
+          "Commercial Costs"
+        ]
       }
     },
     "/contracts-sheets/impulse-plano-1": {
@@ -1144,7 +1199,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filtrar por tipo de usuário (seller, head, coord, admin)"
+            "description": "Filtrar por tipo de usuário (seller, sdr, head, coord, admin)"
           }
         ],
         "responses": {
@@ -1222,6 +1277,50 @@
             "description": "Credenciais inválidas"
           }
         }
+      }
+    },
+    "/teams": {
+      "get": {
+        "summary": "Listar equipes (Coordenador vê apenas as dele, Admin vê todas)",
+        "tags": [
+          "Teams"
+        ]
+      },
+      "post": {
+        "summary": "Criar nova equipe",
+        "tags": [
+          "Teams"
+        ]
+      }
+    },
+    "/teams/{id}": {
+      "put": {
+        "summary": "Atualizar equipe (Nome, foto, descrição)",
+        "tags": [
+          "Teams"
+        ]
+      },
+      "delete": {
+        "summary": "Deletar equipe",
+        "tags": [
+          "Teams"
+        ]
+      }
+    },
+    "/teams/{id}/members": {
+      "post": {
+        "summary": "Adicionar vendedor à equipe",
+        "tags": [
+          "Teams"
+        ]
+      }
+    },
+    "/teams/{id}/members/{sellerId}": {
+      "delete": {
+        "summary": "Remover vendedor da equipe",
+        "tags": [
+          "Teams"
+        ]
       }
     }
   },

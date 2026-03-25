@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  DeleteSellersIdMutationResponse,
+  DeleteSellersIdPathParams,
+} from "../types/DeleteSellersId.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  DeleteSellersIdMutationResponse,
-  DeleteSellersIdPathParams,
-} from "../types/DeleteSellersId.ts";
 
 function getDeleteSellersIdUrl(id: DeleteSellersIdPathParams["id"]) {
   const res = { method: "DELETE", url: `/sellers/${id}` as const };

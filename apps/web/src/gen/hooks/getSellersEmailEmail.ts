@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
+  GetSellersEmailQueryResponse,
+  GetSellersEmailPathParams,
+} from "../types/GetSellersEmailEmail.ts";
+import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type {
-  GetSellersEmailQueryResponse,
-  GetSellersEmailPathParams,
-} from "../types/GetSellersEmailEmail.ts";
 
 function getGetSellersEmailEmailUrl(email: GetSellersEmailPathParams["email"]) {
   const res = { method: "GET", url: `/sellers/email/${email}` as const };

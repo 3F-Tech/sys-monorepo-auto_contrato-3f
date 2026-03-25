@@ -198,21 +198,77 @@
     <!-- Seção: TESTEMUNHAS -->
     <div class="space-y-12 pt-6 border-t border-brand-glass-border">
       <WitnessSection :form="form" :errors="errors" :buName="buName" />
+
+      <div class="space-y-6">
+        <div class="flex items-center justify-between border-b border-brand-glass-border pb-2">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
+              <UsersIcon class="h-5 w-5" />
+            </div>
+            <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Equipe Responsável</h3>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
+            <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium" placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
+            <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA BU</label>
+            <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full" placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA BU</label>
+            <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO SDR</label>
+            <CustomSelect 
+              v-model="selectedSDRId"
+              :options="sdrOptions"
+              placeholder="PESQUISAR SDR"
+              searchable
+              allow-clear
+              variant="form"
+              class="w-full"
+              :class="[errors && errors['NOME SDR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']"
+            />
+            <span v-if="errors && errors['NOME SDR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME SDR'] }}</span>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO SDR</label>
+            <input type="text" id="CPF SDR" v-model="form['CPF SDR']" v-maska="'###.###.###-##'" class="input-glass w-full"
+              placeholder="000.000.000-00" :class="[errors && errors['CPF SDR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+            <span v-if="errors && errors['CPF SDR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF SDR'] }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useCep } from '../../../composables/useCep';
 import WitnessSection from '../../../components/contracts/WitnessSection.vue';
+import CustomSelect from '../../../components/ui/CustomSelect.vue';
 import { 
   Building2, 
   MapPin, 
   User as UserIcon, 
   DollarSign, 
   FileText,
-  Info
+  Info,
+  Users as UsersIcon
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -231,10 +287,38 @@ const props = defineProps({
   templateName: {
     type: String,
     default: ''
+  },
+  sellers: {
+    type: Array,
+    default: () => []
   }
 });
 
+const emit = defineEmits(['update-sdr-id']);
+
 const { loading: cepLoading, fetchAddress } = useCep();
+
+const selectedSDRId = ref<string | null>(null);
+
+const sdrOptions = computed(() => {
+  return (props.sellers as any[])
+    .filter(s => s.type === 'sdr')
+    .map(s => ({ value: s.id.toString(), label: s.name }));
+});
+
+watch(selectedSDRId, (newId) => {
+  emit('update-sdr-id', newId);
+  if (newId) {
+    const sdr = (props.sellers as any[]).find(s => s.id.toString() === newId);
+    if (sdr) {
+      props.form['NOME SDR'] = sdr.name;
+      props.form['CPF SDR'] = sdr.cpf;
+    }
+  } else {
+    props.form['NOME SDR'] = '';
+    props.form['CPF SDR'] = '';
+  }
+});
 
 watch(() => props.form['CEP DO CONTRATANTE'], async (newCep) => {
   if (newCep && newCep.replace(/\D/g, '').length === 8) {

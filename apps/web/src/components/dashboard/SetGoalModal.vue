@@ -11,7 +11,8 @@
       <div class="relative z-10 flex items-center justify-between mb-6">
         <h3 class="text-xl font-bold flex items-center gap-2">
           <Target class="h-5 w-5 text-brand-cyan" />
-          {{ view === 'list' ? 'Gerenciar Metas' : (editingGoal ? 'Editar Meta' : 'Nova Meta de Performance') }}
+          {{ view === 'list' ? 'Gerenciar Metas' : (editingGoal ? 'Editar Meta' : 'Adicionar Nova Meta') }}
+
         </h3>
         <div class="flex items-center gap-2">
           <button v-if="view === 'form'" @click="view = 'list'" 
@@ -39,7 +40,7 @@
         <form v-else @submit.prevent="handleSubmit" class="space-y-6">
 
           <!-- Segmented Type Selector -->
-          <div class="space-y-2">
+          <div v-if="!showPeriodsOnly" class="space-y-2">
             <label class="text-[10px] font-black text-brand-cyan uppercase tracking-widest ml-1">Tipo de Alvo</label>
             <div class="relative flex rounded-2xl bg-brand-surface border border-brand-glass-border p-1 gap-0.5">
               <!-- Glider animado -->
@@ -66,8 +67,9 @@
             </div>
           </div>
 
+
           <!-- Período -->
-          <div class="grid grid-cols-2 gap-4">
+          <div v-if="!showPeriodsOnly" class="grid grid-cols-2 gap-4">
             <div class="space-y-1.5">
               <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Mês</label>
               <CustomSelect 
@@ -86,8 +88,9 @@
             </div>
           </div>
 
+
           <!-- Seleção do Alvo -->
-          <div class="space-y-1.5">
+          <div v-if="!showPeriodsOnly" class="space-y-1.5">
             <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Selecionar {{ targetLabel }}</label>
             <CustomSelect 
               v-model="form.target_id" 
@@ -97,48 +100,16 @@
             />
           </div>
 
+
           <!-- Métricas da Meta -->
           <div class="pt-4 border-t border-white/5">
             <div class="flex items-center gap-2 mb-4">
               <TrendingUp class="h-4 w-4 text-brand-cyan" />
               <span class="text-xs font-bold text-white/70 uppercase tracking-wider">Métricas da Meta (R$)</span>
             </div>
-            
-            <Transition name="metrics-fade" mode="out-in">
-              <!-- BU: apenas NMRR e TCV -->
-              <div v-if="form.target_type === 'bu'" key="bu" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta NMRR</label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
-                    <input v-model="form.nmrr" type="number" step="0.01"
-                      class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
-                      placeholder="0,00">
-                  </div>
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta TCV</label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
-                    <input v-model="form.tcv" type="number" step="0.01"
-                      class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
-                      placeholder="0,00">
-                  </div>
-                </div>
-                <div class="space-y-1.5 md:col-span-2">
-                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Recorrência Mensal</label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
-                    <input v-model="form.monthly" type="number" step="0.01"
-                      class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
-                      placeholder="0,00">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Head / Seller: todos os campos -->
-              <div v-else key="full" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
+                  <Transition name="metrics-fade" mode="out-in">
+              <div :key="form.target_type" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div v-if="!showPeriodsOnly" class="space-y-1.5">
                   <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta P1</label>
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
@@ -147,7 +118,61 @@
                       placeholder="0,00">
                   </div>
                 </div>
-                <div class="space-y-1.5">
+
+
+                <template v-if="showPeriodsOnly">
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Acumulada até D7</label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
+                      <input v-model="form.p1_period_1" type="number" step="0.01"
+                        class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
+                        placeholder="Automático">
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Acumulada até D13</label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
+                      <input v-model="form.p1_period_2" type="number" step="0.01"
+                        class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
+                        placeholder="Automático">
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Acumulada até D21</label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
+                      <input v-model="form.p1_period_3" type="number" step="0.01"
+                        class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
+                        placeholder="Automático">
+                    </div>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Final P1 (Mês)</label>
+                    <div class="relative">
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
+                      <input v-model="form.p1_period_4" type="number" step="0.01"
+                        class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
+                        placeholder="Automático">
+                    </div>
+                  </div>
+
+                  <!-- Info Box -->
+                  <div class="md:col-span-2 lg:col-span-3 p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <p class="text-[10px] text-white/30 uppercase tracking-wider leading-relaxed">
+                      💡 <strong>Dica:</strong> Os campos acima definem os "marcos" na linha do gráfico. 
+                      Se deixá-los vazios, o sistema calculará uma distribuição linear baseada na **Meta P1 Total** ({{ formatFullCurrency(form.p1 || 0) }}).
+                    </p>
+                  </div>
+
+                </template>
+
+
+                <div v-if="!showPeriodsOnly" class="space-y-1.5">
                   <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta TCV</label>
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
@@ -156,7 +181,7 @@
                       placeholder="0,00">
                   </div>
                 </div>
-                <div class="space-y-1.5">
+                <div v-if="!showPeriodsOnly" class="space-y-1.5">
                   <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta NMRR</label>
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
@@ -165,24 +190,7 @@
                       placeholder="0,00">
                   </div>
                 </div>
-                <div class="space-y-1.5">
-                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Total Implementação</label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
-                    <input v-model="form.implementation" type="number" step="0.01"
-                      class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
-                      placeholder="0,00">
-                  </div>
-                </div>
-                <div class="space-y-1.5 md:col-span-2">
-                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Meta Recorrência Mensal</label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
-                    <input v-model="form.monthly" type="number" step="0.01"
-                      class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
-                      placeholder="0,00">
-                  </div>
-                </div>
+
               </div>
             </Transition>
           </div>
@@ -214,6 +222,7 @@ import GoalList from './GoalList.vue';
 import { useAuthStore } from '../../store/auth';
 import { useSellerStore } from '../../store/seller';
 import { useGoalStore } from '../../store/goals';
+import { useTeamStore } from '../../store/team';
 import { getBusiness } from '../../gen/hooks/getBusiness';
 import client from '../../api/client';
 import type { Business } from '../../gen/types/Business';
@@ -221,13 +230,19 @@ import type { Goal } from '../../api/goalService';
 
 const props = defineProps<{
   isOpen: boolean;
+  showPeriodsOnly?: boolean;
+  initialView?: 'list' | 'form';
+  initialTarget?: { type: string; id: string } | null;
 }>();
+
+
 
 const emit = defineEmits(['close', 'saved']);
 
 const authStore = useAuthStore();
 const sellerStore = useSellerStore();
 const goalStore = useGoalStore();
+const teamStore = useTeamStore();
 
 const view = ref<'list' | 'form'>('list');
 const editingGoal = ref<Goal | null>(null);
@@ -238,10 +253,15 @@ const form = ref({
   target_type: 'seller' as 'seller' | 'head' | 'team' | 'bu',
   target_id: '' as string | number,
   p1: null as number | null,
+  p1_period_1: null as number | null,
+  p1_period_2: null as number | null,
+  p1_period_3: null as number | null,
+  p1_period_4: null as number | null,
   tcv: null as number | null,
   nmrr: null as number | null,
   implementation: null as number | null,
   monthly: null as number | null,
+
   month: new Date().getMonth() + 1,
   year: new Date().getFullYear(),
 });
@@ -256,26 +276,27 @@ const monthOptions = [
 const yearOptions = [
   { value: 2024, label: '2024' },
   { value: 2025, label: '2025' },
-  { value: 2026, label: '2026' }
+  { value: 2026, label: '2026' },
+  { value: 2027, label: '2027' },
+  { value: 2028, label: '2028' }
 ];
+
+
+
 
 const targetTypeOptions = computed(() => {
   const types: { value: string; label: string; icon: any }[] = [];
   const utype = authStore.user?.type;
   if (utype === 'admin') {
     types.push({ value: 'bu', label: 'BU', icon: Building2 });
-    types.push({ value: 'head', label: 'Head', icon: User });
-    types.push({ value: 'team', label: 'Equipe', icon: Users });
     types.push({ value: 'seller', label: 'Vendedor', icon: User });
   } else if (utype === 'coord') {
     types.push({ value: 'bu', label: 'BU', icon: Building2 });
   } else if (utype === 'head') {
-    types.push({ value: 'team', label: 'Minha Equipe', icon: Users });
-    types.push({ value: 'seller', label: 'Meus Vendedores', icon: User });
+    types.push({ value: 'seller', label: 'Vendedor', icon: User });
   }
   return types;
 });
-
 // Glider: referências dos botões de tab para calcular posição/largura
 const tabRefs = ref<Record<string, HTMLElement | null>>({});
 const setTabRef = (el: any, value: string) => {
@@ -293,14 +314,33 @@ const gliderStyle = computed(() => {
   };
 });
 
+const periodsSum = computed(() => {
+  return (Number(form.value.p1_period_1 || 0) + 
+          Number(form.value.p1_period_2 || 0) + 
+          Number(form.value.p1_period_3 || 0) + 
+          Number(form.value.p1_period_4 || 0));
+});
+
+const formatFullCurrency = (val: number | string | null | undefined) => {
+  if (val === null || val === undefined) return 'R$ 0,00';
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+};
+
+
 const selectType = (value: string) => {
   form.value.target_type = value as 'seller' | 'head' | 'team' | 'bu';
   form.value.target_id = '';
   form.value.p1 = null;
+  form.value.p1_period_1 = null;
+  form.value.p1_period_2 = null;
+  form.value.p1_period_3 = null;
+  form.value.p1_period_4 = null;
   form.value.tcv = null;
   form.value.nmrr = null;
   form.value.implementation = null;
   form.value.monthly = null;
+
 };
 
 const targetLabel = computed(() => {
@@ -312,34 +352,40 @@ const targetLabel = computed(() => {
 
 const targetIdOptions = computed(() => {
   if (form.value.target_type === 'bu') {
-    const options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
+    let options = allBusiness.value.map(b => ({ value: b.id?.toString() || '', label: b.name || '' }));
     if (authStore.user?.type === 'admin') {
-      options.unshift({ value: '99', label: '3F Group (Consolidado)' });
+      options = options.filter(o => {
+        const name = o.label.toLowerCase();
+        return !(name.includes('3f') || name.includes('group') || name.includes('venture'));
+      });
+      options.unshift({ value: '99', label: '3F Venture' });
     }
     return options;
-  } else if (form.value.target_type === 'head' || form.value.target_type === 'team') {
-    if (authStore.user?.type === 'head') {
-      return [{ value: authStore.user.id?.toString() || '', label: authStore.user.name || '' }];
-    }
+  } else if (form.value.target_type === 'team') {
+    return teamStore.teams.map(t => ({ value: t.id.toString(), label: t.name }));
+  } else if (form.value.target_type === 'head') {
     return sellerStore.allSellers.filter(s => s.type === 'head').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
   } else {
+    // Para tipo Seller
     const sellers = authStore.user?.type === 'head' ? sellerStore.teamSellers : sellerStore.allSellers;
-    return sellers.filter(s => s.type === 'seller').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
+    return sellers.filter(s => s.type === 'seller' || s.type === 'sdr').map(s => ({ value: s.id?.toString() || '', label: s.name || '' }));
   }
 });
 
 const loadData = async () => {
     try {
         const utype = authStore.user?.type;
-        if (utype === 'admin' || utype === 'coord') {
+        if (utype === 'admin' || utype === 'coord' || utype === 'head') {
             const bus = await getBusiness({ client });
             allBusiness.value = bus as Business[];
+            await teamStore.fetchTeams();
         }
         
         if (utype === 'admin' || utype === 'coord') {
             await sellerStore.fetchAllSellers();
         } else if (utype === 'head' && authStore.user?.id) {
             await sellerStore.fetchTeamSellers(authStore.user.id.toString());
+            await sellerStore.fetchAllSellers(); // Também busca todos para nomes no histórico
         }
     } catch (err) {
         console.error('Erro ao carregar dados do modal de metas:', err);
@@ -348,13 +394,28 @@ const loadData = async () => {
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
-    view.value = 'list';
+    view.value = props.initialView || 'list';
     editingGoal.value = null;
     loadData();
     // Pre-carrega todas as metas para o dashboard
     goalStore.fetchGoals();
+
+    // Se tiver um target inicial e estivermos em modo form, tenta carregar a meta existente
+    if (props.initialView === 'form' && props.initialTarget) {
+      const cleanId = props.initialTarget.id.toString().replace('team_', '').replace('head_own_', '');
+      const existing = goalStore.getGoalByTarget(props.initialTarget.type, cleanId);
+      if (existing) {
+        editGoal(existing);
+      } else {
+        // Se não existir, inicia um novo form focado no target
+        addNew();
+        form.value.target_type = props.initialTarget.type as any;
+        form.value.target_id = cleanId;
+      }
+    }
   }
 });
+
 
 const addNew = () => {
   editingGoal.value = null;
@@ -362,10 +423,15 @@ const addNew = () => {
     target_type: authStore.user?.type === 'coord' ? 'bu' : 'seller',
     target_id: '',
     p1: null,
+    p1_period_1: null,
+    p1_period_2: null,
+    p1_period_3: null,
+    p1_period_4: null,
     tcv: null,
     nmrr: null,
     implementation: null,
     monthly: null,
+
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
   };
@@ -377,11 +443,16 @@ const editGoal = (goal: Goal) => {
   form.value = {
     target_type: goal.target_type as any,
     target_id: goal.target_id as any,
-    p1: goal.p1 ? Number(goal.p1) : null,
-    tcv: goal.tcv ? Number(goal.tcv) : null,
-    nmrr: goal.nmrr ? Number(goal.nmrr) : null,
-    implementation: goal.implementation ? Number(goal.implementation) : null,
-    monthly: goal.monthly ? Number(goal.monthly) : null,
+    p1: goal.p1 != null ? Number(goal.p1) : null,
+    p1_period_1: goal.p1_period_1 != null ? Number(goal.p1_period_1) : null,
+    p1_period_2: goal.p1_period_2 != null ? Number(goal.p1_period_2) : null,
+    p1_period_3: goal.p1_period_3 != null ? Number(goal.p1_period_3) : null,
+    p1_period_4: goal.p1_period_4 != null ? Number(goal.p1_period_4) : null,
+    tcv: goal.tcv != null ? Number(goal.tcv) : null,
+    nmrr: goal.nmrr != null ? Number(goal.nmrr) : null,
+    implementation: goal.implementation != null ? Number(goal.implementation) : null,
+    monthly: goal.monthly != null ? Number(goal.monthly) : null,
+
     month: goal.month || (new Date().getMonth() + 1),
     year: goal.year || new Date().getFullYear(),
   };
@@ -399,18 +470,27 @@ watch([() => form.value.target_id, () => form.value.month, () => form.value.year
     );
 
     if (existing) {
-        form.value.p1 = existing.p1 ? Number(existing.p1) : null;
-        form.value.tcv = existing.tcv ? Number(existing.tcv) : null;
-        form.value.nmrr = existing.nmrr ? Number(existing.nmrr) : null;
-        form.value.implementation = existing.implementation ? Number(existing.implementation) : null;
-        form.value.monthly = existing.monthly ? Number(existing.monthly) : null;
+        form.value.p1 = existing.p1 != null ? Number(existing.p1) : null;
+        form.value.p1_period_1 = existing.p1_period_1 != null ? Number(existing.p1_period_1) : null;
+        form.value.p1_period_2 = existing.p1_period_2 != null ? Number(existing.p1_period_2) : null;
+        form.value.p1_period_3 = existing.p1_period_3 != null ? Number(existing.p1_period_3) : null;
+        form.value.p1_period_4 = existing.p1_period_4 != null ? Number(existing.p1_period_4) : null;
+        form.value.tcv = existing.tcv != null ? Number(existing.tcv) : null;
+        form.value.nmrr = existing.nmrr != null ? Number(existing.nmrr) : null;
+        form.value.implementation = existing.implementation != null ? Number(existing.implementation) : null;
+        form.value.monthly = existing.monthly != null ? Number(existing.monthly) : null;
     } else {
         form.value.p1 = null;
+        form.value.p1_period_1 = null;
+        form.value.p1_period_2 = null;
+        form.value.p1_period_3 = null;
+        form.value.p1_period_4 = null;
         form.value.tcv = null;
         form.value.nmrr = null;
         form.value.implementation = null;
         form.value.monthly = null;
     }
+
 });
 
 const close = () => emit('close');
@@ -418,10 +498,16 @@ const close = () => emit('close');
 const handleSubmit = async () => {
   loading.value = true;
   try {
-    await goalStore.saveGoal({
-      ...form.value,
-      target_id: form.value.target_id.toString()
-    });
+  // No modo de períodos, não sobrescrevemos mais o P1 automaticamente.
+  // O P1 é a meta mestre definida na aba principal.
+  
+  await goalStore.saveGoal({
+    ...form.value,
+    target_id: form.value.target_id.toString()
+  });
+
+
+
     emit('saved');
     view.value = 'list'; // Volta para a lista após salvar
   } catch (err) {

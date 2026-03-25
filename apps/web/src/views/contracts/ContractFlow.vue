@@ -162,7 +162,8 @@
 
           <!-- Render Condicional do Form (por enquanto apenas Impulse Plano 1) -->
           <component v-if="activeFormComponent" :is="activeFormComponent" :form="contractData" :errors="formErrors"
-            :buName="selectedBU?.name || ''" :templateName="selectedTemplate" />
+            :buName="selectedBU?.name || ''" :templateName="selectedTemplate"
+            :sellers="allSellers" @update-sdr-id="sdr_id = $event" />
 
           <div v-else class="text-center py-20 bg-brand-surface/20 rounded-3xl border border-brand-glass-border">
             <Construction class="h-12 w-12 mx-auto text-brand-cyan opacity-20 mb-4" />
@@ -257,6 +258,7 @@ const isGenerating = ref(false);
 const isProgressModalVisible = ref(false);
 const trackingId = ref<string | null>(null);
 const progressModalRef = ref<any>(null);
+const sdr_id = ref<string | null>(null);
 
 // @ts-ignore
 const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3007';
@@ -441,7 +443,11 @@ const handleTemplateSelect = (template: string) => {
     'CPF VENDEDOR': '',
     'LINK INSTAGRAM CONTRATANTE': '',
     'QTD ARTES': '',
-    'QTD VIDEOS': ''
+    'QTD VIDEOS': '',
+    'NOME COORD BU': '',
+    'CPF COORD BU': '',
+    'NOME SDR': '',
+    'CPF SDR': ''
   };
 
   // Se não for Growth, adiciona o prazo
@@ -561,7 +567,8 @@ const handleContractGenerate = async () => {
       data: contractData.value,
       bu_id: selectedBU.value?.id,
       bu_name: selectedBU.value?.name,
-      trackingId: newTrackingId
+      trackingId: newTrackingId,
+      sdr_id: sdr_id.value
     });
     // O sucesso agora é gerenciado pelo modal via SSE
   } catch (error: any) {

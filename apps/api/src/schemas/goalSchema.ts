@@ -4,6 +4,10 @@ export const goalSchema = z.object({
   target_type: z.enum(['seller', 'head', 'team', 'bu']),
   target_id: z.union([z.number(), z.string(), z.bigint()]).transform(val => BigInt(val)),
   p1: z.number().nullable().optional(),
+  p1_period_1: z.number().nullable().optional(),
+  p1_period_2: z.number().nullable().optional(),
+  p1_period_3: z.number().nullable().optional(),
+  p1_period_4: z.number().nullable().optional(),
   tcv: z.number().nullable().optional(),
   nmrr: z.number().nullable().optional(),
   implementation: z.number().nullable().optional(),
@@ -11,5 +15,6 @@ export const goalSchema = z.object({
   month: z.number().min(1).max(12),
   year: z.number().min(2024),
 });
+
 
 export type GoalInput = z.infer<typeof goalSchema>;

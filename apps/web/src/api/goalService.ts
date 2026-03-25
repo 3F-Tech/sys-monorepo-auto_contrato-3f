@@ -5,10 +5,15 @@ export interface Goal {
   target_type: 'seller' | 'head' | 'team' | 'bu';
   target_id: string;
   p1: number | null;
+  p1_period_1: number | null;
+  p1_period_2: number | null;
+  p1_period_3: number | null;
+  p1_period_4: number | null;
   tcv: number | null;
   nmrr: number | null;
   implementation: number | null;
   monthly: number | null;
+
   month: number;
   year: number;
   created_by: string;
@@ -22,10 +27,15 @@ export interface GoalInput {
   month: number;
   year: number;
   p1?: number | null;
+  p1_period_1?: number | null;
+  p1_period_2?: number | null;
+  p1_period_3?: number | null;
+  p1_period_4?: number | null;
   tcv?: number | null;
   nmrr?: number | null;
   implementation?: number | null;
   monthly?: number | null;
+
 }
 
 export const goalService = {
