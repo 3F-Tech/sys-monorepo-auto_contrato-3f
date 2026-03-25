@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { GetCacQueryResponse } from "../types/GetCac.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { GetCacQueryResponse } from "../types/GetCac.ts";
 
 function getGetCacUrl() {
   const res = { method: "GET", url: `/cac` as const };

@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { GetHealthQueryResponse } from "../types/GetHealth.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { GetHealthQueryResponse } from "../types/GetHealth.ts";
 
 function getGetHealthUrl() {
   const res = { method: "GET", url: `/health` as const };

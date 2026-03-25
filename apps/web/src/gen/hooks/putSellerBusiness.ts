@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PutSellerBusinessMutationRequest,
-  PutSellerBusinessMutationResponse,
-} from "../types/PutSellerBusiness.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PutSellerBusinessMutationRequest,
+  PutSellerBusinessMutationResponse,
+} from "../types/PutSellerBusiness.ts";
 
 function getPutSellerBusinessUrl() {
   const res = { method: "PUT", url: `/seller-business` as const };

@@ -70,6 +70,11 @@ const options: swaggerJsdoc.Options = {
                         first_payment_date: { type: 'string', format: 'date-time', nullable: true },
                         first_payment_amount: { type: 'string', description: 'Decimal', nullable: true },
                         document_id: { type: 'string', nullable: true },
+                        sdr_id: { type: 'string', description: 'BigInt serializado', nullable: true },
+                        envelope_id: { type: 'string', nullable: true },
+                        signed_count: { type: 'integer', nullable: true },
+                        total_signers: { type: 'integer', nullable: true },
+                        canceled_at: { type: 'string', format: 'date-time', nullable: true },
                     },
                 },
                 ContractData: {

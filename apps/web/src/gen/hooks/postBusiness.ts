@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PostBusinessMutationRequest,
-  PostBusinessMutationResponse,
-} from "../types/PostBusiness.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PostBusinessMutationRequest,
+  PostBusinessMutationResponse,
+} from "../types/PostBusiness.ts";
 
 function getPostBusinessUrl() {
   const res = { method: "POST", url: `/business` as const };

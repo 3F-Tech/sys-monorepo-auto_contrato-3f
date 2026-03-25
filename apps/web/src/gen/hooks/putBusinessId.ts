@@ -5,15 +5,15 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PutBusinessIdMutationRequest,
-  PutBusinessIdMutationResponse,
-  PutBusinessIdPathParams,
-} from "../types/PutBusinessId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PutBusinessIdMutationRequest,
+  PutBusinessIdMutationResponse,
+  PutBusinessIdPathParams,
+} from "../types/PutBusinessId.ts";
 
 function getPutBusinessIdUrl(id: PutBusinessIdPathParams["id"]) {
   const res = { method: "PUT", url: `/business/${id}` as const };

@@ -90,13 +90,22 @@ export type Contracts = {
    */
   document_id?: string | null;
   /**
-   * @type integer
+   * @description BigInt serializado
+   * @type string
    */
-  signed_count?: number;
+  sdr_id?: string | null;
+  /**
+   * @type string
+   */
+  envelope_id?: string | null;
   /**
    * @type integer
    */
-  total_signers?: number;
+  signed_count?: number | null;
+  /**
+   * @type integer
+   */
+  total_signers?: number | null;
   /**
    * @type string, date-time
    */

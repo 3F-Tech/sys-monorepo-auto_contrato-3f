@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { PutTeamsIdMutationResponse } from "../types/PutTeamsId.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { PutTeamsIdMutationResponse } from "../types/PutTeamsId.ts";
 
 function getPutTeamsIdUrl() {
   const res = { method: "PUT", url: `/teams/${id}` as const };

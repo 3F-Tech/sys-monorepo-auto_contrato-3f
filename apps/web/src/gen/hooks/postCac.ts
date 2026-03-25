@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { PostCacMutationResponse } from "../types/PostCac.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { PostCacMutationResponse } from "../types/PostCac.ts";
 
 function getPostCacUrl() {
   const res = { method: "POST", url: `/cac` as const };

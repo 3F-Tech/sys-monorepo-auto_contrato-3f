@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { PostTeamsIdMembersMutationResponse } from "../types/PostTeamsIdMembers.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { PostTeamsIdMembersMutationResponse } from "../types/PostTeamsIdMembers.ts";
 
 function getPostTeamsIdMembersUrl() {
   const res = { method: "POST", url: `/teams/${id}/members` as const };

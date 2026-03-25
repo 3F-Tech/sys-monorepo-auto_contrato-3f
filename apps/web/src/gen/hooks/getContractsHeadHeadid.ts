@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  GetContractsHeadHeadidQueryResponse,
-  GetContractsHeadHeadidPathParams,
-} from "../types/GetContractsHeadHeadid.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  GetContractsHeadHeadidQueryResponse,
+  GetContractsHeadHeadidPathParams,
+} from "../types/GetContractsHeadHeadid.ts";
 
 function getGetContractsHeadHeadidUrl(
   headId: GetContractsHeadHeadidPathParams["headId"],

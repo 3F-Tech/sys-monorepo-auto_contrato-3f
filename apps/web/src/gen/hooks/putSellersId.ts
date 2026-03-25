@@ -5,15 +5,15 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PutSellersIdMutationRequest,
-  PutSellersIdMutationResponse,
-  PutSellersIdPathParams,
-} from "../types/PutSellersId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PutSellersIdMutationRequest,
+  PutSellersIdMutationResponse,
+  PutSellersIdPathParams,
+} from "../types/PutSellersId.ts";
 
 function getPutSellersIdUrl(id: PutSellersIdPathParams["id"]) {
   const res = { method: "PUT", url: `/sellers/${id}` as const };

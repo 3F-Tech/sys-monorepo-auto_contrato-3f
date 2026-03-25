@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { DeleteTeamsIdMutationResponse } from "../types/DeleteTeamsId.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { DeleteTeamsIdMutationResponse } from "../types/DeleteTeamsId.ts";
 
 function getDeleteTeamsIdUrl() {
   const res = { method: "DELETE", url: `/teams/${id}` as const };

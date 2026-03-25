@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { GetCommercialCostsQueryResponse } from "../types/GetCommercialCosts.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { GetCommercialCostsQueryResponse } from "../types/GetCommercialCosts.ts";
 
 function getGetCommercialCostsUrl() {
   const res = { method: "GET", url: `/commercial-costs` as const };

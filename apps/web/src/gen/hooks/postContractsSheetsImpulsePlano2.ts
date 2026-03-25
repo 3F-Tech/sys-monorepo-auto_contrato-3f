@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PostContractsSheetsImpulsePlano2MutationRequest,
-  PostContractsSheetsImpulsePlano2MutationResponse,
-} from "../types/PostContractsSheetsImpulsePlano2.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PostContractsSheetsImpulsePlano2MutationRequest,
+  PostContractsSheetsImpulsePlano2MutationResponse,
+} from "../types/PostContractsSheetsImpulsePlano2.ts";
 
 function getPostContractsSheetsImpulsePlano2Url() {
   const res = {

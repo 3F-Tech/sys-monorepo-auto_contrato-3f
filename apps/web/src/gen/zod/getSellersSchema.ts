@@ -14,7 +14,9 @@ export const getSellersQueryParamsSchema = z
     type: z.optional(
       z
         .string()
-        .describe("Filtrar por tipo de usuário (seller, head, coord, admin)"),
+        .describe(
+          "Filtrar por tipo de usuário (seller, sdr, head, coord, admin)",
+        ),
     ),
   })
   .optional();

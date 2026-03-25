@@ -12,7 +12,7 @@ export type GetSellersQueryParams = {
    */
   head_id?: string;
   /**
-   * @description Filtrar por tipo de usuário (seller, head, coord, admin)
+   * @description Filtrar por tipo de usuário (seller, sdr, head, coord, admin)
    * @type string | undefined
    */
   type?: string;

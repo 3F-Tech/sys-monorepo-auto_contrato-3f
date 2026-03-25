@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { GetTeamsQueryResponse } from "../types/GetTeams.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { GetTeamsQueryResponse } from "../types/GetTeams.ts";
 
 function getGetTeamsUrl() {
   const res = { method: "GET", url: `/teams` as const };

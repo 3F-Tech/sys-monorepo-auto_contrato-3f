@@ -985,7 +985,6 @@ const calculateDuration = (contract: Contracts) => {
   return diffDays === 1 ? '1 dia' : `${diffDays} dias`;
 };
 
-<<<<<<< HEAD
 const getSignaturesStatus = (contract: Contracts) => {
   if (!contract.total_signers) return {
     dot: 'bg-white/20',
@@ -1019,8 +1018,6 @@ const getSignaturesStatus = (contract: Contracts) => {
     text: 'text-red-400'
   };
 };
-=======
->>>>>>> d379b244f46b6918fb8bb2b96d096caba898852c
 </script>
 
 <style scoped>

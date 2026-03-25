@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  GetBusinessIdQueryResponse,
-  GetBusinessIdPathParams,
-} from "../types/GetBusinessId.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  GetBusinessIdQueryResponse,
+  GetBusinessIdPathParams,
+} from "../types/GetBusinessId.ts";
 
 function getGetBusinessIdUrl(id: GetBusinessIdPathParams["id"]) {
   const res = { method: "GET", url: `/business/${id}` as const };

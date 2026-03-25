@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { PostCommercialCostsMutationResponse } from "../types/PostCommercialCosts.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { PostCommercialCostsMutationResponse } from "../types/PostCommercialCosts.ts";
 
 function getPostCommercialCostsUrl() {
   const res = { method: "POST", url: `/commercial-costs` as const };
