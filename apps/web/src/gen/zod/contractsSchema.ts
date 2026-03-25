@@ -25,4 +25,5 @@ export const contractsSchema = z.object({
   signed_date: z.string().datetime().nullish(),
   first_payment_date: z.string().datetime().nullish(),
   first_payment_amount: z.string().describe("Decimal").nullish(),
+  document_id: z.string().nullish(),
 });

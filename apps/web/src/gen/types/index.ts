@@ -14,6 +14,11 @@ export type {
   DeleteContractsIdPathParams,
 } from "./DeleteContractsId.ts";
 export type {
+  DeleteGoalsIdMutation,
+  DeleteGoalsIdMutationResponse,
+  DeleteGoalsIdPathParams,
+} from "./DeleteGoalsId.ts";
+export type {
   DeleteSellersId200,
   DeleteSellersIdMutation,
   DeleteSellersIdMutationResponse,
@@ -53,6 +58,7 @@ export type {
   GetContractsSellerSelleridQuery,
   GetContractsSellerSelleridQueryResponse,
 } from "./GetContractsSellerSellerid.ts";
+export type { GetGoalsQuery, GetGoalsQueryResponse } from "./GetGoals.ts";
 export type {
   GetHealth200,
   GetHealthQuery,
@@ -87,6 +93,7 @@ export type {
   GetSellersIdQuery,
   GetSellersIdQueryResponse,
 } from "./GetSellersId.ts";
+export type { Goal, GoalTargetTypeEnumKey } from "./Goal.ts";
 export type {
   PostBusiness201,
   PostBusinessMutation,
@@ -130,6 +137,11 @@ export type {
   PostContractsSheetsSeedPlanoGrowthMutationResponse,
 } from "./PostContractsSheetsSeedPlanoGrowth.ts";
 export type {
+  PostGoalsMutation,
+  PostGoalsMutationRequest,
+  PostGoalsMutationResponse,
+} from "./PostGoals.ts";
+export type {
   PostLogin200,
   PostLogin401,
   PostLoginMutation,
@@ -171,3 +183,4 @@ export type {
 } from "./PutSellersId.ts";
 export type { SellerBusiness } from "./SellerBusiness.ts";
 export type { Sellers } from "./Sellers.ts";
+export { goalTargetTypeEnum } from "./Goal.ts";

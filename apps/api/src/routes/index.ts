@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
+import { progressTracker } from '../utils/progressTracker';
 import { checkHealth } from '../controllers/healthController';
 import { getSellers, getSellerById, createSeller, updateSeller, deleteSeller, getSellerByEmail, login } from '../controllers/sellerController';
 import { getBusiness, getBusinessById, createBusiness, updateBusiness, deleteBusiness } from '../controllers/businessController';
@@ -17,14 +18,44 @@ import {
     submitBommaSocialIlimitado,
     submitBommaSocialDeterminada
 } from '../controllers/contractAutomationController';
+import { handleClicksignWebhook } from '../controllers/webhookController';
 import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBusiness } from '../controllers/sellerBussinessController';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract } from '../controllers/contractController';
+import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract, cancelContract, syncContractStatus, getContractSigners } from '../controllers/contractController';
 import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalController';
 
 const router = Router();
 
 router.get('/health', checkHealth);
+
+// Rota de Webhook para Clicksign (Pública)
+router.post('/webhooks/clicksign', handleClicksignWebhook);
+
+/**
+ * Endpoint SSE para acompanhar o progresso de geração de contratos
+ */
+router.get('/contracts/progress/:trackingId', (req: Request, res: Response) => {
+    const { trackingId } = req.params;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for Nginx/Proxies
+
+    // Enviar mensagem inicial para confirmar a conexão
+    res.write(`data: ${JSON.stringify({ status: 'connected', step: 'Conectado ao servidor', progress: 0 })}\n\n`);
+
+    const onProgress = (data: any) => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    progressTracker.on(`progress:${trackingId}`, onProgress);
+
+    req.on('close', () => {
+        progressTracker.off(`progress:${trackingId}`, onProgress);
+        res.end();
+    });
+});
 
 // Rotas Públicas
 router.post('/login', login);
@@ -74,6 +105,9 @@ router.get('/contracts/bu/:id', getContractByBuId);
 router.get('/contracts/head/:id', getContractByHeadId);
 router.post('/contracts', createContract);
 router.put('/contracts/:id', updateContract);
+router.post('/contracts/:id/cancel', cancelContract);
+router.post('/contracts/:id/sync', syncContractStatus);
+router.get('/contracts/:id/signers', getContractSigners);
 router.delete('/contracts/:id', deleteContract);
 
 // GOAL ROUTES

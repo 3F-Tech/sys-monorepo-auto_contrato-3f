@@ -68,6 +68,7 @@ const options: swaggerJsdoc.Options = {
                         signed_date: { type: 'string', format: 'date-time', nullable: true },
                         first_payment_date: { type: 'string', format: 'date-time', nullable: true },
                         first_payment_amount: { type: 'string', description: 'Decimal', nullable: true },
+                        document_id: { type: 'string', nullable: true },
                     },
                 },
                 ContractData: {

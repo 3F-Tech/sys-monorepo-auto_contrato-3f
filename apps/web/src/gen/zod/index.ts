@@ -12,6 +12,10 @@ export {
   deleteContractsIdPathParamsSchema,
 } from "./deleteContractsIdSchema.ts";
 export {
+  deleteGoalsIdMutationResponseSchema,
+  deleteGoalsIdPathParamsSchema,
+} from "./deleteGoalsIdSchema.ts";
+export {
   deleteSellersId200Schema,
   deleteSellersIdMutationResponseSchema,
   deleteSellersIdPathParamsSchema,
@@ -44,6 +48,7 @@ export {
   getContractsSellerSelleridPathParamsSchema,
   getContractsSellerSelleridQueryResponseSchema,
 } from "./getContractsSellerSelleridSchema.ts";
+export { getGoalsQueryResponseSchema } from "./getGoalsSchema.ts";
 export {
   getHealth200Schema,
   getHealthQueryResponseSchema,
@@ -72,6 +77,7 @@ export {
   getSellersQueryParamsSchema,
   getSellersQueryResponseSchema,
 } from "./getSellersSchema.ts";
+export { goalSchema } from "./goalSchema.ts";
 export {
   postBusiness201Schema,
   postBusinessMutationRequestSchema,
@@ -107,6 +113,10 @@ export {
   postContractsSheetsSeedPlanoGrowthMutationRequestSchema,
   postContractsSheetsSeedPlanoGrowthMutationResponseSchema,
 } from "./postContractsSheetsSeedPlanoGrowthSchema.ts";
+export {
+  postGoalsMutationRequestSchema,
+  postGoalsMutationResponseSchema,
+} from "./postGoalsSchema.ts";
 export {
   postLogin200Schema,
   postLogin401Schema,

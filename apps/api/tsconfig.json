@@ -12,7 +12,9 @@
         "module": "Node16",
         "lib": [
             "ESNext",
-            "DOM"
+            "DOM",
+            "ES6",
+            "DOM.Iterable"
         ] // Garante que o TS conheça as APIs novas
     },
     "include": [

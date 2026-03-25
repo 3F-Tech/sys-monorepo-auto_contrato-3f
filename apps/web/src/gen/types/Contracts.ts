@@ -85,4 +85,20 @@ export type Contracts = {
    * @type string
    */
   first_payment_amount?: string | null;
+  /**
+   * @type string
+   */
+  document_id?: string | null;
+  /**
+   * @type integer
+   */
+  signed_count?: number;
+  /**
+   * @type integer
+   */
+  total_signers?: number;
+  /**
+   * @type string, date-time
+   */
+  canceled_at?: string | null;
 };

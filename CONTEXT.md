@@ -31,7 +31,7 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 1. **Autenticação:** Login via JWT próprio (email + senha MD5, `JWT_SECRET` no `.env`).
 2. **Home:** Dashboard com stats, filtros de mês/BU/vendedor e listagem de contratos.
 3. **Seleção de Contrato:** Escolha do modelo específico da empresa.
-4. **Preenchimento:** Formulário com validação Zod no front e back.
+4. **Preenchimento:** Formulário com validação Zod no front e back (testemunhas adicionais são opcionais).
 5. **Registro e Trigger:**
    - Back-end salva o log da operação no Prisma.
    - Back-end envia dados para o Google Sheets via API.

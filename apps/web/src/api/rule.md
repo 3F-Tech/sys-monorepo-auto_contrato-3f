@@ -16,3 +16,8 @@ Configuração da base de comunicação com o backend e gerenciamento de interce
 ## ⚙️ Configuração
 - Para adicionar um novo header global ou timeout, edite `src/api/client.ts`.
 - Não altere o comportamento dos interceptores sem atualizar este `rule.md`.
+
+## 📡 Server-Sent Events (SSE)
+- **Implementação**: O SSE **não** utiliza Axios. Em vez disso, é utilizado a API nativa `EventSource`.
+- **Configuração**: Conecta-se diretamente à `baseURL + /contracts/progress/:trackingId`.
+- **Autenticação**: O endpoint de progresso é público para facilitar a conexão SSE estável, mas o início da geração requer o token JWT via Axios.

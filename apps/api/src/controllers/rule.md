@@ -36,15 +36,79 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
   - **Moeda**: Adicione sempre "R$ " antes de valores monetários.
   - **Instagram**: Adicione sempre "@" antes de handles de redes sociais.
 - **Helper**: Use sempre o helper `handleContractSubmit` para novos contratos.
+- **Lista de Testemunhas (L1/L2)**: As variáveis `{{ L1-TESTEMUNHAS }}` e `{{ L2-TESTEMUNHAS }}` são automaticamente populadas com uma lista balanceada de todas as testemunhas (fixas e as adicionais, se houver). O backend alterna entre as duas listas para manter o layout equilibrado.
+- **Obrigatoriedade de Testemunhas**: Testemunhas ADICIONAIS não são obrigatórias, pois as testemunhas fixas das BUs e o próprio vendedor (que atua como testemunha) já suprem a necessidade jurídica mínima de 2 signatários extras.
+
+## 🔗 Bypass Mode (Contrato Existente no Clicksign)
+Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `handleContractSubmit` ativa o **modo bypass**:
+- **Pula completamente** a cópia no Google Drive, a edição no Google Docs e a criação de Envelope/Documento no Clicksign.
+- **Consulta** o status do ID fornecido:
+  1. Tenta como Envelope (API v3) via `ClickSignService.getEnvelope(id)`.
+  2. Se falhar, tenta como Documento (API v1) via `ClickSignService.getDocumentStatusV1(key)`.
+- **Detecta assinatura completa** se o status for `closed`, `completed` ou `document_closed`.
+- **Salva** o ID no campo `document_id` e `signed: true/false` conforme o status detectado.
+- **Aplica-se a todos os tipos de contrato** (Seed, Impulse, Bomma), pois o bypass é no helper genérico.
+
+## 📡 Monitoramento de Progresso (SSE)
+- **Tecnologia**: Server-Sent Events (SSE) via `ProgressTracker.ts`.
+- **Funcionamento**: O controlador gera um `trackingId` (UUID) e emite eventos de progresso (`start`, `drive`, `docs`, `clicksign`, `completed`, `error`) durante o fluxo de automação.
+- **Endpoint**: `/api/contracts/progress/:trackingId` (Público, deve estar ANTES do `authMiddleware`).
+- **Headers**: Deve incluir `X-Accel-Buffering: no` para evitar buffer de proxy (Nginx).
+
+## 🪝 Webhooks e Gatilhos Pós-Assinatura
+- **Clicksign**: O `webhookController.ts` processa eventos de assinatura.
+- **Evento de Gatilho**: Somente o evento `closed` (envelope finalizado) dispara a atualização de status para `signed: true` e o gatilho externo.
+- **Gatilho Externo**: Localizado em `webhookController.ts` (Placeholder para Conta Azul / Asaas).
 
 ## ⚙️ Melhores Práticas
 - **Tratamento de BigInt**: Sempre utilize o serializador JSON personalizado para converter BigInt em string antes de enviar a resposta.
 - **Express Types**: Utilize a tipagem forte do Express (`Request`, `Response`) em todos os métodos.
 - **Erros**: Retorne status codes apropriados (200/201 para sucesso, 400/401/404/500 para erros).
 - **Log**: Em produção, evite `console.log` excessivo; utilize o padrão de logs do monorepo se disponível.
+- **Prisma Client Desatualizado**: O Prisma Client pode não refletir campos novos no schema (ex: `canceled_at`, `envelope_id`) se o `prisma generate` não for possível de executar (erro de permissão de arquivo). Nesses casos, use casting `(prisma.contracts as any)` nas operações que usam esses campos. **Reiniciar o servidor de dev** costuma resolver a dessincronização.
 
 ## 🔄 Evolução do Schema
 - **Status de Mudança**: O campo `change_alert` (boolean) foi desativado em favor de `change_status` (string). Valores possíveis: `'alert'`, `'approved'`, `'reject'`, ou `null` (padrão). Não use o valor `'none'`.
+- **Cancelamento**: O campo `canceled_at` (DateTime) é usado para marcar contratos cancelados. Contratos cancelados são isolados no filter `'canceled'` do Dashboard.
+- **Assinaturas**: Os campos `signed_count` (Int) e `total_signers` (Int) rastreiam o progresso de assinaturas do envelope no Clicksign v3.
+- **IDs Externos**: `envelope_id` armazena o UUID do Envelope na API v3. `document_id` pode armazenar o ID de documento v1/v3 ou o `fileId` do arquivo no Google Drive.
+
+## 🔵 Endpoint: Signatários de Contrato
+- **Rota:** `GET /contracts/:id/signers`
+- **Handler:** `getContractSigners`
+- **Descrição:** Consulta em tempo real a API v3 da Clicksign, mapeando os requisitos para determinar quem já assinou. Retorna `[{name, email, signed}]`.
+- **Frontend:** Utilizado pelo `SignersModal.vue` para exibir detalhe de progresso de assinaturas.
+
+## 🗑️ Exclusão Completa (DELETE /contracts/:id)
+A exclusão de contratos é **atômica e multi-serviço**. A ordem é:
+1. Lê o `envelope_id` e `document_id` do contrato.
+2. Cancela o envelope no **Clicksign** (`ClickSignService.cancelDocument`).
+3. Deleta o arquivo no **Google Drive** (`GoogleDriveService.deleteFile`).
+4. Remove o registro e suas dependencias do **Banco de Dados** (transação Prisma).
+Falhas nas etapas 2 e 3 são logadas mas não bloqueiam as etapas seguintes.
+
+## 📡 Endpoints de Contratos (POST — todos exigem JWT)
+
+| Rota | Handler | Contrato |
+|---|---|---|
+| `/contracts-sheets/impulse-plano-1` | `submitImpulsePlano1` | Impulse Plano 1 |
+| `/contracts-sheets/impulse-plano-2` | `submitImpulsePlano2` | Impulse Plano 2 |
+| `/contracts-sheets/seed-plano-1` | `submitSeedPlano1` | Seed Plano 1 |
+| `/contracts-sheets/seed-plano-2` | `submitSeedPlano2` | Seed Plano 2 |
+| `/contracts-sheets/seed-plano-growth` | `submitSeedGrowth` | Seed Growth |
+| `/contracts-sheets/bomma-assessoria` | `submitBommaAssessoria` | Bomma Assessoria |
+| `/contracts-sheets/bomma-consultoria` | `submitBommaConsultoria` | Bomma Consultoria |
+| `/contracts-sheets/bomma-assessoria-social-ilimitado` | `submitBommaAssessoriaSocialIlimitado` | Bomma Ass. + Social (Ilimitado) |
+| `/contracts-sheets/bomma-assessoria-social-artes` | `submitBommaAssessoriaSocialArtes` | Bomma Ass. + Social (Artes) |
+| `/contracts-sheets/bomma-assessoria-social-determinada` | `submitBommaAssessoriaSocialDeterminada` | Bomma Ass. + Social (Determinada) |
+| `/contracts-sheets/bomma-assessoria-social-videos` | `submitBommaAssessoriaSocialVideos` | Bomma Ass. + Social (Vídeos) |
+| `/contracts-sheets/bomma-social-ilimitado` | `submitBommaSocialIlimitado` | Bomma Social Media (Ilimitado) |
+| `/contracts-sheets/bomma-social-determinada` | `submitBommaSocialDeterminada` | Bomma Social Media (Determinada) |
+
+## 📋 Schema de Entrada (Zod — `contractSubmissionSchema`)
+- **Obrigatórios**: Razão Social, CNPJ, CEP, endereço completo, representante (nome/email/CPF), valores (taxa, mensalidade, primeiro pagamento, data, dia vencimento), data assinatura, vendedor (nome/email/CPF).
+- **Opcionais**: Testemunhas adicionais 1–6 (nome/email/cpf), testemunhas fixas 1–3, telefone/email financeiro, Instagram, QTD ARTES, QTD VIDEOS.
+- **Bypass Clicksign**: Campo `'ID DO DOCUMENTO CLICKSIGN'` — quando preenchido, ativa o modo bypass (veja seção Bypass Mode).
 
 ## 🛠️ Build e Configuração TypeScript
 - **Módulo**: A API compila com `"module": "Node16"` e `"moduleResolution": "Node16"` no `tsconfig.json`, gerando output **CommonJS**.

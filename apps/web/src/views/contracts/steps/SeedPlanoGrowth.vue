@@ -1,5 +1,30 @@
 <template>
   <div class="space-y-12 pb-20">
+    <!-- Seção: DOCUMENTO EXISTENTE (CLICKSIGN) -->
+    <div class="space-y-6">
+      <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
+        <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
+          <Info class="h-5 w-5" />
+        </div>
+        <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Documento Clicksign (Opcional)</h3>
+      </div>
+      
+      <div class="p-4 rounded-xl bg-brand-cyan/5 border border-brand-cyan/20 flex gap-4 items-start">
+        <Info class="h-5 w-5 text-brand-cyan shrink-0 mt-0.5" />
+        <p class="text-[13px] text-white/80 leading-relaxed">
+          <strong class="text-brand-cyan">Atenção:</strong> Preencha este campo <strong class="text-white">APENAS</strong> se o contrato já existir e tiver sido enviado no Clicksign. Se informado, o sistema não criará um novo documento no Drive, apenas fará o vínculo e a checagem de assinaturas.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-1 space-y-2">
+          <label class="text-[10px] font-bold text-brand-cyan uppercase tracking-widest">ID DO DOCUMENTO CLICKSIGN</label>
+          <input type="text" id="ID DO DOCUMENTO CLICKSIGN" v-model="form['ID DO DOCUMENTO CLICKSIGN']" class="input-glass w-full border-brand-cyan/20 focus:border-brand-cyan" placeholder="Ex: e619b024-..." :class="[errors && errors['ID DO DOCUMENTO CLICKSIGN'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
+          <span v-if="errors && errors['ID DO DOCUMENTO CLICKSIGN']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['ID DO DOCUMENTO CLICKSIGN'] }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Seção: DADOS DA EMPRESA (CONTRATANTE) -->
     <div class="space-y-6">
       <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
@@ -165,47 +190,9 @@
       </div>
     </div>
 
-    <!-- Seção: TESTEMUNHAS E RESPONSÁVEIS -->
+    <!-- Seção: TESTEMUNHAS -->
     <div class="space-y-12 pt-6 border-t border-brand-glass-border">
-      <WitnessSection :form="form" :errors="errors" />
-
-      <!-- Equipe Interna -->
-      <div class="space-y-6">
-        <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
-          <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
-            <UsersIcon class="h-5 w-5" />
-          </div>
-          <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Equipe Responsável</h3>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO VENDEDOR</label>
-            <input type="text" id="NOME VENDEDOR" v-model="form['NOME VENDEDOR']" class="input-glass w-full text-brand-cyan/90 font-medium"
-              placeholder="NOME DO VENDEDOR" :class="[errors && errors['NOME VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-            <span v-if="errors && errors['NOME VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME VENDEDOR'] }}</span>
-          </div>
-          <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO VENDEDOR</label>
-            <input type="text" id="CPF VENDEDOR" v-model="form['CPF VENDEDOR']" v-maska="'###.###.###-##'" class="input-glass w-full"
-              placeholder="000.000.000-00" :class="[errors && errors['CPF VENDEDOR'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-            <span v-if="errors && errors['CPF VENDEDOR']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF VENDEDOR'] }}</span>
-          </div>
-          <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">NOME DO COORDENADOR DA
-              BU</label>
-            <input type="text" id="NOME COORD BU" v-model="form['NOME COORD BU']" class="input-glass w-full"
-              placeholder="NOME DO COORDENADOR" :class="[errors && errors['NOME COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-            <span v-if="errors && errors['NOME COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['NOME COORD BU'] }}</span>
-          </div>
-          <div class="space-y-2">
-            <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">CPF DO COORDENADOR DA
-              BU</label>
-            <input type="text" id="CPF COORD BU" v-model="form['CPF COORD BU']" v-maska="'###.###.###-##'" class="input-glass w-full"
-              placeholder="000.000.000-00" :class="[errors && errors['CPF COORD BU'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-            <span v-if="errors && errors['CPF COORD BU']" class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['CPF COORD BU'] }}</span>
-          </div>
-        </div>
-      </div>
+      <WitnessSection :form="form" :errors="errors" :buName="buName" />
     </div>
   </div>
 </template>
@@ -219,8 +206,8 @@ import {
   MapPin, 
   User as UserIcon, 
   DollarSign, 
-  FileText, 
-  Users as UsersIcon
+  FileText,
+  Info
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -231,6 +218,10 @@ const props = defineProps({
   errors: {
     type: Object,
     default: () => ({})
+  },
+  buName: {
+    type: String,
+    default: ''
   }
 });
 

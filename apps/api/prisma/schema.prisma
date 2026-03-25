@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model business {
@@ -15,6 +16,7 @@ model business {
   update_at       DateTime?         @default(now()) @db.Timestamp(6)
   img_base64      String?
   color           String?
+  bu_cac          bu_cac[]
   contracts       contracts[]
   seller_business seller_business[]
 }
@@ -31,44 +33,53 @@ model seller_business {
 }
 
 model sellers {
-  id              BigInt            @id @default(autoincrement())
-  name            String?           @db.VarChar(255)
-  cpf             String?           @unique @db.VarChar(14)
-  email           String?           @unique @db.VarChar(255)
-  phone           String?
-  password        String?
-  type            String
-  created_at      DateTime?         @default(now()) @db.Timestamp(6)
-  update_at       DateTime?         @default(now()) @db.Timestamp(6)
-  head_id         BigInt?
-  contracts       contracts[]
-  seller_business seller_business[]
+  id                           BigInt            @id @default(autoincrement())
+  name                         String?           @db.VarChar(255)
+  cpf                          String?           @unique @db.VarChar(14)
+  email                        String?           @unique @db.VarChar(255)
+  phone                        String?
+  password                     String?
+  type                         String
+  created_at                   DateTime?         @default(now()) @db.Timestamp(6)
+  update_at                    DateTime?         @default(now()) @db.Timestamp(6)
+  head_id                      BigInt?
+  team_id                      Int?
+  contracts                    contracts[]
+  seller_business              seller_business[]
+  teams_sellers_team_idToteams teams?            @relation("sellers_team_idToteams", fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teams_teams_head_idTosellers teams[]           @relation("teams_head_idTosellers")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model contracts {
-  id                   BigInt    @id @default(autoincrement())
+  id                   BigInt            @id @default(autoincrement())
   title                String?
   link                 String?
   cnpj_client          String?
   seller_id            BigInt
   bu_id                Int
-  monthly_fee          Decimal?  @db.Decimal
-  implementation_fee   Decimal?  @db.Decimal
-  contractual_term     Int?      @db.SmallInt
-  due_date             DateTime? @db.Date
+  monthly_fee          Decimal?          @db.Decimal
+  implementation_fee   Decimal?          @db.Decimal
+  contractual_term     Int?              @db.SmallInt
+  due_date             DateTime?         @db.Date
   type_contract        String?
-  created_at           DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
-  signed               Boolean   @default(false)
+  created_at           DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime          @default(now()) @db.Timestamptz(6)
+  signed               Boolean           @default(false)
   change_status        String?
-  signed_date          DateTime? @db.Timestamptz(6)
+  signed_date          DateTime?         @db.Timestamptz(6)
   change_description   String?
-  first_payment_amount Decimal?  @db.Decimal
-  first_payment_date   DateTime? @db.Timestamptz(6)
+  first_payment_amount Decimal?          @db.Decimal
+  first_payment_date   DateTime?         @db.Timestamptz(6)
   legal_repre_email    String?
-  business             business  @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  sellers              sellers   @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  canceled_at          DateTime?         @db.Timestamptz(6)
+  document_id          String?           @unique
+  envelope_id          String?           @unique
+  signed_count         Int               @default(0)
+  total_signers        Int               @default(0)
+  business             business          @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  sellers              sellers           @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  witnesses_email      witnesses_email[]
 }
 
 model goals {
@@ -85,6 +96,63 @@ model goals {
   created_by     BigInt
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  p1_period_1    Decimal? @db.Decimal
+  p1_period_2    Decimal? @db.Decimal
+  p1_period_3    Decimal? @db.Decimal
+  p1_period_4    Decimal? @db.Decimal
 
   @@unique([target_type, target_id, month, year])
+}
+
+model teams {
+  id                             Int       @id @default(autoincrement())
+  name                           String    @db.VarChar(255)
+  photo_url                      String?
+  description                    String?
+  head_id                        BigInt?
+  created_at                     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime? @default(now()) @db.Timestamptz(6)
+  sellers_sellers_team_idToteams sellers[] @relation("sellers_team_idToteams")
+  sellers_teams_head_idTosellers sellers?  @relation("teams_head_idTosellers", fields: [head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model witnesses_email {
+  id          BigInt    @id @default(autoincrement())
+  contract_id BigInt
+  email       String
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contract")
+}
+
+model bu_cac {
+  id         Int      @id @default(autoincrement())
+  bu_id      Int
+  amount     Decimal  @db.Decimal
+  month      Int
+  year       Int
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  business   business @relation(fields: [bu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([bu_id, month, year])
+}
+
+model commercial_costs {
+  id                       Int      @id @default(autoincrement())
+  month                    Int
+  year                     Int
+  media_investment         Decimal? @db.Decimal
+  commercial_tools         Decimal? @db.Decimal
+  remuneration_pre_sales_1 Decimal? @db.Decimal
+  remuneration_pre_sales_2 Decimal? @db.Decimal
+  remuneration_closer_1    Decimal? @db.Decimal
+  remuneration_closer_2    Decimal? @db.Decimal
+  remuneration_coord       Decimal? @db.Decimal
+  referral_commission      Decimal? @db.Decimal
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([month, year])
 }

@@ -187,6 +187,10 @@
             "type": "string",
             "description": "Decimal",
             "nullable": true
+          },
+          "document_id": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -808,6 +812,54 @@
         "responses": {
           "200": {
             "description": "Contrato deletado"
+          }
+        }
+      }
+    },
+    "/contracts/{id}/cancel": {
+      "post": {
+        "summary": "Cancelar um contrato pendente no Clicksign e no sistema",
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Contrato (BigInt)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contrato cancelado com sucesso"
+          }
+        }
+      }
+    },
+    "/contracts/{id}/sync": {
+      "post": {
+        "summary": "Sincronizar status de assinaturas com o Clicksign",
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do Contrato (BigInt)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status sincronizado"
           }
         }
       }

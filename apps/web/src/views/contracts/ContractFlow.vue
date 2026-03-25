@@ -152,7 +152,7 @@
               class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-cyan/5 border border-brand-cyan/10">
               <FileText class="h-4 w-4 text-brand-cyan" />
               <span class="text-brand-cyan text-[10px] font-bold uppercase tracking-widest">{{ selectedTemplate
-                }}</span>
+              }}</span>
             </div>
             <h1 class="text-4xl font-extrabold tracking-tight">Preencha os <span class="text-brand-cyan">Dados</span>
             </h1>
@@ -161,7 +161,8 @@
           </section>
 
           <!-- Render Condicional do Form (por enquanto apenas Impulse Plano 1) -->
-          <component v-if="activeFormComponent" :is="activeFormComponent" :form="contractData" :errors="formErrors" />
+          <component v-if="activeFormComponent" :is="activeFormComponent" :form="contractData" :errors="formErrors"
+            :buName="selectedBU?.name || ''" :templateName="selectedTemplate" />
 
           <div v-else class="text-center py-20 bg-brand-surface/20 rounded-3xl border border-brand-glass-border">
             <Construction class="h-12 w-12 mx-auto text-brand-cyan opacity-20 mb-4" />
@@ -186,12 +187,16 @@
             </div>
 
             <div class="flex gap-3">
+              <!-- <button @click="debugFillData"
+                class="px-4 py-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest hover:bg-yellow-500 hover:text-white transition-all">
+                Debug: Preencher
+              </button> -->
               <button @click="currentStep = 2"
                 class="px-8 py-3 rounded-2xl bg-brand-surface border border-brand-glass-border font-bold text-xs hover:bg-white/5 transition-all">Voltar</button>
               <button @click="handleContractGenerate" :disabled="isGenerating"
                 class="btn-primary px-10 py-3 rounded-2xl shadow-lg shadow-brand-cyan/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                 <Loader2 v-if="isGenerating" class="h-4 w-4 animate-spin" />
-                {{ isGenerating ? 'Gerando...' : 'Finalizar Contrato' }}
+                {{ isGenerating ? 'Gerando...' : 'Gerar Contrato' }}
               </button>
             </div>
           </div>
@@ -199,6 +204,10 @@
       </template>
 
     </main>
+
+    <!-- Progress Modal -->
+    <ProgressModal ref="progressModalRef" :show="isProgressModalVisible" :trackingId="trackingId" :serverUrl="serverUrl"
+      @close="handleProgressClose" @completed="handleProgressComplete" @error="handleProgressError" />
   </div>
 </template>
 
@@ -228,6 +237,7 @@ import SeedPlano1 from './steps/SeedPlano1.vue';
 import SeedPlano2 from './steps/SeedPlano2.vue';
 import SeedPlanoGrowth from './steps/SeedPlanoGrowth.vue';
 import BommaTemplate from './steps/BommaTemplate.vue';
+import ProgressModal from '../../components/ui/ProgressModal.vue';
 
 import { useToast } from '../../composables/useToast';
 
@@ -244,6 +254,12 @@ const allSellers = ref<Sellers[]>([]);
 const selectedBU = ref<Business | null>(null);
 const selectedTemplate = ref('');
 const isGenerating = ref(false);
+const isProgressModalVisible = ref(false);
+const trackingId = ref<string | null>(null);
+const progressModalRef = ref<any>(null);
+
+// @ts-ignore
+const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3007';
 
 // Objeto centralizado para todos os dados dos contratos
 const contractData = ref<Record<string, any>>({});
@@ -384,6 +400,7 @@ const handleTemplateSelect = (template: string) => {
 
   // Auto-preenchimento Inteligente - Mapeia todas as chaves esperadas para o form de Contrato.
   const initialData: Record<string, any> = {
+    'ID DO DOCUMENTO CLICKSIGN': '',
     'RAZAO SOCIAL DO CONTRATANTE': '',
     'CNPJ DO CONTRATANTE': '',
     'CEP DO CONTRATANTE': '',
@@ -413,10 +430,18 @@ const handleTemplateSelect = (template: string) => {
     'CPF TESTEMUNHA 5': '',
     'NOME TESTEMUNHA 6': '',
     'CPF TESTEMUNHA 6': '',
+    'EMAIL TESTEMUNHA 1': '',
+    'EMAIL TESTEMUNHA 2': '',
+    'EMAIL TESTEMUNHA 3': '',
+    'EMAIL TESTEMUNHA 4': '',
+    'EMAIL TESTEMUNHA 5': '',
+    'EMAIL TESTEMUNHA 6': '',
     'NOME VENDEDOR': '',
+    'EMAIL VENDEDOR': '',
     'CPF VENDEDOR': '',
-    'NOME COORD BU': '',
-    'CPF COORD BU': ''
+    'LINK INSTAGRAM CONTRATANTE': '',
+    'QTD ARTES': '',
+    'QTD VIDEOS': ''
   };
 
   // Se não for Growth, adiciona o prazo
@@ -428,40 +453,12 @@ const handleTemplateSelect = (template: string) => {
 
   if (user) {
     initialData['NOME VENDEDOR'] = user.name || '';
+    initialData['EMAIL VENDEDOR'] = user.email || '';
     initialData['CPF VENDEDOR'] = user.cpf || '';
   }
 
-  if (selectedBU.value?.id) {
-    const buId = selectedBU.value.id;
-    const buName = selectedBU.value.name?.toLowerCase() || '';
-    
-    // Preenchimento Automático de Testemunhas e Coordenadores por BU
-    if (buName.includes('bomma')) {
-      initialData['NOME TESTEMUNHA 1'] = 'Luís Fernando Mauri Menti';
-      initialData['CPF TESTEMUNHA 1'] = '023.275.400-46';
-      // Para Bomma, Luis Fernando também costuma ser o Coordenador se não houver outro
-      initialData['NOME COORD BU'] = 'Luís Fernando Mauri Menti';
-      initialData['CPF COORD BU'] = '023.275.400-46';
-    } else if (buName.includes('impulse')) {
-      initialData['NOME TESTEMUNHA 1'] = 'Natália Selister Piccoli';
-      initialData['CPF TESTEMUNHA 1'] = '013.266.710-06';
-    } else if (buName.includes('seed')) {
-      initialData['NOME TESTEMUNHA 1'] = 'Erika'; // CPF será preenchido manualmente ou via botão
-      initialData['CPF TESTEMUNHA 1'] = ''; 
-      initialData['NOME TESTEMUNHA 2'] = 'Natália Selister Piccoli';
-      initialData['CPF TESTEMUNHA 2'] = '013.266.710-06';
-    }
-
-    const coordinator = allSellers.value.find(s =>
-      s.type === 'coord' &&
-      (s as any).seller_business?.some((sb: any) => sb.business_id === buId)
-    );
-
-    if (coordinator) {
-      initialData['NOME COORD BU'] = coordinator.name || '';
-      initialData['CPF COORD BU'] = coordinator.cpf || '';
-    }
-  }
+  // Observação: O preenchimento de Testemunhas e Coordenadores (Signatários Fixos) 
+  // agora é delegado ao componente WitnessSection de forma reativa e centralizada.
 
   formErrors.value = {}; // reset erros
   contractData.value = initialData;
@@ -471,19 +468,22 @@ const handleTemplateSelect = (template: string) => {
 
 // Validar formulário antes de enviar
 const validateForm = () => {
-  const errors = getValidationRules(contractData.value);
+  const errors = getValidationRules(contractData.value, selectedBU.value?.name, selectedTemplate.value);
   formErrors.value = errors;
 
   const errorKeys = Object.keys(errors);
   if (errorKeys.length > 0) {
-    // Focus e scroll
+    // Aguarda o Vue aplicar as classes de erro antes de fazer o scroll
     setTimeout(() => {
       const firstErrorEl = document.getElementById(errorKeys[0]);
       if (firstErrorEl) {
-        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Calcula posição e rola manualmente compensando a barra sticky inferior (~120px)
+        const rect = firstErrorEl.getBoundingClientRect();
+        const scrollTop = window.scrollY + rect.top - 120;
+        window.scrollTo({ top: scrollTop, behavior: 'smooth' });
         firstErrorEl.focus({ preventScroll: true });
       }
-    }, 100);
+    }, 50);
     return false;
   }
 
@@ -496,10 +496,10 @@ watch(
   contractData,
   () => {
     if (Object.keys(formErrors.value).length === 0) return;
-    
+
     if (validationTimeout) clearTimeout(validationTimeout);
     validationTimeout = setTimeout(() => {
-      const currentValidation = getValidationRules(contractData.value);
+      const currentValidation = getValidationRules(contractData.value, selectedBU.value?.name);
       const newErrors: Record<string, string> = {};
       for (const key in formErrors.value) {
         if (currentValidation[key]) {
@@ -511,6 +511,31 @@ watch(
   },
   { deep: true }
 );
+
+const debugFillData = () => {
+  contractData.value = {
+    ...contractData.value,
+    'CNPJ DO CONTRATANTE': '12.345.678/0001-90',
+    'CEP DO CONTRATANTE': '95170-000',
+    'LOGRADOURO DO CONTRATANTE': 'Rua Marechal Floriano Peixoto',
+    'NUMERO DO CONTRATANTE': '123',
+    'BAIRRO DO CONTRATANTE': 'Centro',
+    'CIDADE DO CONTRATANTE': 'Farroupilha',
+    'UF DO CONTRATANTE': 'RS',
+    'NOME DO REPRESENTANTE': 'João da Silva',
+    'EMAIL DO REPRESENTANTE': 'joao.silva@empresateste.com.br',
+    'CPF DO REPRESENTANTE': '123.456.789-00',
+    'VALOR TAXA IMPLEMENTACAO': '1.500,00',
+    'VALOR MENSALIDADE': '4.500,00',
+    'VALOR DO PRIMEIRO PAGAMENTO': '6.000,00',
+    'DATA PRIMEIRO PAGAMENTO': '20/10/2026',
+    'DIA VENCIMENTO MENSAL': 10,
+    'DATA ASSINATURA CONTRATO': '10/03/2026',
+    'PRAZO CONTRATUAL MESES': 12,
+    'TELEFONE FINANCEIRO CONTRATANTE': '(54) 99999-9999',
+    'EMAIL FINANCEIRO CONTRATANTE': 'financeiro@3fventure.com.br'
+  };
+};
 
 const handleContractGenerate = async () => {
   if (isGenerating.value) return;
@@ -525,36 +550,63 @@ const handleContractGenerate = async () => {
     return;
   }
 
+  // Preparar Tracking para SSE
+  const newTrackingId = crypto.randomUUID();
+  trackingId.value = newTrackingId;
+  isProgressModalVisible.value = true;
   isGenerating.value = true;
+
   try {
-    const response = await client.post(activeEndpoint.value, {
+    await client.post(activeEndpoint.value, {
       data: contractData.value,
       bu_id: selectedBU.value?.id,
-      bu_name: selectedBU.value?.name
+      bu_name: selectedBU.value?.name,
+      trackingId: newTrackingId
     });
-
-    if (response.data.success) {
-      toastSuccess('Contrato gerado com sucesso!');
-      router.push('/');
-    }
+    // O sucesso agora é gerenciado pelo modal via SSE
   } catch (error: any) {
-    console.error('Erro ao gerar contrato:', error);
+    console.error('Erro ao iniciar geração de contrato:', error);
+    isGenerating.value = false;
+
+    const errorMessage = error.response?.data?.error || error.message;
     const backendErrors = error.response?.data?.details;
+
     if (Array.isArray(backendErrors)) {
       const newErrors: Record<string, string> = { ...formErrors.value };
       backendErrors.forEach((err: any) => {
-        // Mapeia o campo do backend para o campo do form (data.FIELD -> FIELD)
         const field = err.field?.replace('data.', '');
         if (field) newErrors[field] = err.message;
       });
       formErrors.value = newErrors;
       toastWarning('Alguns campos possuem erros de validação.');
+      // Nesse caso de validação, podemos fechar o modal para o usuário corrigir
+      isProgressModalVisible.value = false;
     } else {
-      toastError('Erro ao gerar contrato: ' + (error.response?.data?.error || error.message));
+      // Para erros críticos (backend down, script fail), mantemos o modal aberto com o erro
+      progressModalRef.value?.setError(errorMessage);
     }
-  } finally {
-    isGenerating.value = false;
   }
+};
+
+const handleProgressComplete = () => {
+  // Redirecionar após 3 segundos de exibição do sucesso (sem interação do user)
+  setTimeout(() => {
+    isProgressModalVisible.value = false;
+    isGenerating.value = false;
+    router.push('/');
+  }, 3000);
+};
+
+// Ao fechar o modal manualmente (botão "Fechar"), ir direto para home
+const handleProgressClose = () => {
+  isProgressModalVisible.value = false;
+  isGenerating.value = false;
+  router.push('/');
+};
+
+const handleProgressError = (errorMsg: string) => {
+  isGenerating.value = false;
+  toastError(errorMsg || 'Erro durante o processamento do contrato.');
 };
 
 const handleBack = () => {

@@ -5,14 +5,14 @@
 
 import fetch from "@kubb/plugin-client/clients/axios";
 import type {
-  PostGoalsMutationRequest,
-  PostGoalsMutationResponse,
-} from "../types/PostGoals.ts";
-import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type {
+  PostGoalsMutationRequest,
+  PostGoalsMutationResponse,
+} from "../types/PostGoals.ts";
 
 function getPostGoalsUrl() {
   const res = { method: "POST", url: `/goals` as const };

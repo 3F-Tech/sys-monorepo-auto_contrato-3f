@@ -476,8 +476,11 @@ export const deleteSeller = async (req: any, res: Response) => {
         ));
 
         res.json(serializedSeller);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Erro ao excluir vendedor:', error);
-        res.status(500).json({ error: "Falha ao excluir vendedor" });
+        res.status(500).json({ 
+            error: "Falha ao excluir vendedor", 
+            details: error instanceof Error ? error.message : String(error) 
+        });
     }
 }

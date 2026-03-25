@@ -34,12 +34,33 @@ export const validateRequired = (val: any, fieldName: string) => {
   return null;
 };
 
-export const getValidationRules = (data: Record<string, any>) => {
+export const getValidationRules = (data: Record<string, any>, buName?: string, templateName?: string) => {
   const errors: Record<string, string> = {};
 
   const check = (key: string, error: string | null) => {
     if (error) errors[key] = error;
   };
+
+  const isBomma = buName?.toUpperCase().includes('BOMMA');
+  const tName = templateName?.toUpperCase() || '';
+
+  // Instagram obrigatório apenas para Bomma
+  if (isBomma) {
+    check('LINK INSTAGRAM CONTRATANTE', validateRequired(data['LINK INSTAGRAM CONTRATANTE'], 'Link do Instagram'));
+  }
+
+  // Regras de Social Media para Bomma (QTD ARTES / QTD VIDEOS)
+  if (isBomma) {
+    const needsArtes = tName.includes('ARTES') || tName.includes('DETERMINADA');
+    const needsVideos = tName.includes('VÍDEOS') || tName.includes('VIDEOS') || tName.includes('DETERMINADA');
+
+    if (needsArtes) {
+      check('QTD ARTES', validateRequired(data['QTD ARTES'], 'Quantidade de artes'));
+    }
+    if (needsVideos) {
+      check('QTD VIDEOS', validateRequired(data['QTD VIDEOS'], 'Quantidade de vídeos'));
+    }
+  }
 
   check('RAZAO SOCIAL DO CONTRATANTE', validateRequired(data['RAZAO SOCIAL DO CONTRATANTE'], 'Razão Social'));
   check('CNPJ DO CONTRATANTE', validateCNPJ(data['CNPJ DO CONTRATANTE'] || ''));
@@ -56,7 +77,12 @@ export const getValidationRules = (data: Record<string, any>) => {
   
   check('VALOR TAXA IMPLEMENTACAO', validateRequired(data['VALOR TAXA IMPLEMENTACAO'], 'Taxa de implementação'));
   check('VALOR MENSALIDADE', validateRequired(data['VALOR MENSALIDADE'], 'Mensalidade'));
-  check('VALOR DO PRIMEIRO PAGAMENTO', validateRequired(data['VALOR DO PRIMEIRO PAGAMENTO'], 'Valor do primeiro pagamento'));
+
+  // VALOR DO PRIMEIRO PAGAMENTO só é obrigatório em contratos que tenham esse campo (Seed/Impulse)
+  // A Bomma não possui esse campo no formulário
+  if (!isBomma) {
+    check('VALOR DO PRIMEIRO PAGAMENTO', validateRequired(data['VALOR DO PRIMEIRO PAGAMENTO'], 'Valor do primeiro pagamento'));
+  }
   
   check('DATA PRIMEIRO PAGAMENTO', validateDate(data['DATA PRIMEIRO PAGAMENTO'] || ''));
   
@@ -67,14 +93,13 @@ export const getValidationRules = (data: Record<string, any>) => {
 
   check('DATA ASSINATURA CONTRATO', validateDate(data['DATA ASSINATURA CONTRATO'] || ''));
   
-  check('NOME TESTEMUNHA 1', validateRequired(data['NOME TESTEMUNHA 1'], 'Nome da testemunha'));
-  check('CPF TESTEMUNHA 1', validateCPF(data['CPF TESTEMUNHA 1'] || ''));
+  if (data['NOME TESTEMUNHA 1']) {
+    check('NOME TESTEMUNHA 1', validateRequired(data['NOME TESTEMUNHA 1'], 'Nome da testemunha'));
+    check('CPF TESTEMUNHA 1', validateCPF(data['CPF TESTEMUNHA 1'] || ''));
+  }
   
   check('NOME VENDEDOR', validateRequired(data['NOME VENDEDOR'], 'Nome do vendedor'));
   check('CPF VENDEDOR', validateCPF(data['CPF VENDEDOR'] || ''));
-  
-  check('NOME COORD BU', validateRequired(data['NOME COORD BU'], 'Nome do coordenador'));
-  check('CPF COORD BU', validateCPF(data['CPF COORD BU'] || ''));
 
   if (data['PRAZO CONTRATUAL MESES'] !== undefined) {
     const prazo = Number(data['PRAZO CONTRATUAL MESES']);

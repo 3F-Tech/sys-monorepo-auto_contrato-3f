@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch, onUnmounted } from 'vue';
 import { AlertTriangle, AlertCircle, Info, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -68,6 +68,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['confirm', 'cancel']);
+
+// Bloquear scroll do body ao abrir o modal
+watch(() => props.isOpen, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}, { immediate: true });
+
+onUnmounted(() => {
+  document.body.style.overflow = '';
+});
 
 const iconComponent = computed(() => {
   switch (props.icon) {

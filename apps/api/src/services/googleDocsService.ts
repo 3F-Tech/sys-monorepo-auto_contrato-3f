@@ -25,15 +25,26 @@ export class GoogleDocsService {
     const auth = this.getAuth();
     const docs = google.docs({ version: 'v1', auth });
 
-    const requests = Object.entries(replacements).map(([key, value]) => ({
-      replaceAllText: {
-        containsText: {
-          text: `{{${key}}}`,
-          matchCase: true,
+    const requests = Object.entries(replacements).flatMap(([key, value]) => [
+      {
+        replaceAllText: {
+          containsText: {
+            text: `{{${key}}}`,
+            matchCase: true,
+          },
+          replaceText: value || '',
         },
-        replaceText: value || '',
       },
-    }));
+      {
+        replaceAllText: {
+          containsText: {
+            text: `{{ ${key} }}`,
+            matchCase: true,
+          },
+          replaceText: value || '',
+        },
+      }
+    ]);
 
     if (requests.length === 0) return;
 

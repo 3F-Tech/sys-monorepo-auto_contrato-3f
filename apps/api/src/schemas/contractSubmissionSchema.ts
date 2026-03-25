@@ -27,32 +27,58 @@ export const contractDataSchema = z.object({
   'DATA PRIMEIRO PAGAMENTO': z.string().regex(dateRegex, "Data inválida (use DD/MM/AAAA)"),
   'DIA VENCIMENTO MENSAL': z.union([z.number(), z.string()]).transform(val => Number(val)).refine(val => val >= 1 && val <= 31, "Dia de vencimento deve ser entre 1 e 31"),
   'DATA ASSINATURA CONTRATO': z.string().regex(dateRegex, "Data inválida (use DD/MM/AAAA)"),
-  'NOME TESTEMUNHA 1': z.string().min(3, "Nome da testemunha obrigatório"),
-  'CPF TESTEMUNHA 1': z.string().regex(cpfRegex, "CPF da testemunha inválido"),
+  'NOME TESTEMUNHA 1': z.string().min(3, "Nome da testemunha muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 1': z.string().email("E-mail da testemunha inválido").optional().or(z.literal('')),
+  'CPF TESTEMUNHA 1': z.string().regex(cpfRegex, "CPF da testemunha inválido").optional().or(z.literal('')),
   'NOME TESTEMUNHA 2': z.string().min(3, "Nome da testemunha 2 muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 2': z.string().email("E-mail da testemunha 2 inválido").optional().or(z.literal('')),
   'CPF TESTEMUNHA 2': z.string().regex(cpfRegex, "CPF da testemunha 2 inválido").optional().or(z.literal('')),
   'NOME TESTEMUNHA 3': z.string().min(3, "Nome da testemunha 3 muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 3': z.string().email("E-mail da testemunha 3 inválido").optional().or(z.literal('')),
   'CPF TESTEMUNHA 3': z.string().regex(cpfRegex, "CPF da testemunha 3 inválido").optional().or(z.literal('')),
   'NOME TESTEMUNHA 4': z.string().min(3, "Nome da testemunha 4 muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 4': z.string().email("E-mail da testemunha 4 inválido").optional().or(z.literal('')),
   'CPF TESTEMUNHA 4': z.string().regex(cpfRegex, "CPF da testemunha 4 inválido").optional().or(z.literal('')),
   'NOME TESTEMUNHA 5': z.string().min(3, "Nome da testemunha 5 muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 5': z.string().email("E-mail da testemunha 5 inválido").optional().or(z.literal('')),
   'CPF TESTEMUNHA 5': z.string().regex(cpfRegex, "CPF da testemunha 5 inválido").optional().or(z.literal('')),
   'NOME TESTEMUNHA 6': z.string().min(3, "Nome da testemunha 6 muito curto").optional().or(z.literal('')),
+  'EMAIL TESTEMUNHA 6': z.string().email("E-mail da testemunha 6 inválido").optional().or(z.literal('')),
   'CPF TESTEMUNHA 6': z.string().regex(cpfRegex, "CPF da testemunha 6 inválido").optional().or(z.literal('')),
   'NOME VENDEDOR': z.string().min(3, "Nome do vendedor obrigatório"),
+  'EMAIL VENDEDOR': z.string().email("E-mail do vendedor obrigatório"),
   'CPF VENDEDOR': z.string().regex(cpfRegex, "CPF do vendedor inválido"),
-  'NOME COORD BU': z.string().min(3, "Nome do coordenador obrigatório"),
-  'CPF COORD BU': z.string().regex(cpfRegex, "CPF do coordenador inválido"),
+  'NOME TESTEMUNHA FIXA 1': z.string().optional(),
+  'EMAIL TESTEMUNHA FIXA 1': z.string().optional(),
+  'CPF TESTEMUNHA FIXA 1': z.string().optional(),
+  'NOME TESTEMUNHA FIXA 2': z.string().optional(),
+  'EMAIL TESTEMUNHA FIXA 2': z.string().optional(),
+  'CPF TESTEMUNHA FIXA 2': z.string().optional(),
+  'NOME TESTEMUNHA FIXA 3': z.string().optional(),
+  'EMAIL TESTEMUNHA FIXA 3': z.string().optional(),
+  'CPF TESTEMUNHA FIXA 3': z.string().optional(),
   'PRAZO CONTRATUAL MESES': z.union([z.number(), z.string()]).optional().transform(val => val ? Number(val) : undefined).refine(val => val === undefined || val > 0, "Prazo deve ser maior que 0"),
   'TELEFONE FINANCEIRO CONTRATANTE': z.string().optional(),
   'EMAIL FINANCEIRO CONTRATANTE': z.string().email("E-mail inválido").optional().or(z.literal('')),
   'LINK INSTAGRAM CONTRATANTE': z.string().optional(),
   'QTD ARTES': z.string().optional(),
   'QTD VIDEOS': z.string().optional(),
+  'ID DO DOCUMENTO CLICKSIGN': z.string().optional().or(z.literal('')),
 });
 
 export const contractSubmissionSchema = z.object({
   data: contractDataSchema,
   bu_id: z.number({ required_error: "ID da BU é obrigatório" }),
   bu_name: z.string().optional(),
+}).superRefine((val, ctx) => {
+  const isBomma = val.bu_name?.toUpperCase().includes('BOMMA');
+  const instagram = val.data['LINK INSTAGRAM CONTRATANTE'];
+  
+  if (isBomma && (!instagram || instagram.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O link do Instagram é obrigatório para contratos Bomma",
+      path: ['data', 'LINK INSTAGRAM CONTRATANTE'],
+    });
+  }
 });

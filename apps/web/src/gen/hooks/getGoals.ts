@@ -4,12 +4,12 @@
  */
 
 import fetch from "@kubb/plugin-client/clients/axios";
-import type { GetGoalsQueryResponse } from "../types/GetGoals.ts";
 import type {
   Client,
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
+import type { GetGoalsQueryResponse } from "../types/GetGoals.ts";
 
 function getGetGoalsUrl() {
   const res = { method: "GET", url: `/goals` as const };

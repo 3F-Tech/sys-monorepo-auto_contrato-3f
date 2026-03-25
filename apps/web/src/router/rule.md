@@ -9,7 +9,7 @@ Definir a navegação da aplicação, proteção de rotas e controle de acesso b
 |---|---|---|---|
 | `home` | `/` | `Home.vue` | — (requer autenticação) |
 | `login` | `/login` | `LoginView.vue` | `public: true` |
-| `admin-users` | `/admin/users` | `UsersView.vue` | `adminOnly: true` |
+| `admin-users` | `/admin/users` | `UsersView.vue` | `managementOnly: true` |
 | `admin-business` | `/admin/business` | `BusinessView.vue` | `adminOnly: true` |
 | `new-contract` | `/contratos/novo` | `ContractFlow.vue` | — (requer autenticação) |
 
@@ -18,9 +18,11 @@ Definir a navegação da aplicação, proteção de rotas e controle de acesso b
 2. **Metas de Rota**:
    - `public: true` → Rota acessível sem autenticação (ex: `/login`). Se o usuário já estiver logado, é redirecionado para `/`.
    - `adminOnly: true` → Rota que exige `userRole === 'admin'`. Outros cargos são redirecionados para `/`.
+   - `managementOnly: true` → Rota acessível por `admin`, `head` e `coord`. Sellers são redirecionados para `/`.
    - Sem meta → Rota protegida por padrão. Requer autenticação.
 3. **Controle de Acesso (RBAC)**:
    - A verificação de cargo é feita via `authStore.userRole`.
+   - A constante `isManagement` agrupa `['admin', 'head', 'coord']` para o guard `managementOnly`.
 
 ## 🧩 Configuração
 - O arquivo principal de configuração é `src/router/index.ts`.
@@ -28,3 +30,4 @@ Definir a navegação da aplicação, proteção de rotas e controle de acesso b
 
 ## 📝 Manutenção
 Ao criar uma nova rota, adicione-a à tabela acima.
+

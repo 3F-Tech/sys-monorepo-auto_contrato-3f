@@ -1,5 +1,6 @@
 export { deleteBusinessId } from "./deleteBusinessId.ts";
 export { deleteContractsId } from "./deleteContractsId.ts";
+export { deleteGoalsId } from "./deleteGoalsId.ts";
 export { deleteSellersId } from "./deleteSellersId.ts";
 export { getBusiness } from "./getBusiness.ts";
 export { getBusinessId } from "./getBusinessId.ts";
@@ -7,6 +8,7 @@ export { getContracts } from "./getContracts.ts";
 export { getContractsBuBuid } from "./getContractsBuBuid.ts";
 export { getContractsHeadHeadid } from "./getContractsHeadHeadid.ts";
 export { getContractsSellerSellerid } from "./getContractsSellerSellerid.ts";
+export { getGoals } from "./getGoals.ts";
 export { getHealth } from "./getHealth.ts";
 export { getSellerBusiness } from "./getSellerBusiness.ts";
 export { getSellerBusinessId } from "./getSellerBusinessId.ts";
@@ -20,6 +22,7 @@ export { postContractsSheetsImpulsePlano2 } from "./postContractsSheetsImpulsePl
 export { postContractsSheetsSeedPlano1 } from "./postContractsSheetsSeedPlano1.ts";
 export { postContractsSheetsSeedPlano2 } from "./postContractsSheetsSeedPlano2.ts";
 export { postContractsSheetsSeedPlanoGrowth } from "./postContractsSheetsSeedPlanoGrowth.ts";
+export { postGoals } from "./postGoals.ts";
 export { postLogin } from "./postLogin.ts";
 export { postSellers } from "./postSellers.ts";
 export { putBusinessId } from "./putBusinessId.ts";

@@ -23,23 +23,32 @@ export class GoogleDriveService {
    * @param destinationFolderId ID da pasta de destino
    * @param newFileName Nome para o novo arquivo copiado
    */
-  static async copyFile(fileId: string, destinationFolderId: string, newFileName: string) {
+  static async copyFile(fileId: string, destinationFolderId: string, newFileName: string, retries = 3) {
     const auth = this.getAuth();
     const drive = google.drive({ version: 'v3', auth });
 
-    try {
-      const response = await drive.files.copy({
-        fileId: fileId,
-        supportsAllDrives: true,
-        requestBody: {
-          name: newFileName,
-          parents: [destinationFolderId],
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error copying file in Google Drive:', error);
-      throw error;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await drive.files.copy({
+                fileId: fileId,
+                supportsAllDrives: true,
+                requestBody: {
+                    name: newFileName,
+                    parents: [destinationFolderId],
+                },
+            });
+            return response.data;
+        } catch (error: any) {
+            const isRateLimit = error.code === 403 || error.message?.includes('Rate limit exceeded');
+            if (isRateLimit && i < retries - 1) {
+                const delay = Math.pow(2, i) * 2000;
+                console.warn(`[DRIVE] Rate limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            console.error('Error copying file in Google Drive:', error);
+            throw error;
+        }
     }
   }
 
@@ -85,6 +94,32 @@ export class GoogleDriveService {
       return buffer.toString('base64');
     } catch (error) {
       console.error('Error exporting file to PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deleta um arquivo permanentemente do Google Drive.
+   * @param fileId ID do arquivo no Google Drive
+   */
+  static async deleteFile(fileId: string) {
+    const auth = this.getAuth();
+    const drive = google.drive({ version: 'v3', auth });
+
+    try {
+      await drive.files.delete({
+        fileId: fileId,
+        supportsAllDrives: true,
+      });
+      console.log(`[DRIVE] Arquivo ${fileId} deletado com sucesso.`);
+      return true;
+    } catch (error: any) {
+      // Se o arquivo já não existir, tratamos como sucesso na exclusão
+      if (error.code === 404) {
+        console.warn(`[DRIVE] Arquivo ${fileId} não encontrado (provavelmente já deletado).`);
+        return true;
+      }
+      console.error(`[DRIVE] Erro ao deletar arquivo ${fileId}:`, error);
       throw error;
     }
   }

@@ -35,4 +35,11 @@ Este módulo gerencia o acesso aos modelos de contrato e a criação de novas in
 ## 🛠️ Implementação Técnica
 - Use o `GoogleDriveService.ts` para interações com a Drive API v3.
 - **Exportação PDF**: O método `exportFileToPDF` deve ser usado para obter a versão não editável do contrato para o Clicksign.
-- Scopes necessários: `drive.file`, `drive.readonly` (para modelos) e `drive` (para criação e exportação).
+- **Exclusão de Arquivo**: O método `deleteFile(fileId)` é usado para remover o arquivo do Drive quando um contrato é excluído do sistema. Ele inclui tratamento de `404` (arquivo já deletado = sucesso silencioso) e `supportsAllDrives: true`.
+- Scopes necessários: `drive.file`, `drive.readonly` (para modelos) e `drive` (para criação, exportação e exclusão).
+
+## 🗑️ Fluxo de Exclusão
+A exclusão de um contrato no sistema dispara automaticamente a remoção do arquivo no Drive:
+1. `deleteContract` em `contractController.ts` lê o `document_id` do contrato no banco.
+2. Chama `GoogleDriveService.deleteFile(document_id)`.
+3. **Falhas são logadas mas não bloqueiam** a exclusão no banco — o objetivo é uma exclusão best-effort.

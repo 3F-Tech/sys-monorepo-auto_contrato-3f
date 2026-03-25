@@ -14,6 +14,11 @@ export type {
   DeleteContractsIdPathParams,
 } from "./types/DeleteContractsId.ts";
 export type {
+  DeleteGoalsIdMutation,
+  DeleteGoalsIdMutationResponse,
+  DeleteGoalsIdPathParams,
+} from "./types/DeleteGoalsId.ts";
+export type {
   DeleteSellersId200,
   DeleteSellersIdMutation,
   DeleteSellersIdMutationResponse,
@@ -53,6 +58,7 @@ export type {
   GetContractsSellerSelleridQuery,
   GetContractsSellerSelleridQueryResponse,
 } from "./types/GetContractsSellerSellerid.ts";
+export type { GetGoalsQuery, GetGoalsQueryResponse } from "./types/GetGoals.ts";
 export type {
   GetHealth200,
   GetHealthQuery,
@@ -87,6 +93,7 @@ export type {
   GetSellersIdQuery,
   GetSellersIdQueryResponse,
 } from "./types/GetSellersId.ts";
+export type { Goal, GoalTargetTypeEnumKey } from "./types/Goal.ts";
 export type {
   PostBusiness201,
   PostBusinessMutation,
@@ -129,6 +136,11 @@ export type {
   PostContractsSheetsSeedPlanoGrowthMutationRequest,
   PostContractsSheetsSeedPlanoGrowthMutationResponse,
 } from "./types/PostContractsSheetsSeedPlanoGrowth.ts";
+export type {
+  PostGoalsMutation,
+  PostGoalsMutationRequest,
+  PostGoalsMutationResponse,
+} from "./types/PostGoals.ts";
 export type {
   PostLogin200,
   PostLogin401,
@@ -173,6 +185,7 @@ export type { SellerBusiness } from "./types/SellerBusiness.ts";
 export type { Sellers } from "./types/Sellers.ts";
 export { deleteBusinessId } from "./hooks/deleteBusinessId.ts";
 export { deleteContractsId } from "./hooks/deleteContractsId.ts";
+export { deleteGoalsId } from "./hooks/deleteGoalsId.ts";
 export { deleteSellersId } from "./hooks/deleteSellersId.ts";
 export { getBusiness } from "./hooks/getBusiness.ts";
 export { getBusinessId } from "./hooks/getBusinessId.ts";
@@ -180,6 +193,7 @@ export { getContracts } from "./hooks/getContracts.ts";
 export { getContractsBuBuid } from "./hooks/getContractsBuBuid.ts";
 export { getContractsHeadHeadid } from "./hooks/getContractsHeadHeadid.ts";
 export { getContractsSellerSellerid } from "./hooks/getContractsSellerSellerid.ts";
+export { getGoals } from "./hooks/getGoals.ts";
 export { getHealth } from "./hooks/getHealth.ts";
 export { getSellerBusiness } from "./hooks/getSellerBusiness.ts";
 export { getSellerBusinessId } from "./hooks/getSellerBusinessId.ts";
@@ -193,12 +207,14 @@ export { postContractsSheetsImpulsePlano2 } from "./hooks/postContractsSheetsImp
 export { postContractsSheetsSeedPlano1 } from "./hooks/postContractsSheetsSeedPlano1.ts";
 export { postContractsSheetsSeedPlano2 } from "./hooks/postContractsSheetsSeedPlano2.ts";
 export { postContractsSheetsSeedPlanoGrowth } from "./hooks/postContractsSheetsSeedPlanoGrowth.ts";
+export { postGoals } from "./hooks/postGoals.ts";
 export { postLogin } from "./hooks/postLogin.ts";
 export { postSellers } from "./hooks/postSellers.ts";
 export { putBusinessId } from "./hooks/putBusinessId.ts";
 export { putContractsId } from "./hooks/putContractsId.ts";
 export { putSellerBusiness } from "./hooks/putSellerBusiness.ts";
 export { putSellersId } from "./hooks/putSellersId.ts";
+export { goalTargetTypeEnum } from "./types/Goal.ts";
 export { businessSchema } from "./zod/businessSchema.ts";
 export { contractDataSchema } from "./zod/contractDataSchema.ts";
 export { contractsSchema } from "./zod/contractsSchema.ts";
@@ -212,6 +228,10 @@ export {
   deleteContractsIdMutationResponseSchema,
   deleteContractsIdPathParamsSchema,
 } from "./zod/deleteContractsIdSchema.ts";
+export {
+  deleteGoalsIdMutationResponseSchema,
+  deleteGoalsIdPathParamsSchema,
+} from "./zod/deleteGoalsIdSchema.ts";
 export {
   deleteSellersId200Schema,
   deleteSellersIdMutationResponseSchema,
@@ -245,6 +265,7 @@ export {
   getContractsSellerSelleridPathParamsSchema,
   getContractsSellerSelleridQueryResponseSchema,
 } from "./zod/getContractsSellerSelleridSchema.ts";
+export { getGoalsQueryResponseSchema } from "./zod/getGoalsSchema.ts";
 export {
   getHealth200Schema,
   getHealthQueryResponseSchema,
@@ -273,6 +294,7 @@ export {
   getSellersQueryParamsSchema,
   getSellersQueryResponseSchema,
 } from "./zod/getSellersSchema.ts";
+export { goalSchema } from "./zod/goalSchema.ts";
 export {
   postBusiness201Schema,
   postBusinessMutationRequestSchema,
@@ -308,6 +330,10 @@ export {
   postContractsSheetsSeedPlanoGrowthMutationRequestSchema,
   postContractsSheetsSeedPlanoGrowthMutationResponseSchema,
 } from "./zod/postContractsSheetsSeedPlanoGrowthSchema.ts";
+export {
+  postGoalsMutationRequestSchema,
+  postGoalsMutationResponseSchema,
+} from "./zod/postGoalsSchema.ts";
 export {
   postLogin200Schema,
   postLogin401Schema,

@@ -17,12 +17,10 @@
         <div class="h-8 w-px bg-white/5 mx-1 hidden md:block"></div>
 
         <div class="flex items-center gap-1 p-1 bg-black/20 border border-brand-glass-border rounded-xl">
-          <button v-for="opt in signedFilterOptions" :key="opt.value"
-            @click="signedFilter = opt.value"
-            :class="['px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
-              signedFilter === opt.value 
-                ? 'bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20' 
-                : 'text-white/30 hover:text-white/60']">
+          <button v-for="opt in signedFilterOptions" :key="opt.value" @click="signedFilter = opt.value" :class="['px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
+            signedFilter === opt.value
+              ? 'bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20'
+              : 'text-white/30 hover:text-white/60']">
             {{ opt.label }}
           </button>
         </div>
@@ -39,12 +37,13 @@
 
     <!-- Loading State (Skeleton) -->
     <div v-if="loading" class="space-y-3">
-      <div v-for="i in 3" :key="i" 
-        class="p-5 rounded-2xl bg-brand-surface/30 border border-brand-glass-border animate-pulse flex items-center justify-between relative overflow-hidden"
-      >
+      <div v-for="i in 3" :key="i"
+        class="p-5 rounded-2xl bg-brand-surface/30 border border-brand-glass-border animate-pulse flex items-center justify-between relative overflow-hidden">
         <!-- Shimmer gradient overlay -->
-        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
-        
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer">
+        </div>
+
         <div class="flex items-center gap-4 relative z-10">
           <div class="h-10 w-10 rounded-xl bg-white/5 border border-white/10"></div>
           <div class="space-y-2">
@@ -76,14 +75,18 @@
     <div v-else class="space-y-3">
       <div v-for="contract in paginatedContracts" :key="contract.id?.toString()"
         :class="['group bg-brand-offset border rounded-xl transition-all overflow-hidden shadow-sm',
-          contract.signed ? 'border-green-500/60 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:border-green-400' : 'border-brand-glass-border hover:border-brand-cyan/30']">
+          contract.canceled_at ? 'border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:border-red-400' :
+            contract.signed ? 'border-green-500/60 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:border-green-400' : 'border-brand-glass-border hover:border-brand-cyan/30']">
 
         <!-- Header / Summary -->
         <div @click="toggleExpand(contract.id?.toString()!)"
           class="p-4 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-white/5">
           <div class="flex items-center gap-4">
             <div
-              :class="['rounded-lg border border-brand-glass-border transition-all overflow-hidden flex items-center justify-center flex-shrink-0', getBuImage(contract.bu_id) ? 'bg-brand-surface' : 'p-2', contract.signed ? 'text-green-400 border-green-500/30 bg-green-500/5' : 'text-brand-cyan border-brand-cyan/20']"
+              :class="['rounded-lg border border-brand-glass-border transition-all overflow-hidden flex items-center justify-center flex-shrink-0',
+                getBuImage(contract.bu_id) ? 'bg-brand-surface' : 'p-2',
+                contract.canceled_at ? 'text-red-400 border-red-500/60 bg-red-500/5' :
+                  contract.signed ? 'text-green-400 border-green-500/30 bg-green-500/5' : 'text-brand-cyan border-brand-cyan/20']"
               style="width: 36px; height: 36px;">
               <img v-if="getBuImage(contract.bu_id)" :src="getBuImage(contract.bu_id)!"
                 class="h-full w-full object-cover" :alt="getBuName(contract.bu_id)" />
@@ -92,13 +95,38 @@
             </div>
             <div>
               <h4 class="text-sm font-bold text-white group-hover:text-brand-cyan transition-colors">{{ contract.title
-                }}</h4>
+              }}</h4>
               <p class="text-[10px] text-white/50 font-medium uppercase tracking-wider">{{
                 getSellerName(contract.seller_id) }} · {{ contract.type_contract }}</p>
             </div>
           </div>
 
           <div class="flex items-center gap-6">
+            <!-- Progresso de Assinaturas -->
+            <div class="hidden lg:flex flex-col items-end gap-1">
+              <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Assinaturas</span>
+              <div v-if="contract.total_signers"
+                class="flex items-center gap-2 px-3 py-1 rounded-full shadow-sm group/progress border transition-all duration-300"
+                :class="getSignaturesStatus(contract).badge">
+                <div class="h-1.5 w-1.5 rounded-full transition-all duration-300"
+                  :class="getSignaturesStatus(contract).dot"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest"
+                  :class="getSignaturesStatus(contract).text">
+                  {{ contract.signed_count || 0 }}/{{ contract.total_signers }}
+                </span>
+                <!-- Botão de Detalhes de Assinatura -->
+                <button @click.stop="openSignersModal(contract)"
+                  class="ml-1 p-0.5 hover:bg-white/10 rounded transition-all duration-300 opacity-0 group-hover/progress:opacity-100"
+                  :title="'Ver detalhes de quem assinou'">
+                  <Users :class="['h-2.5 w-2.5 transition-all text-white/40 hover:text-brand-cyan',
+                    loadingSignersId === contract.id ? 'animate-pulse text-brand-cyan' : '']" />
+                </button>
+              </div>
+              <span v-else
+                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white/20 bg-white/5 border border-white/5 shadow-inner">-
+                / -</span>
+            </div>
+
             <div class="hidden md:flex flex-col items-end gap-1">
               <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Status da Alteração</span>
               <span v-if="contract.change_status === 'alert'"
@@ -118,8 +146,9 @@
               <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Contrato</span>
               <span
                 :class="['text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm',
-                  contract.signed ? 'bg-green-500/20 text-green-300 border border-green-500/20' : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20']">
-                {{ contract.signed ? 'Assinado' : 'Pendente' }}
+                  contract.canceled_at ? 'bg-red-500/20 text-red-500 border border-red-500/20' :
+                    contract.signed ? 'bg-green-500/20 text-green-300 border border-green-500/20' : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20']">
+                {{ contract.canceled_at ? 'Cancelado' : (contract.signed ? 'Assinado' : 'Pendente') }}
               </span>
             </div>
             <ChevronDown :class="['h-4 w-4 text-white/30 transition-transform duration-300',
@@ -183,7 +212,7 @@
                       <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
                     </div>
                   </div>
-                  
+
                   <!-- P1 Info (Nova) -->
                   <div class="pt-4 mt-4 border-t border-white/5 space-y-3">
                     <div class="grid grid-cols-2 gap-3">
@@ -192,7 +221,8 @@
                           <CreditCard class="h-3 w-3 text-brand-cyan/60" />
                           <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Valor P1</span>
                         </div>
-                        <p class="text-xs font-bold text-white/90">{{ formatCurrency(contract.first_payment_amount) }}</p>
+                        <p class="text-xs font-bold text-white/90">{{ formatCurrency(contract.first_payment_amount) }}
+                        </p>
                       </div>
                       <div class="p-3 rounded-xl bg-white/5 border border-white/10">
                         <div class="flex items-center gap-2 mb-1">
@@ -203,10 +233,11 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Tempo Metric (Nova) -->
                   <div class="pt-4 border-t border-white/5">
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10">
+                    <div
+                      class="flex items-center justify-between p-3 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10">
                       <div class="flex items-center gap-2">
                         <Clock class="h-3.5 w-3.5 text-brand-cyan" />
                         <span class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">
@@ -229,7 +260,7 @@
                     <Settings2 class="h-3 w-3" />
                     Ações Administrativas
                   </label>
-                  <button @click="handleDeleteContract(contract)"
+                  <button v-if="(contract as any).canceled_at" @click="handleDeleteContract(contract)"
                     class="text-[10px] py-1 px-3 rounded-md font-bold uppercase tracking-widest text-white/20 hover:text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 transition-all"
                     title="Excluir Contrato Permanentemente">
                     <Trash2 class="h-3 w-3" />
@@ -237,7 +268,8 @@
                   </button>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                  <button @click="handleToggleSigned(contract)" :disabled="contract.change_status === 'alert'"
+                  <button v-if="!(contract as any).canceled_at" @click="handleToggleSigned(contract)"
+                    :disabled="contract.change_status === 'alert' || contract.signed"
                     :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 group/btn shadow-lg',
                       contract.change_status === 'alert' ? 'opacity-50 cursor-not-allowed grayscale' : '',
                       contract.signed
@@ -246,16 +278,32 @@
                     <CheckCircle2
                       :class="['h-8 w-8 transition-transform group-hover/btn:scale-110', contract.signed ? 'text-green-400' : 'group-hover/btn:text-green-400']" />
                     <span v-if="contract.signed"
-                      class="text-[10px] font-black uppercase tracking-[0.15em]">Finalizado</span>
+                      class="text-[10px] font-black uppercase tracking-[0.15em]">Assinado</span>
                     <span v-else class="text-[10px] font-black uppercase tracking-[0.15em]">Marcar Assinado</span>
                   </button>
 
-                  <button v-if="!isLeadership && contract.change_status !== 'alert'" @click="openChangeModal(contract)"
-                    :disabled="!contract.link" :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg',
+                  <button
+                    v-if="!isLeadership && contract.change_status !== 'alert' && !(contract as any).canceled_at"
+                    @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed" :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
                       'bg-brand-offset border-brand-glass-border text-white/30 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5',
-                      !contract.link ? 'opacity-20 cursor-not-allowed grayscale' : '']">
-                    <AlertCircle class="h-8 w-8" />
+                      (!contract.link || contract.signed) ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none' : '']">
+                    <AlertCircle class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
                     <span class="text-[10px] font-black uppercase tracking-[0.15em]">Aviso Mudança</span>
+                  </button>
+
+                  <!-- Botão Cancelar Contrato (visível apenas para contratos não assinados e não finalizados/alertas) -->
+                  <button v-if="!(contract as any).canceled_at" @click="confirmCancelContract(contract)"
+                    :disabled="contract.signed"
+                    :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg bg-brand-offset border-brand-glass-border text-white/30 group/btn',
+                      contract.signed ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none' : 'hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/5']">
+                    <Ban class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em]">Cancelar</span>
+                  </button>
+
+                  <button v-if="(contract as any).canceled_at" disabled
+                    class="col-span-2 p-6 rounded-2xl border-2 border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center gap-3 shadow-lg text-red-400/50 text-center relative opacity-50 cursor-not-allowed">
+                    <Ban class="h-8 w-8" />
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em]">Contrato Cancelado</span>
                   </button>
 
                   <div v-else-if="!isLeadership && contract.change_status === 'alert'"
@@ -288,7 +336,17 @@
                   </div>
                 </div>
 
-                <div v-if="!contract.link"
+                <div v-if="contract.signed || (contract as any).canceled_at"
+                  class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10"
+                  :class="contract.signed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'">
+                  <component :is="contract.signed ? CheckCircle2 : Ban"
+                    :class="['h-3 w-3', contract.signed ? 'text-green-400/50' : 'text-red-400/50']" />
+                  <p class="text-[9px] font-bold uppercase tracking-widest text-center"
+                    :class="contract.signed ? 'text-green-400/70' : 'text-red-400/70'">
+                    Contrato {{ contract.signed ? 'assinado' : 'cancelado' }} não permite alteração
+                  </p>
+                </div>
+                <div v-else-if="!contract.link"
                   class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
                   <HelpCircle class="h-3 w-3 text-orange-400/50" />
                   <p class="text-[9px] text-orange-400/70 font-bold uppercase tracking-widest text-center">
@@ -300,24 +358,18 @@
           </div>
         </Transition>
       </div>
-      
+
       <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="flex items-center justify-center gap-4 pt-4 pb-2">
-        <button 
-          @click="currentPage > 1 && currentPage--" 
-          :disabled="currentPage === 1"
-          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
+        <button @click="currentPage > 1 && currentPage--" :disabled="currentPage === 1"
+          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
           Anterior
         </button>
         <span class="text-[10px] font-medium text-white/40 uppercase tracking-wider">
           Página {{ currentPage }} de {{ totalPages }}
         </span>
-        <button 
-          @click="currentPage < totalPages && currentPage++" 
-          :disabled="currentPage === totalPages"
-          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
+        <button @click="currentPage < totalPages && currentPage++" :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
           Próxima
         </button>
       </div>
@@ -412,11 +464,60 @@
       message="Tem certeza que deseja excluir permanentemente este contrato? Esta ação não poderá ser desfeita e os dados serão perdidos para sempre."
       confirmText="Excluir" cancelText="Cancelar" type="danger" icon="trash" @confirm="executeDelete"
       @cancel="cancelDelete" />
+
+    <!-- Modal Cancelar Contrato (Clicksign/DB) -->
+    <Transition name="fade">
+      <div v-if="showCancelContractModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showCancelContractModal = false"></div>
+
+        <div
+          class="bg-gray-900 border border-red-500/20 rounded-2xl w-full max-w-md p-6 relative z-10 shadow-2xl overflow-hidden flex flex-col">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
+          <div class="absolute -top-12 -right-12 w-32 h-32 bg-red-500 rounded-full blur-[80px] opacity-20"></div>
+
+          <div class="flex items-center gap-4 mb-6">
+            <div class="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <Ban class="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white tracking-wide">Cancelar Contrato</h3>
+              <p class="text-sm text-white/50">Esta ação é irreversível</p>
+            </div>
+          </div>
+
+          <p class="text-white/70 mb-6 leading-relaxed">
+            Tem certeza que deseja cancelar este contrato? Esta ação irá anulá-lo tanto no nosso sistema quanto na
+            plataforma <strong class="text-white">Clicksign</strong>, e os signatários não poderão mais assiná-lo.
+          </p>
+
+          <div class="flex justify-end gap-3 mt-auto">
+            <button @click="showCancelContractModal = false"
+              class="px-5 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 transition-colors font-medium text-sm">
+              Voltar
+            </button>
+            <button @click="cancelContractStatus" :disabled="isCanceling"
+              class="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white transition-colors font-bold text-sm shadow-lg shadow-red-500/20 flex items-center gap-2">
+              <span v-if="isCanceling" class="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+              {{ isCanceling ? 'Cancelando...' : 'Sim, Cancelar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Modal Detalhes de Signatários -->
+    <SignersModal 
+      :isOpen="showSignersModal"
+      :loading="loadingSigners"
+      :contractTitle="selectedContractForSigners?.title || ''"
+      :signers="currentSigners"
+      @close="showSignersModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { Contracts } from '../../gen/types/Contracts';
 import type { Business } from '../../gen/types/Business';
 import type { Sellers } from '../../gen/types/Sellers';
@@ -439,10 +540,15 @@ import {
   Trash2,
   Clock,
   CreditCard,
-  Calendar
+  Calendar,
+  Ban,
+  RefreshCw,
+  Users
 } from 'lucide-vue-next';
 import { useToast } from '../../composables/useToast';
 import ConfirmModal from '../ui/ConfirmModal.vue';
+import SignersModal from './SignersModal.vue';
+import client from '../../api/client';
 
 const props = defineProps<{
   contracts: Contracts[];
@@ -460,12 +566,12 @@ const editingLink = ref('');
 const changeDescriptionInput = ref('');
 const searchQuery = ref('');
 const showAlertsOnly = ref(false);
-const signedFilter = ref<'all' | 'signed' | 'pending'>('all');
+const signedFilter = ref<'signed' | 'pending' | 'canceled'>('pending');
 
 const signedFilterOptions = [
-  { label: 'Todas', value: 'all' },
-  { label: 'Assinados', value: 'signed' },
   { label: 'Pendentes', value: 'pending' },
+  { label: 'Assinados', value: 'signed' },
+  { label: 'Cancelados', value: 'canceled' },
 ] as const;
 
 const changeRequestModalOpen = ref(false);
@@ -476,6 +582,149 @@ const reviewContract = ref<Contracts | null>(null);
 
 const deleteModalOpen = ref(false);
 const contractToDelete = ref<Contracts | null>(null);
+
+const showCancelContractModal = ref(false);
+const contractToCancel = ref<Contracts | null>(null);
+const isCanceling = ref(false);
+const isSyncing = ref<string | null>(null);
+
+// Estados para Modal de Signatários
+const showSignersModal = ref(false);
+const loadingSigners = ref(false);
+const loadingSignersId = ref<string | null>(null);
+const selectedContractForSigners = ref<Contracts | null>(null);
+const currentSigners = ref<any[]>([]);
+
+const openSignersModal = async (contract: Contracts) => {
+  if (!contract.id) return;
+  
+  selectedContractForSigners.value = contract;
+  showSignersModal.value = true;
+  loadingSigners.value = true;
+  loadingSignersId.value = contract.id;
+  currentSigners.value = [];
+
+  try {
+    const response = await client.get(`/contracts/${contract.id}/signers`);
+    if (response.data.success) {
+      currentSigners.value = response.data.signers;
+
+      // Atualiza o signed_count local com base nos dados ao vivo do Clicksign
+      const signedCount = currentSigners.value.filter((s: any) => s.signed).length;
+      const totalSigners = currentSigners.value.length;
+
+      const index = contractStore.myContracts.findIndex(c => c.id === contract.id);
+      if (index !== -1 && totalSigners > 0) {
+        contractStore.myContracts[index] = {
+          ...contractStore.myContracts[index],
+          signed_count: signedCount,
+          total_signers: totalSigners,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao buscar signatários:', err);
+    toastError('Não foi possível carregar a lista de signatários');
+  } finally {
+    loadingSigners.value = false;
+    loadingSignersId.value = null;
+  }
+};
+
+const syncContract = async (contract: Contracts) => {
+  if (!contract.id || isSyncing.value) return;
+
+  isSyncing.value = contract.id;
+  try {
+    const response = await client.post(`/contracts/${contract.id}/sync`);
+    const updatedContract = response.data.contract;
+
+    // Atualiza no store
+    const index = contractStore.myContracts.findIndex(c => c.id === contract.id);
+    if (index !== -1) {
+      contractStore.myContracts[index] = {
+        ...contractStore.myContracts[index],
+        ...updatedContract
+      };
+      toastSuccess(`Sincronizado: ${updatedContract.signed_count}/${updatedContract.total_signers} assinaturas`);
+    }
+  } catch (err: any) {
+    toastError('Erro ao sincronizar assinaturas');
+    console.error(err);
+  } finally {
+    isSyncing.value = null;
+  }
+};
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Sincronização em background para contratos pendentes
+ * Evita que o usuário veja contadores desatualizados na primeira carga
+ */
+const backgroundSyncPending = async (contractsToSync: Contracts[]) => {
+  if (!contractsToSync.length) return;
+  
+  // Filtra apenas contratos que TENHAM ID do clicksign
+  const candidates = contractsToSync.filter(c => 
+    !c.signed && 
+    !c.canceled_at && 
+    ((c as any).envelope_id || c.document_id)
+  );
+
+  if (!candidates.length) return;
+
+  // Limita a 5 (mais seguro para rate limit)
+  const limited = candidates.slice(0, 5);
+  
+  for (const contract of limited) {
+    if (!contract.id) continue;
+    
+    try {
+      // Sincronização silenciosa
+      const response = await client.post(`/contracts/${contract.id}/sync`);
+      if (response.data.success) {
+        const updatedContract = response.data.contract;
+        const index = contractStore.myContracts.findIndex(c => c.id === contract.id);
+        if (index !== -1) {
+          contractStore.myContracts[index] = {
+            ...contractStore.myContracts[index],
+            ...updatedContract
+          };
+        }
+      }
+      // Pequeno delay entre requisições para evitar 429 (Rate Limit)
+      await sleep(1000); 
+    } catch (e: any) {
+      // Se for um 400 avisando que não tem ID, apenas ignoramos silenciosamente
+      if (e.response?.status === 400 && e.response?.data?.error?.includes('ID do Clicksign')) {
+        continue;
+      }
+      // Se for um 429, paramos o loop para não piorar
+      if (e.response?.status === 429) {
+        console.warn(`[Silent Sync] Rate limit atingido. Parando sincronização em background.`);
+        break;
+      }
+      console.warn(`[Silent Sync] Falha ao sincronizar contrato ${contract.id}:`, e);
+    }
+  }
+};
+
+let hasInitialSynced = false;
+
+// Sincroniza automaticamente os pendentes quando os contratos carregam ou o filtro muda
+watch([() => props.contracts, signedFilter], ([newContracts, newFilter]) => {
+  if (newContracts.length > 0 && newFilter === 'pending' && !hasInitialSynced) {
+    const pending = newContracts.filter(c => !c.signed && !c.canceled_at);
+    if (pending.length > 0) {
+      hasInitialSynced = true;
+      backgroundSyncPending(pending);
+    }
+  }
+}, { immediate: true });
+
+// Resetar o flag se os contratos mudarem significativamente ou se quisermos forçar novo sync (opcional)
+// Por enquanto, uma vez por carga de página/sessão de filtro está bom.
 
 const currentPage = ref(1);
 const itemsPerPage = 10;
@@ -515,11 +764,13 @@ const filteredContracts = computed(() => {
   }
 
   if (signedFilter.value === 'signed') {
-    displayContracts = displayContracts.filter(c => c.signed);
+    displayContracts = displayContracts.filter(c => c.signed && !c.canceled_at);
   } else if (signedFilter.value === 'pending') {
-    displayContracts = displayContracts.filter(c => !c.signed);
+    displayContracts = displayContracts.filter(c => !c.signed && !c.canceled_at);
+  } else if (signedFilter.value === 'canceled') {
+    displayContracts = displayContracts.filter(c => !!c.canceled_at);
   }
-  
+
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     displayContracts = displayContracts.filter(c =>
@@ -535,8 +786,11 @@ const filteredContracts = computed(() => {
   // 3. Assinados (signed === true) sempre no fundo
   return [...displayContracts].sort((a, b) => {
     const priorityOf = (c: typeof a): number => {
-      if (c.change_status === 'alert') return 0;
+      // Prioridade 0: Qualquer status de alteração (Aviso, Aprovado, Recusado)
+      if (c.change_status && c.change_status !== 'none') return 0;
+      // Prioridade 1: Pendentes de assinatura
       if (!c.signed) return 1;
+      // Prioridade 2: Assinados
       return 2;
     };
 
@@ -545,10 +799,15 @@ const filteredContracts = computed(() => {
 
     if (pa !== pb) return pa - pb;
 
-    // Dentro do mesmo grupo, ordena por data de vencimento (mais próxima primeiro)
-    const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
-    const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
-    return dateA - dateB;
+    // Ordenação Secundária: Mais assinaturas primeiro (descendente)
+    const signersA = a.signed_count || 0;
+    const signersB = b.signed_count || 0;
+    if (signersA !== signersB) return signersB - signersA;
+
+    // Ordenação Terciária: Mais recentes primeiro (descendente por data de criação)
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return timeB - timeA;
   });
 });
 
@@ -673,6 +932,42 @@ const executeDelete = async () => {
   contractToDelete.value = null;
 };
 
+const confirmCancelContract = (contract: Contracts) => {
+  contractToCancel.value = contract;
+  showCancelContractModal.value = true;
+};
+
+const cancelContractStatus = async () => {
+  if (!contractToCancel.value || isCanceling.value) return;
+
+  isCanceling.value = true;
+  try {
+    const response = await client.post(`/contracts/${contractToCancel.value.id}/cancel`);
+
+    toastSuccess('Contrato cancelado com sucesso no sistema e no Clicksign');
+
+    // Atualiza a lista local no Store para garantir reatividade imediata em todo o sistema
+    if (contractToCancel.value) {
+      const contractId = contractToCancel.value.id;
+      const index = contractStore.myContracts.findIndex(c => c.id === contractId);
+      if (index !== -1) {
+        // Substituímos o objeto inteiro no array para disparar a reatividade do Vue 3
+        contractStore.myContracts[index] = {
+          ...contractStore.myContracts[index],
+          canceled_at: new Date().toISOString()
+        };
+      }
+    }
+  } catch (err: any) {
+    toastError(err.response?.data?.error || err.message || 'Erro ao cancelar contrato');
+    console.error(err);
+  } finally {
+    isCanceling.value = false;
+    showCancelContractModal.value = false;
+    contractToCancel.value = null;
+  }
+};
+
 const formatDate = (date: string | null | undefined) => {
   if (!date) return 'Não definida';
   return new Date(date).toLocaleDateString('pt-BR');
@@ -685,16 +980,50 @@ const formatCurrency = (value: any) => {
 
 const calculateDuration = (contract: Contracts) => {
   if (!contract.created_at) return 'N/A';
-  
+
   const start = new Date(contract.created_at as string);
-  const end = contract.signed && contract.signed_date 
-    ? new Date(contract.signed_date as string) 
+  const end = contract.signed && contract.signed_date
+    ? new Date(contract.signed_date as string)
     : new Date();
-    
+
   const diffTime = Math.abs(end.getTime() - start.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return diffDays === 1 ? '1 dia' : `${diffDays} dias`;
+};
+
+const getSignaturesStatus = (contract: Contracts) => {
+  if (!contract.total_signers) return {
+    dot: 'bg-white/20',
+    badge: 'bg-white/5 border-white/5',
+    text: 'text-white/20'
+  };
+
+  const count = contract.signed_count || 0;
+  const total = contract.total_signers;
+  const ratio = count / total;
+
+  if (count === total || contract.signed) {
+    return {
+      dot: 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]',
+      badge: 'bg-green-500/20 border-green-500/20',
+      text: 'text-green-300'
+    };
+  }
+
+  if (ratio >= 0.5) {
+    return {
+      dot: 'bg-orange-500 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.4)]',
+      badge: 'bg-orange-500/20 border-orange-500/20',
+      text: 'text-orange-400'
+    };
+  }
+
+  return {
+    dot: 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]',
+    badge: 'bg-red-500/20 border-red-500/20',
+    text: 'text-red-400'
+  };
 };
 </script>
 
@@ -720,6 +1049,7 @@ const calculateDuration = (contract: Contracts) => {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }

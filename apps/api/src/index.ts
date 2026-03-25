@@ -1,11 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { specs } from './swagger.config'; //
+import { specs } from './swagger.config'; 
 import fs from 'fs';
 import path from 'path';
-// import { swaggerOptions } from './swagger-jsdoc.config';
 import apiRoutes from './routes';
 
 (BigInt.prototype as any).toJSON = function () {
