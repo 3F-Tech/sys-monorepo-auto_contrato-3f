@@ -86,6 +86,12 @@ export const createTeam = async (req: any, res: Response) => {
  *     summary: Atualizar equipe (Nome, foto, descrição)
  *     tags:
  *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  */
 export const updateTeam = async (req: any, res: Response) => {
     try {
@@ -117,6 +123,12 @@ export const updateTeam = async (req: any, res: Response) => {
  *     summary: Adicionar vendedor à equipe
  *     tags:
  *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  */
 export const addTeamMember = async (req: any, res: Response) => {
     try {
@@ -148,6 +160,17 @@ export const addTeamMember = async (req: any, res: Response) => {
  *     summary: Remover vendedor da equipe
  *     tags:
  *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: sellerId
+ *         required: true
+ *         schema:
+ *           type: string
  */
 export const removeTeamMember = async (req: any, res: Response) => {
     try {
@@ -179,6 +202,12 @@ export const removeTeamMember = async (req: any, res: Response) => {
  *     summary: Deletar equipe
  *     tags:
  *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  */
 export const deleteTeam = async (req: any, res: Response) => {
     try {

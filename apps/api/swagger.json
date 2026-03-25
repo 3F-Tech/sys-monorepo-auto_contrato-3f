@@ -1320,12 +1320,32 @@
         "summary": "Atualizar equipe (Nome, foto, descrição)",
         "tags": [
           "Teams"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ]
       },
       "delete": {
         "summary": "Deletar equipe",
         "tags": [
           "Teams"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ]
       }
     },
@@ -1334,6 +1354,16 @@
         "summary": "Adicionar vendedor à equipe",
         "tags": [
           "Teams"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ]
       }
     },
@@ -1342,6 +1372,24 @@
         "summary": "Remover vendedor da equipe",
         "tags": [
           "Teams"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sellerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ]
       }
     }
