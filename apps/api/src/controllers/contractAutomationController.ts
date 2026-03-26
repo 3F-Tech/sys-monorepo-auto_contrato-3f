@@ -78,6 +78,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         }
 
         const { data, bu_id, bu_name, sdr_id } = validation.data;
+        const isDebug = data['isDebug'];
         const user = req.user;
 
         // Declarations moved to function scope
@@ -311,8 +312,24 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
 
                     const buKey = Object.keys(BU_SIGNERS_MAP).find(k => finalBuName.toUpperCase().includes(k));
                     if (buKey) {
+                        const signerData = { ...BU_SIGNERS_MAP[buKey] };
+                        
+                        // Aplicar sufixo +test em modo debug para e-mails específicos
+                        if (isDebug) {
+                            const targetEmails = [
+                                'luisfernando@3fventure.com.br',
+                                'natalia@bommamkt.com.br',
+                                'leticia@bommamkt.com.br',
+                                'erika@seedagromarketing.com.br',
+                                'luisfernando@seedagromarketing.com.br'
+                            ];
+                            if (targetEmails.includes(signerData.email.toLowerCase())) {
+                                signerData.email = signerData.email.replace('@', '+test@');
+                            }
+                        }
+
                         signersToProcess.push({
-                            ...BU_SIGNERS_MAP[buKey],
+                            ...signerData,
                             role: 'contractee' // Luis/Nati/Mateus como representante da Contratada no v3
                         });
                     }

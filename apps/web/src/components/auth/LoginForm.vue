@@ -27,7 +27,7 @@
 
         <!-- Subheading -->
         <div class="mb-8">
-          <h2 class="text-xl font-bold text-white tracking-tight">Bem-vindo de volta</h2>
+          <h2 class="text-xl font-bold text-white tracking-tight">Bem-vindo de voltE</h2>
           <p class="mt-1.5 text-sm text-white/40">Entre com suas credenciais para continuar.</p>
         </div>
 
@@ -108,5 +108,3 @@ const handleSubmit = () => {
   emit('submit', { email: email.value, password: password.value });
 };
 </script>
-
-

@@ -186,20 +186,34 @@ const extraWitnessStartIdx = 0; // Starts at 1 for adicionales
 // Update form with fixed data
 const updateFixedData = () => {
   const sigs = fixedSignatories.value;
+  const isDebug = props.form['isDebug'];
 
-  // Clean all potential witness slots (optional)
-  // ...
+  const getEmail = (originalEmail: string) => {
+    if (!isDebug) return originalEmail;
+    // Lista de e-mails específicos que devem receber +test
+    const targetEmails = [
+      'luisfernando@3fventure.com.br',
+      'natalia@bommamkt.com.br',
+      'leticia@bommamkt.com.br',
+      'erika@seedagromarketing.com.br'
+    ];
+    
+    if (targetEmails.includes(originalEmail.toLowerCase())) {
+      return originalEmail.replace('@', '+test@');
+    }
+    return originalEmail;
+  };
 
-  // Fill Fixed Witnesses in dedicated variables to avoid collision
+  // Fill Fixed Witnesses
   sigs.witnesses.forEach((w, i) => {
     props.form[`NOME TESTEMUNHA FIXA ${i + 1}`] = w.name;
-    props.form[`EMAIL TESTEMUNHA FIXA ${i + 1}`] = w.email;
+    props.form[`EMAIL TESTEMUNHA FIXA ${i + 1}`] = getEmail(w.email);
     props.form[`CPF TESTEMUNHA FIXA ${i + 1}`] = w.cpf;
   });
 
-  // Seller is already in NOME VENDEDOR, but we can also put in a fixa slot if useful
+  // Seller/Contracted representative
   props.form[`NOME TESTEMUNHA FIXA ${sigs.witnesses.length + 1}`] = props.form['NOME VENDEDOR'] || '';
-  props.form[`EMAIL TESTEMUNHA FIXA ${sigs.witnesses.length + 1}`] = props.form['EMAIL VENDEDOR'] || '';
+  props.form[`EMAIL TESTEMUNHA FIXA ${sigs.witnesses.length + 1}`] = getEmail(props.form['EMAIL VENDEDOR'] || '');
   props.form[`CPF TESTEMUNHA FIXA ${sigs.witnesses.length + 1}`] = props.form['CPF VENDEDOR'] || '';
 };
 

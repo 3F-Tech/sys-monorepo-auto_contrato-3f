@@ -1,6 +1,8 @@
 export const validateCNPJ = (cnpj: string) => {
   const digits = cnpj.replace(/\D/g, '');
-  if (digits.length !== 14) return "O CNPJ deve ter 14 dígitos";
+  if (digits.length !== 11 && digits.length !== 14) {
+    return "O documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos";
+  }
   return null;
 };
 

@@ -698,6 +698,7 @@ watch(
 const debugFillData = () => {
   contractData.value = {
     ...contractData.value,
+    "isDebug": true,
     "CNPJ DO CONTRATANTE": "12.345.678/0001-90",
     "CEP DO CONTRATANTE": "95170-000",
     "LOGRADOURO DO CONTRATANTE": "Rua Marechal Floriano Peixoto",

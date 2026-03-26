@@ -64,6 +64,7 @@ export const contractDataSchema = z.object({
   'QTD ARTES': z.string().optional(),
   'QTD VIDEOS': z.string().optional(),
   'ID DO DOCUMENTO CLICKSIGN': z.string().optional().or(z.literal('')),
+  'isDebug': z.boolean().optional(),
   'NOME SDR': z.string().optional().or(z.literal('')),
   'CPF SDR': z.string().regex(cpfRegex, "CPF do SDR inválido").optional().or(z.literal('')),
   'NOME COORD BU': z.string().optional().or(z.literal('')),
