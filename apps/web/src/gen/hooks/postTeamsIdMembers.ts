@@ -9,9 +9,12 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type { PostTeamsIdMembersMutationResponse } from "../types/PostTeamsIdMembers.ts";
+import type {
+  PostTeamsIdMembersMutationResponse,
+  PostTeamsIdMembersPathParams,
+} from "../types/PostTeamsIdMembers.ts";
 
-function getPostTeamsIdMembersUrl() {
+function getPostTeamsIdMembersUrl(id: PostTeamsIdMembersPathParams["id"]) {
   const res = { method: "POST", url: `/teams/${id}/members` as const };
   return res;
 }
@@ -21,6 +24,7 @@ function getPostTeamsIdMembersUrl() {
  * {@link /teams/:id/members}
  */
 export async function postTeamsIdMembers(
+  id: PostTeamsIdMembersPathParams["id"],
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -31,7 +35,7 @@ export async function postTeamsIdMembers(
     unknown
   >({
     method: "POST",
-    url: getPostTeamsIdMembersUrl().url.toString(),
+    url: getPostTeamsIdMembersUrl(id).url.toString(),
     ...requestConfig,
   });
   return res.data;

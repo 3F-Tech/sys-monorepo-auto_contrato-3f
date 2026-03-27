@@ -286,6 +286,20 @@ export class ClickSignService {
             const response = await client.get(`/documents/${documentKey}`);
             return response.data.document.status;
         } catch (error: any) {
+            console.error('Error getting document status in Clicksign v1:', JSON.stringify(error.response?.data || error.message));
+            throw error;
+        }
+    }
+
+    /**
+     * Busca o documento completo no Clicksign (v1).
+     */
+    static async getDocumentV1(documentKey: string) {
+        const client = this.getV1Client();
+        try {
+            const response = await client.get(`/documents/${documentKey}`);
+            return response.data;
+        } catch (error: any) {
             console.error('Error getting document in Clicksign v1:', JSON.stringify(error.response?.data || error.message));
             throw error;
         }

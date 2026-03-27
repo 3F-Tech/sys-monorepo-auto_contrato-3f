@@ -3,9 +3,21 @@
  * Do not edit manually.
  */
 
+export type DeleteTeamsIdMembersSelleridPathParams = {
+  /**
+   * @type integer
+   */
+  id: number;
+  /**
+   * @type string
+   */
+  sellerId: string;
+};
+
 export type DeleteTeamsIdMembersSelleridMutationResponse = any;
 
 export type DeleteTeamsIdMembersSelleridMutation = {
   Response: any;
+  PathParams: DeleteTeamsIdMembersSelleridPathParams;
   Errors: any;
 };

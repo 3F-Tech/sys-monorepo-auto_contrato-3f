@@ -97,6 +97,7 @@
               class="input-glass w-full" placeholder="NOME COMPLETO"
               :class="[errors && errors['NOME TESTEMUNHA ' + i] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['NOME TESTEMUNHA ' + i]"
+              role="alert"
               class="text-[9px] text-red-500 font-bold mt-1 block">{{
                 errors['NOME TESTEMUNHA ' + i] }}</span>
           </div>
@@ -106,6 +107,7 @@
               class="input-glass w-full" placeholder="email@exemplo.com"
               :class="[errors && errors['EMAIL TESTEMUNHA ' + i] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
             <span v-if="errors && errors['EMAIL TESTEMUNHA ' + i]"
+              role="alert"
               class="text-[9px] text-red-500 font-bold mt-1 block">{{
                 errors['EMAIL TESTEMUNHA ' + i] }}</span>
           </div>
@@ -114,7 +116,9 @@
             <input type="text" :id="'CPF TESTEMUNHA ' + i" v-model="form['CPF TESTEMUNHA ' + i]"
               v-maska="'###.###.###-##'" class="input-glass w-full" placeholder="000.000.000-00"
               :class="[errors && errors['CPF TESTEMUNHA ' + i] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
-            <span v-if="errors && errors['CPF TESTEMUNHA ' + i]" class="text-[9px] text-red-500 font-bold mt-1 block">{{
+            <span v-if="errors && errors['CPF TESTEMUNHA ' + i]" 
+              role="alert"
+              class="text-[9px] text-red-500 font-bold mt-1 block">{{
               errors['CPF TESTEMUNHA ' + i] }}</span>
           </div>
         </div>

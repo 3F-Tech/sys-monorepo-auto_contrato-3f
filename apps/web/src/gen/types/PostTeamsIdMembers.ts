@@ -3,9 +3,17 @@
  * Do not edit manually.
  */
 
+export type PostTeamsIdMembersPathParams = {
+  /**
+   * @type integer
+   */
+  id: number;
+};
+
 export type PostTeamsIdMembersMutationResponse = any;
 
 export type PostTeamsIdMembersMutation = {
   Response: any;
+  PathParams: PostTeamsIdMembersPathParams;
   Errors: any;
 };

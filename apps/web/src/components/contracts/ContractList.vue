@@ -242,6 +242,41 @@
                       </span>
                     </div>
                   </div>
+
+                  <!-- Seção: Editar Datas (Nova) -->
+                  <div class="pt-4 border-t border-white/5 space-y-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <Calendar class="h-3 w-3 text-brand-cyan/60" />
+                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Datas do Sistema</span>
+                      </div>
+                      <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)" 
+                        class="text-[9px] font-bold text-brand-cyan hover:underline uppercase tracking-widest transition-all">
+                        Editar Datas
+                      </button>
+                    </div>
+
+                    <div v-if="isEditingDates === contract.id?.toString()" class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de Criação</label>
+                        <input v-model="editCreatedAt" type="date" class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de Assina.</label>
+                        <input v-model="editSignedDate" type="date" class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
+                      </div>
+                      <div class="col-span-2 flex gap-2 pt-1">
+                        <button @click="saveDates(contract)" :disabled="isSavingDates" 
+                          class="flex-1 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-[9px] uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-lg shadow-brand-cyan/10">
+                          {{ isSavingDates ? 'Salvando...' : 'Salvar Alterações' }}
+                        </button>
+                        <button @click="isEditingDates = null" :disabled="isSavingDates"
+                          class="px-4 py-2 rounded-lg bg-white/5 text-white/40 font-bold text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -587,6 +622,53 @@ const loadingSigners = ref(false);
 const loadingSignersId = ref<string | null>(null);
 const selectedContractForSigners = ref<Contracts | null>(null);
 const currentSigners = ref<any[]>([]);
+
+// Novos estados para edição de datas
+const isEditingDates = ref<string | null>(null);
+const editCreatedAt = ref('');
+const editSignedDate = ref('');
+const isSavingDates = ref(false);
+
+const startEditingDates = (contract: Contracts) => {
+  isEditingDates.value = contract.id?.toString() || null;
+  // Converte para formato YYYY-MM-DD para o input type="date"
+  if (contract.created_at) {
+    const date = new Date(contract.created_at);
+    editCreatedAt.value = date.toISOString().split('T')[0];
+  } else {
+    editCreatedAt.value = '';
+  }
+  
+  if (contract.signed_date) {
+    const date = new Date(contract.signed_date);
+    editSignedDate.value = date.toISOString().split('T')[0];
+  } else {
+    editSignedDate.value = '';
+  }
+};
+
+const saveDates = async (contract: Contracts) => {
+  if (!contract.id) return;
+  isSavingDates.value = true;
+  try {
+    const res = await contractStore.updateContract(contract.id.toString(), {
+      created_at: editCreatedAt.value ? new Date(editCreatedAt.value + 'T12:00:00Z').toISOString() : undefined,
+      signed_date: editSignedDate.value ? new Date(editSignedDate.value + 'T12:00:00Z').toISOString() : null,
+    } as any);
+    
+    if (res.success) {
+      toastSuccess('Datas atualizadas com sucesso');
+      isEditingDates.value = null;
+    } else {
+      toastError('Erro ao atualizar as datas');
+    }
+  } catch (err) {
+    console.error('Erro ao salvar datas:', err);
+    toastError('Erro ao processar a atualização das datas');
+  } finally {
+    isSavingDates.value = false;
+  }
+};
 
 const openSignersModal = async (contract: Contracts) => {
   if (!contract.id) return;

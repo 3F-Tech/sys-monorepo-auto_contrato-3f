@@ -224,11 +224,20 @@ const getBusinessColor = (id: number) => {
 
 const filteredSellers = computed(() => {
   if (!searchQuery.value) return sellers.value;
-  const query = searchQuery.value.toLowerCase();
-  return sellers.value.filter(s =>
-    s.name?.toLowerCase().includes(query) ||
-    s.email?.toLowerCase().includes(query)
-  );
+
+  const normalize = (str: string) =>
+    str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  const query = normalize(searchQuery.value);
+
+  return sellers.value.filter((s) => {
+    const name = s.name ? normalize(s.name) : "";
+    const email = s.email ? normalize(s.email) : "";
+    return name.includes(query) || email.includes(query);
+  });
 });
 
 const getRoleLabel = (role?: string) => {
@@ -263,6 +272,10 @@ const closeModal = () => {
 };
 
 const handleDelete = (id: any) => {
+  if (authStore.user?.id?.toString() === id?.toString()) {
+    toast.error("Você não pode excluir seu próprio usuário.");
+    return;
+  }
   userIdToDelete.value = id;
   confirmDeleteOpen.value = true;
 };

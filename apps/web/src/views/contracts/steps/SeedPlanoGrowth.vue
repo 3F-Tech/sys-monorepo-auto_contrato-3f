@@ -26,7 +26,24 @@
             class="input-glass w-full border-brand-cyan/20 focus:border-brand-cyan" placeholder="Ex: e619b024-..."
             :class="[errors && errors['ID DO DOCUMENTO CLICKSIGN'] ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5' : '']">
           <span v-if="errors && errors['ID DO DOCUMENTO CLICKSIGN']"
+            role="alert"
             class="text-[9px] text-red-500 font-bold mt-1 block">{{ errors['ID DO DOCUMENTO CLICKSIGN'] }}</span>
+        </div>
+
+        <!-- Datas de Importação (Aparecem apenas se houver ID Clicksign) -->
+        <div v-if="form['ID DO DOCUMENTO CLICKSIGN']" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-brand-cyan/10">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-brand-cyan uppercase tracking-widest">Data de Criação (Sistema)</label>
+            <input type="date" v-model="form['created_at']"
+              class="input-glass w-full border-brand-cyan/20 focus:border-brand-cyan">
+            <p class="text-[9px] text-white/40 italic">Opcional: Informe se o contrato for antigo/retroativo.</p>
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-brand-cyan uppercase tracking-widest">Data de Assinatura (Sistema)</label>
+            <input type="date" v-model="form['signed_date']"
+              class="input-glass w-full border-brand-cyan/20 focus:border-brand-cyan">
+            <p class="text-[9px] text-white/40 italic">Opcional: Caso o contrato já tenha sido assinado.</p>
+          </div>
         </div>
       </div>
     </div>

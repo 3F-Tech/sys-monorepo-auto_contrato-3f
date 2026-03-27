@@ -23,7 +23,7 @@ Responsável pelos contratos visíveis ao usuário no dashboard.
   - `fetchMyContracts(sellerId)` → Para `seller`.
   - `fetchTeamContracts(headId)` → Para `head`.
   - `fetchAllContracts()` → Para `admin` ou `coord`.
-  - `updateContract(id, data)` → Atualiza `signed`, `signed_date`, `link`, `change_status`, `change_description`.
+  - `updateContract(id, data)` → Atualiza `signed`, `signed_date`, `created_at`, `link`, `change_status`, `change_description`.
 
 ### `useSellerStore` (`seller.ts`)
 Responsável pela listagem de vendedores para gestão da equipe.

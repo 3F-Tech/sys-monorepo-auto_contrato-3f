@@ -80,12 +80,13 @@ export const useContractStore = defineStore('contract', () => {
     loading.value = true;
     try {
       await putContractsId(id.toString(), {
-        signed: data.signed === undefined ? undefined : data.signed,
-        signed_date: data.signed_date === undefined ? undefined : data.signed_date,
-        link: data.link === undefined ? undefined : data.link,
-        change_status: data.change_status === undefined ? undefined : data.change_status,
-        change_description: data.change_description === undefined ? undefined : data.change_description
-      } as any, { client });
+        signed: data.signed,
+        signed_date: data.signed_date,
+        created_at: data.created_at,
+        link: data.link,
+        change_status: data.change_status,
+        change_description: data.change_description
+      }, { client });
       
       const index = myContracts.value.findIndex(c => c.id?.toString() === id.toString());
       if (index !== -1) {

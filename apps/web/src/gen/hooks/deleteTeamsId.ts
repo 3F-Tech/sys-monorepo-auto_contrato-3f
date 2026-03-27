@@ -9,9 +9,12 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type { DeleteTeamsIdMutationResponse } from "../types/DeleteTeamsId.ts";
+import type {
+  DeleteTeamsIdMutationResponse,
+  DeleteTeamsIdPathParams,
+} from "../types/DeleteTeamsId.ts";
 
-function getDeleteTeamsIdUrl() {
+function getDeleteTeamsIdUrl(id: DeleteTeamsIdPathParams["id"]) {
   const res = { method: "DELETE", url: `/teams/${id}` as const };
   return res;
 }
@@ -21,6 +24,7 @@ function getDeleteTeamsIdUrl() {
  * {@link /teams/:id}
  */
 export async function deleteTeamsId(
+  id: DeleteTeamsIdPathParams["id"],
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -31,7 +35,7 @@ export async function deleteTeamsId(
     unknown
   >({
     method: "DELETE",
-    url: getDeleteTeamsIdUrl().url.toString(),
+    url: getDeleteTeamsIdUrl(id).url.toString(),
     ...requestConfig,
   });
   return res.data;

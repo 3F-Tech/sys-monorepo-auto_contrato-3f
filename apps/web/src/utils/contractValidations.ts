@@ -95,9 +95,17 @@ export const getValidationRules = (data: Record<string, any>, buName?: string, t
 
   check('DATA ASSINATURA CONTRATO', validateDate(data['DATA ASSINATURA CONTRATO'] || ''));
   
-  if (data['NOME TESTEMUNHA 1']) {
-    check('NOME TESTEMUNHA 1', validateRequired(data['NOME TESTEMUNHA 1'], 'Nome da testemunha'));
-    check('CPF TESTEMUNHA 1', validateCPF(data['CPF TESTEMUNHA 1'] || ''));
+  // Validação de Testemunhas (1 a 6)
+  for (let i = 1; i <= 6; i++) {
+    const nameKey = `NOME TESTEMUNHA ${i}`;
+    const cpfKey = `CPF TESTEMUNHA ${i}`;
+    const nameVal = data[nameKey];
+    const cpfVal = data[cpfKey];
+
+    if (nameVal || cpfVal) {
+      check(nameKey, validateRequired(nameVal, `Nome da testemunha ${i}`));
+      check(cpfKey, validateCPF(cpfVal || ''));
+    }
   }
   
   check('NOME VENDEDOR', validateRequired(data['NOME VENDEDOR'], 'Nome do vendedor'));

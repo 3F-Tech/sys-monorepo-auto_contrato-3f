@@ -28,10 +28,12 @@ export type {
 export type {
   DeleteTeamsIdMutation,
   DeleteTeamsIdMutationResponse,
+  DeleteTeamsIdPathParams,
 } from "./DeleteTeamsId.ts";
 export type {
   DeleteTeamsIdMembersSelleridMutation,
   DeleteTeamsIdMembersSelleridMutationResponse,
+  DeleteTeamsIdMembersSelleridPathParams,
 } from "./DeleteTeamsIdMembersSellerid.ts";
 export type {
   GetBusiness200,
@@ -193,6 +195,7 @@ export type {
 export type {
   PostTeamsIdMembersMutation,
   PostTeamsIdMembersMutationResponse,
+  PostTeamsIdMembersPathParams,
 } from "./PostTeamsIdMembers.ts";
 export type {
   PutBusinessId200,
@@ -224,6 +227,7 @@ export type {
 export type {
   PutTeamsIdMutation,
   PutTeamsIdMutationResponse,
+  PutTeamsIdPathParams,
 } from "./PutTeamsId.ts";
 export type { SellerBusiness } from "./SellerBusiness.ts";
 export type { Sellers } from "./Sellers.ts";

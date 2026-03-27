@@ -225,6 +225,10 @@ export const createContract = async (req: Request, res: Response) => {
  *                 nullable: true
  *               link:
  *                 type: string
+ *               created_at:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
  *               change_status:
  *                 type: string
  *                 nullable: true
@@ -242,10 +246,10 @@ export const createContract = async (req: Request, res: Response) => {
 export const updateContract = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { signed, signed_date, link, change_status, change_description } = req.body;
+        const { signed, signed_date, created_at, link, change_status, change_description } = req.body;
         
         // Verifica se pelo menos uma propriedade foi enviada no body (mesmo que seja false ou null)
-        if (signed === undefined && signed_date === undefined && link === undefined && change_status === undefined && change_description === undefined) {
+        if (signed === undefined && signed_date === undefined && created_at === undefined && link === undefined && change_status === undefined && change_description === undefined) {
             return res.status(400).json({ error: 'Dados não fornecidos' });
         }
 
@@ -265,6 +269,7 @@ export const updateContract = async (req: Request, res: Response) => {
             data: {
                 ...(signed !== undefined && { signed }),
                 ...(signed_date !== undefined && { signed_date }),
+                ...(created_at !== undefined && { created_at }),
                 ...(link !== undefined && { link }),
                 ...(change_status !== undefined && { change_status }),
                 ...(change_description !== undefined && { change_description })
@@ -473,117 +478,20 @@ export const syncContractStatus = async (req: Request, res: Response) => {
         const { id } = req.params;
         const targetId = BigInt(id);
 
-        const contract = await prisma.contracts.findUnique({
-            where: { id: targetId }
-        });
+        console.log(`[SYNC] Solicitando sincronização para o contrato ID: ${targetId}...`);
 
-        if (!contract) return res.status(404).json({ error: 'Contrato não encontrado' });
-        const clicksignId = (contract as any).envelope_id || contract.document_id || '';
-        if (!clicksignId) return res.status(400).json({ error: 'Contrato não possui ID do Clicksign para sincronizar' });
+        const { ContractService } = await import('../services/contractService.js');
+        const updatedContract = await ContractService.syncWithClickSign(targetId);
 
-        console.log(`[SYNC] Sincronizando contrato "${contract.title}" (ClickSign ID: ${clicksignId})...`);
+        // Serialização para corrigir BigInt
+        const serialized = JSON.parse(JSON.stringify(updatedContract, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+        ));
 
-        let signedCount = 0;
-        let totalSigners = contract.total_signers || 0;
-        let isFullySigned = false;
-
-        try {
-            const { ClickSignService } = await import('../services/clickSignService.js');
-            try {
-                // Busca os requisitos com os signatários incluídos
-                const { envelopeId } = await ClickSignService.getEnvelopeSigners(clicksignId);
-                const requirements = await ClickSignService.getEnvelopeRequirements(envelopeId || clicksignId);
-                
-                // Lógica final v3: Um signatário "assinou" se seus requisitos foram modificados após a criação
-                // (ou se tiverem o status 'completed' se a API começar a enviar).
-                const signerStatus = new Map<string, boolean>();
-                
-                requirements.forEach((req: any) => {
-                    const signerId = req.relationships?.signer?.data?.id;
-                    if (!signerId) return;
-                    
-                    const isCompleted = 
-                        (req.attributes?.status || '').toLowerCase() === 'completed' || 
-                        (req.attributes?.modified && req.attributes?.modified !== req.attributes?.created);
-                    
-                    // Se o signatário já tinha um requisito "não assinado", mantemos. 
-                    // Se todos os requisitos de um signatário forem "completed", ele assinou.
-                    // Na v3, geralmente 1 requisito modificado = assinou (mesmo que tenha 2, eles modificam juntos).
-                    if (!signerStatus.has(signerId) || isCompleted) {
-                        signerStatus.set(signerId, isCompleted || (signerStatus.get(signerId) || false));
-                    }
-                });
-
-                signedCount = Array.from(signerStatus.values()).filter(v => v).length;
-                totalSigners = signerStatus.size;
-
-                // Fallback se totalSigners vier zerado
-                if (totalSigners === 0) {
-                    const { signers } = await ClickSignService.getEnvelopeSigners(envelopeId || clicksignId);
-                    totalSigners = signers.length;
-                }
-
-                console.log(`[CLICKSIGN DEBUG] Final Count V3: ${signedCount}/${totalSigners}`);
-
-                // Se encontramos um envelopeId diferente (fallback), salvamos
-                if (envelopeId && envelopeId !== (contract as any).envelope_id) {
-                    await (prisma.contracts as any).update({
-                        where: { id: targetId },
-                        data: { envelope_id: envelopeId }
-                    });
-                    console.log(`[SYNC] Envelope ID atualizado: ${envelopeId}`);
-                }
-
-                // Verifica se está assinado
-                isFullySigned = (totalSigners > 0 && signedCount >= totalSigners);
-                
-                try {
-                    const envelopeData = await ClickSignService.getEnvelope(envelopeId || clicksignId);
-                    if (envelopeData?.attributes?.status === 'closed') {
-                        isFullySigned = true;
-                    }
-                } catch (e) { /* ignore */ }
-
-            } catch (v3Error) {
-                console.log('[SYNC] Não encontrado na v3, tentando v1...');
-                // Tenta v1 se v3 falhar (contratos legados)
-                try {
-                    const statusV1 = await ClickSignService.getDocumentStatusV1(contract.document_id || '');
-                    if (statusV1 === 'closed') {
-                        isFullySigned = true;
-                        if (totalSigners === 0) totalSigners = 5; // Fallback comum em nosso sistema
-                        signedCount = totalSigners;
-                    }
-                } catch (v1Error: any) {
-                    console.error('[SYNC] Erro em ambas APIs (v3/v1):', (v3Error as any).message, v1Error.message);
-                    throw v3Error; // Relança o erro da v3 que é mais provável ser o atual
-                }
-            }
-
-            // Atualiza o banco
-            const updated = await prisma.contracts.update({
-                where: { id: targetId },
-                data: {
-                    signed_count: signedCount,
-                    total_signers: totalSigners > 0 ? totalSigners : undefined,
-                    signed: isFullySigned || (totalSigners > 0 && signedCount >= totalSigners),
-                    signed_date: (isFullySigned && !contract.signed_date) ? new Date() : undefined
-                }
-            });
-
-            const serialized = JSON.parse(JSON.stringify(updated, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-            ));
-
-            // Envia resposta final
-            res.json({ success: true, contract: serialized });
-        } catch (error: any) {
-            console.error('[SYNC] Erro interno:', error);
-            res.status(500).json({ error: 'Erro ao sincronizar', details: error.message });
-        }
+        res.json({ success: true, contract: serialized });
     } catch (error: any) {
-        console.error('[SYNC] Erro principal:', error);
-        res.status(500).json({ error: 'Erro ao buscar contrato para sincronizar' });
+        console.error('[SYNC] Erro na rota de sincronização:', error.message);
+        res.status(500).json({ error: 'Erro ao sincronizar status', details: error.message });
     }
 };
 
@@ -606,8 +514,6 @@ export const getContractSigners = async (req: Request, res: Response) => {
         }
 
         try {
-            const { ClickSignService } = await import('../services/clickSignService.js');
-            
             // Busca dados v3
             let envelopeIdToUse = clicksignId;
             try {
@@ -644,9 +550,24 @@ export const getContractSigners = async (req: Request, res: Response) => {
                 return res.json({ success: true, signers: signersList });
 
             } catch (v3Error) {
-                // Se falhar a v3, tentamos retornar apenas uma lista vazia ou erro amigável
-                console.warn('[GET SIGNERS] Erro v3:', (v3Error as any).message);
-                return res.json({ success: true, signers: [], message: 'Contrato legado ou indisponível na v3' });
+                console.warn(`[GET SIGNERS] Erro v3 para ${clicksignId}:`, (v3Error as any).message);
+                
+                // Fallback para API v1
+                try {
+                    const docV1 = await ClickSignService.getDocumentV1(contract.document_id || '');
+                    const listSigners = docV1.document?.list || [];
+                    
+                    const signersList = listSigners.map((s: any) => ({
+                        name: s.name || s.email,
+                        email: s.email,
+                        signed: !!s.signature?.signed_at
+                    }));
+                    
+                    return res.json({ success: true, signers: signersList });
+                } catch (v1Error: any) {
+                    console.error('[GET SIGNERS] Erro em ambas APIs', v1Error.message);
+                    return res.json({ success: true, signers: [], message: 'Contrato legado ou indisponível' });
+                }
             }
         } catch (error: any) {
             console.error('[GET SIGNERS] Erro ao importar serviço:', error);

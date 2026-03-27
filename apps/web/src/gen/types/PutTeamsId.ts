@@ -3,9 +3,17 @@
  * Do not edit manually.
  */
 
+export type PutTeamsIdPathParams = {
+  /**
+   * @type integer
+   */
+  id: number;
+};
+
 export type PutTeamsIdMutationResponse = any;
 
 export type PutTeamsIdMutation = {
   Response: any;
+  PathParams: PutTeamsIdPathParams;
   Errors: any;
 };

@@ -28,10 +28,12 @@ export type {
 export type {
   DeleteTeamsIdMutation,
   DeleteTeamsIdMutationResponse,
+  DeleteTeamsIdPathParams,
 } from "./types/DeleteTeamsId.ts";
 export type {
   DeleteTeamsIdMembersSelleridMutation,
   DeleteTeamsIdMembersSelleridMutationResponse,
+  DeleteTeamsIdMembersSelleridPathParams,
 } from "./types/DeleteTeamsIdMembersSellerid.ts";
 export type {
   GetBusiness200,
@@ -196,6 +198,7 @@ export type {
 export type {
   PostTeamsIdMembersMutation,
   PostTeamsIdMembersMutationResponse,
+  PostTeamsIdMembersPathParams,
 } from "./types/PostTeamsIdMembers.ts";
 export type {
   PutBusinessId200,
@@ -227,6 +230,7 @@ export type {
 export type {
   PutTeamsIdMutation,
   PutTeamsIdMutationResponse,
+  PutTeamsIdPathParams,
 } from "./types/PutTeamsId.ts";
 export type { SellerBusiness } from "./types/SellerBusiness.ts";
 export type { Sellers } from "./types/Sellers.ts";
@@ -297,8 +301,14 @@ export {
   deleteSellersIdMutationResponseSchema,
   deleteSellersIdPathParamsSchema,
 } from "./zod/deleteSellersIdSchema.ts";
-export { deleteTeamsIdMembersSelleridMutationResponseSchema } from "./zod/deleteTeamsIdMembersSelleridSchema.ts";
-export { deleteTeamsIdMutationResponseSchema } from "./zod/deleteTeamsIdSchema.ts";
+export {
+  deleteTeamsIdMembersSelleridMutationResponseSchema,
+  deleteTeamsIdMembersSelleridPathParamsSchema,
+} from "./zod/deleteTeamsIdMembersSelleridSchema.ts";
+export {
+  deleteTeamsIdMutationResponseSchema,
+  deleteTeamsIdPathParamsSchema,
+} from "./zod/deleteTeamsIdSchema.ts";
 export {
   getBusinessId200Schema,
   getBusinessIdPathParamsSchema,
@@ -422,7 +432,10 @@ export {
   postSellersMutationRequestSchema,
   postSellersMutationResponseSchema,
 } from "./zod/postSellersSchema.ts";
-export { postTeamsIdMembersMutationResponseSchema } from "./zod/postTeamsIdMembersSchema.ts";
+export {
+  postTeamsIdMembersMutationResponseSchema,
+  postTeamsIdMembersPathParamsSchema,
+} from "./zod/postTeamsIdMembersSchema.ts";
 export { postTeamsMutationResponseSchema } from "./zod/postTeamsSchema.ts";
 export {
   putBusinessId200Schema,
@@ -447,6 +460,9 @@ export {
   putSellersIdMutationResponseSchema,
   putSellersIdPathParamsSchema,
 } from "./zod/putSellersIdSchema.ts";
-export { putTeamsIdMutationResponseSchema } from "./zod/putTeamsIdSchema.ts";
+export {
+  putTeamsIdMutationResponseSchema,
+  putTeamsIdPathParamsSchema,
+} from "./zod/putTeamsIdSchema.ts";
 export { sellerBusinessSchema } from "./zod/sellerBusinessSchema.ts";
 export { sellersSchema } from "./zod/sellersSchema.ts";

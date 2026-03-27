@@ -216,7 +216,7 @@
 
         <!-- Goals Dashboard Area -->
         <GoalsDashboard 
-          :goal="activeGoal" 
+          :goal="activeGoal || null" 
           :actuals="currentPerformance"
           :contracts="filteredP1Contracts"
           @open-settings="handleOpenGoalSettings('goals')"
@@ -264,7 +264,10 @@
               </div>
 
               <div class="space-y-1 relative z-10">
-                <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
+                  <Info v-if="stat.tooltip" :title="stat.tooltip" class="h-3 w-3 text-white/20 cursor-help hover:text-brand-cyan transition-colors" />
+                </div>
                 <div class="flex items-baseline gap-1">
                   <div v-if="isLoading" class="space-y-2 mb-1">
                     <div class="h-8 w-32 bg-white/10 rounded-xl animate-pulse relative overflow-hidden">
@@ -474,7 +477,8 @@ import {
   Activity,
   Construction,
   Briefcase,
-  Target
+  Target,
+  Info
 } from 'lucide-vue-next';
 import ProfileModal from '../components/profile/ProfileModal.vue';
 import GoalsDashboard from '../components/dashboard/GoalsDashboard.vue';
@@ -635,7 +639,7 @@ const activeGoal = computed(() => {
     if (buIds.length === 0) return null;
     
     const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
-    return sumGoals(buGoals, 'head', selectedCoordId.value, month, year);
+    return sumGoals(buGoals, 'head', selectedCoordId.value, month, year) || null;
   }
 
   // Lógica para Equipe ou Vendedor
@@ -705,7 +709,7 @@ const activeGoal = computed(() => {
     g.year === year
   );
   
-  return sumGoals(memberGoals, 'team', teamIdStr, month, year);
+  return sumGoals(memberGoals, 'team', teamIdStr, month, year) || null;
 });
 
 const sumGoals = (goals: Goal[], type: string, id: string, month: number, year: number): Goal | null => {
@@ -886,10 +890,11 @@ const contractsForP1 = computed(() => {
   if (!selectedMonth.value) return allContracts;
 
   const [year, month] = selectedMonth.value.split('-').map(Number);
-  // O Mês P1 (ex: Abril, month 4) cobre de 06 do mês anterior (Março) até 05 do mês corrente (Abril).
-  // Em JS Date (0-indexed): month 4 -> Março é index 2 (4 - 2), Abril é index 3 (4 - 1)
-  const startDate = new Date(year, month - 2, 6, 0, 0, 0); 
-  const endDate = new Date(year, month - 1, 5, 23, 59, 59);
+  // O Mês de Competência P1 segundo a Regra do Dashboard:
+  // 06 do Mês Selecionado até 05 do Mês Seguinte.
+  // Em JS Date (0-indexed), o Mês Selecionado é (month - 1). O mês seguinte é (month).
+  const startDate = new Date(year, month - 1, 6, 0, 0, 0); 
+  const endDate = new Date(year, month, 5, 23, 59, 59);
 
   return allContracts.filter(c => {
     // Prioridade: first_payment_date > signed_date > created_at
@@ -910,8 +915,9 @@ const contractsForGeneralPerformance = computed(() => {
   const endDate = new Date(year, month, 0, 23, 59, 59);    // Último dia do mês
 
   return allContracts.filter(c => {
-    // Para performance geral, usamos a data de criação ou data de assinatura
-    const targetDateStr = c.created_at;
+    // Para indicadores gerais (TCV, NMRR), aceitamos qualquer contrato ASSINADO no mês
+    // ou gerado no mês. Prioridade para signed_date.
+    const targetDateStr = c.signed_date || c.created_at;
     if (!targetDateStr) return false;
     const targetDate = new Date(targetDateStr);
     return targetDate >= startDate && targetDate <= endDate;
@@ -971,8 +977,16 @@ const applyFilters = (contracts: any[]) => {
   return filtered;
 };
 
-const filteredP1Contracts = computed(() => applyFilters(contractsForP1.value));
-const filteredGeneralContracts = computed(() => applyFilters(contractsForGeneralPerformance.value));
+const filteredP1Contracts = computed(() => {
+  const result = applyFilters(contractsForP1.value);
+  console.log('[DEBUG] filteredP1Contracts count:', result.length, 'Window:', selectedMonth.value);
+  return result;
+});
+const filteredGeneralContracts = computed(() => {
+  const result = applyFilters(contractsForGeneralPerformance.value);
+  console.log('[DEBUG] filteredGeneralContracts count:', result.length);
+  return result;
+});
 
 // Contratos assinados apenas para os cálculos de valores
 const signedP1Contracts = computed(() => filteredP1Contracts.value.filter(c => c.signed));
@@ -1135,7 +1149,8 @@ const stats = computed(() => {
       label: 'Valor P1',
       value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalP1),
       icon: Activity,
-      type: 'finance'
+      type: 'finance',
+      tooltip: 'Reflete comissões do ciclo (Dia 06 do mês anterior ao Dia 05 do mês atual)'
     },
     {
       label: 'Valor Total (TCV)',

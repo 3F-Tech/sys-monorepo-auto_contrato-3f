@@ -9,9 +9,15 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type { DeleteTeamsIdMembersSelleridMutationResponse } from "../types/DeleteTeamsIdMembersSellerid.ts";
+import type {
+  DeleteTeamsIdMembersSelleridMutationResponse,
+  DeleteTeamsIdMembersSelleridPathParams,
+} from "../types/DeleteTeamsIdMembersSellerid.ts";
 
-function getDeleteTeamsIdMembersSelleridUrl() {
+function getDeleteTeamsIdMembersSelleridUrl(
+  id: DeleteTeamsIdMembersSelleridPathParams["id"],
+  sellerId: DeleteTeamsIdMembersSelleridPathParams["sellerId"],
+) {
   const res = {
     method: "DELETE",
     url: `/teams/${id}/members/${sellerId}` as const,
@@ -24,6 +30,8 @@ function getDeleteTeamsIdMembersSelleridUrl() {
  * {@link /teams/:id/members/:sellerId}
  */
 export async function deleteTeamsIdMembersSellerid(
+  id: DeleteTeamsIdMembersSelleridPathParams["id"],
+  sellerId: DeleteTeamsIdMembersSelleridPathParams["sellerId"],
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -34,7 +42,7 @@ export async function deleteTeamsIdMembersSellerid(
     unknown
   >({
     method: "DELETE",
-    url: getDeleteTeamsIdMembersSelleridUrl().url.toString(),
+    url: getDeleteTeamsIdMembersSelleridUrl(id, sellerId).url.toString(),
     ...requestConfig,
   });
   return res.data;

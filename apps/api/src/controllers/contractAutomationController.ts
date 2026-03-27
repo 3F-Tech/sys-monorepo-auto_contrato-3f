@@ -522,12 +522,26 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                 envelope_id: envelopeIdToSave,
                 type_contract: sheetName,
                 signed: isAlreadySigned,
+                signed_date: isAlreadySigned ? new Date() : null,
                 signed_count: isAlreadySigned ? signersToProcess.length : 0,
                 total_signers: signersToProcess.length,
                 change_status: null,
                 link: generatedFileLink
             }
         });
+
+        // === SINCRONIZAÇÃO IMEDIATA (NOVO) ===
+        // Se foi fornecido um ID ou se já marcamos como assinado, forçamos um sync 
+        // para garantir que todos os campos (signed_date, etc) sejam preenchidos.
+        if (providedEnvelopeId || isAlreadySigned) {
+            try {
+                console.log(`[SYNC] Iniciando sincronização imediata para o contrato ${newContract.id}...`);
+                const { ContractService } = await import('../services/contractService.js');
+                await ContractService.syncWithClickSign(newContract.id);
+            } catch (syncErr: any) {
+                console.warn(`[SYNC] Falha na sincronização imediata (não crítico):`, syncErr.message);
+            }
+        }
 
         // 4. Salvar e-mails das testemunhas vinculados ao contrato
         const witnessEmails: string[] = [];
@@ -580,6 +594,25 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
         });
     } catch (error: any) {
         console.error(`[ERRO] Falha ao processar contrato ${sheetName}:`, error);
+
+        const prismaError = error as any;
+        const errorCode = prismaError?.cause?.code || prismaError?.code || "";
+
+        if (errorCode === "P2002" || prismaError.message?.includes("Unique constraint failed")) {
+            const isDoc = prismaError.message?.includes("document_id");
+            const isEnv = prismaError.message?.includes("envelope_id");
+            
+            if (isDoc || isEnv) {
+                return res.status(409).json({
+                    error: "Documento já cadastrado",
+                    field: isDoc ? "ID DO DOCUMENTO CLICKSIGN" : "envelope_id",
+                    details: isDoc 
+                        ? "Este ID de Documento já está vinculado a outro contrato."
+                        : "Este ID de Envelope já está vinculado a outro contrato."
+                });
+            }
+        }
+
         if (trackingId) {
             progressTracker.emitProgress(trackingId, {
                 status: 'error',

@@ -32,6 +32,10 @@ export type PutContractsIdMutationRequest = {
    */
   link?: string;
   /**
+   * @type string, date-time
+   */
+  created_at?: string | null;
+  /**
    * @type string
    */
   change_status?: string | null;

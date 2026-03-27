@@ -72,6 +72,7 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 - **Cancelamento**: O campo `canceled_at` (DateTime) é usado para marcar contratos cancelados. Contratos cancelados são isolados no filter `'canceled'` do Dashboard.
 - **Assinaturas**: Os campos `signed_count` (Int) e `total_signers` (Int) rastreiam o progresso de assinaturas do envelope no Clicksign v3.
 - **IDs Externos**: `envelope_id` armazena o UUID do Envelope na API v3. `document_id` pode armazenar o ID de documento v1/v3 ou o `fileId` do arquivo no Google Drive.
+- **Datas Editáveis**: A rota `PUT /contracts/:id` aceita `created_at` como campo opcional. Isso permite a edição retroativa de datas de criação e assinatura de contratos importados manualmente.
 
 ## 🔵 Endpoint: Signatários de Contrato
 - **Rota:** `GET /contracts/:id/signers`

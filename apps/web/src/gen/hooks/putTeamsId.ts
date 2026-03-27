@@ -9,9 +9,12 @@ import type {
   RequestConfig,
   ResponseErrorConfig,
 } from "@kubb/plugin-client/clients/axios";
-import type { PutTeamsIdMutationResponse } from "../types/PutTeamsId.ts";
+import type {
+  PutTeamsIdMutationResponse,
+  PutTeamsIdPathParams,
+} from "../types/PutTeamsId.ts";
 
-function getPutTeamsIdUrl() {
+function getPutTeamsIdUrl(id: PutTeamsIdPathParams["id"]) {
   const res = { method: "PUT", url: `/teams/${id}` as const };
   return res;
 }
@@ -21,6 +24,7 @@ function getPutTeamsIdUrl() {
  * {@link /teams/:id}
  */
 export async function putTeamsId(
+  id: PutTeamsIdPathParams["id"],
   config: Partial<RequestConfig> & { client?: Client } = {},
 ) {
   const { client: request = fetch, ...requestConfig } = config;
@@ -31,7 +35,7 @@ export async function putTeamsId(
     unknown
   >({
     method: "PUT",
-    url: getPutTeamsIdUrl().url.toString(),
+    url: getPutTeamsIdUrl(id).url.toString(),
     ...requestConfig,
   });
   return res.data;

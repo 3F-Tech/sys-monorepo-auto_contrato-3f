@@ -736,9 +736,15 @@ const handleContractGenerate = async () => {
 
   isGenerating.value = true;
 
+  // Se informou data de assinatura, marca como assinado automaticamente para o banco
+  const payload = { ...contractData.value };
+  if (payload.signed_date) {
+    payload.signed = true;
+  }
+
   try {
     await client.post(activeEndpoint.value, {
-      data: contractData.value,
+      data: payload,
       bu_id: selectedBU.value?.id,
       bu_name: selectedBU.value?.name,
       sdr_id: sdr_id.value,
@@ -755,12 +761,29 @@ const handleContractGenerate = async () => {
     console.error("Erro ao iniciar geração de contrato:", error);
     isGenerating.value = false;
 
+    const statusCode = error.response?.status;
     const errorMessage = error.response?.data?.error || error.message;
-    const backendErrors = error.response?.data?.details;
+    const errorDetails = error.response?.data?.details;
 
-    if (Array.isArray(backendErrors)) {
+    if (statusCode === 409) {
+      const field = error.response?.data?.field;
+      if (field) {
+        formErrors.value[field] = errorDetails || errorMessage;
+        // Scroll para o campo problemático
+        setTimeout(() => {
+          const el = document.getElementById(field);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const scrollTop = window.scrollY + rect.top - 120;
+            window.scrollTo({ top: scrollTop, behavior: "smooth" });
+            el.focus({ preventScroll: true });
+          }
+        }, 100);
+      }
+      toastError(`${errorMessage}: ${errorDetails || "Este documento/envelope já está em uso."}`);
+    } else if (Array.isArray(errorDetails)) {
       const newErrors: Record<string, string> = { ...formErrors.value };
-      backendErrors.forEach((err: any) => {
+      errorDetails.forEach((err: any) => {
         const field = err.field?.replace("data.", "");
         if (field) newErrors[field] = err.message;
       });

@@ -1,26 +1,18 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function checkContract() {
-    try {
-        const contract = await prisma.contracts.findFirst({
-            where: {
-                title: { contains: 'TESTE WEBHOOK 1' }
-            }
-        });
-        
-        if (contract) {
-            console.log('CONTRATO ENCONTRADO:');
-            console.log(JSON.stringify(contract, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value, 2));
-        } else {
-            console.log('CONTRATO NÃO ENCONTRADO.');
-        }
-    } catch (error) {
-        console.error('ERRO AO BUSCAR CONTRATO:', error.message);
-    } finally {
-        await prisma.$disconnect();
-    }
+async function main() {
+  const contracts = await prisma.contracts.findMany({
+    where: { 
+      // Filtermos contratos recentes que tem document_id
+      // document_id: { not: null } 
+    },
+    orderBy: { created_at: 'desc' },
+    take: 10
+  });
+  console.log("LAST 10 CONTRACTS:");
+  contracts.forEach(c => {
+    console.log(`ID: ${c.id} | title: ${c.title.substring(0,30)} | signed: ${c.signed} | P1 amount: ${c.first_payment_amount} | Monthly: ${c.monthly_fee} | P1 Date: ${c.first_payment_date} | document_id: ${c.document_id} | change_status: ${c.change_status}`);
+  });
 }
-
-checkContract();
+main().catch(console.error).finally(() => prisma.$disconnect());

@@ -113,3 +113,17 @@ O `ContractFlow.vue` decide o componente e endpoint com base na BU + template se
 - Ele chama a função `autoFillDebug()` que preenche todos os campos com dados fictícios válidos para agilizar testes.
 - **Não** deve ser removido em produção (não é exibido por padrão com dados reais).
 
+## 📅 Edição de Datas de Contratos
+
+### Via Card na Lista (`ContractList.vue`)
+- **Feature**: Botão "Editar Datas" aparece na seção expandida do card de contrato.
+- **Campos**: `Data de Criação` (mapeia para `created_at`) e `Data de Assinatura` (mapeia para `signed_date`).
+- **Impacto**: Afeta diretamente o cálculo de "Tempo até Assinatura" e os indicadores de performance no dashboard.
+
+### Via Formulário de Geração (Todos os Templates)
+- **Trigger**: Os campos de data aparecem **condicionalmente** quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido.
+- **Lógica de negócio**: Se uma `Data de Assinatura` for informada, o payload enviado ao backend inclui `signed: true` automaticamente (ver `handleContractGenerate` em `ContractFlow.vue`).
+- **Escopo**: Aplica-se a todos os templates: `ImpulsePlano1`, `ImpulsePlano2`, `SeedPlano1`, `SeedPlano2`, `SeedPlanoGrowth`, `BommaTemplate`.
+
+> [!IMPORTANT]
+> A alteração de `signed_date` deve ser consistente com o campo `signed` (booleano). Se `signed_date` for definida, `signed` deve ser `true` para que os cálculos de média de assinatura funcionem corretamente.

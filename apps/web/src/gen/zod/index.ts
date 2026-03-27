@@ -21,8 +21,14 @@ export {
   deleteSellersIdMutationResponseSchema,
   deleteSellersIdPathParamsSchema,
 } from "./deleteSellersIdSchema.ts";
-export { deleteTeamsIdMembersSelleridMutationResponseSchema } from "./deleteTeamsIdMembersSelleridSchema.ts";
-export { deleteTeamsIdMutationResponseSchema } from "./deleteTeamsIdSchema.ts";
+export {
+  deleteTeamsIdMembersSelleridMutationResponseSchema,
+  deleteTeamsIdMembersSelleridPathParamsSchema,
+} from "./deleteTeamsIdMembersSelleridSchema.ts";
+export {
+  deleteTeamsIdMutationResponseSchema,
+  deleteTeamsIdPathParamsSchema,
+} from "./deleteTeamsIdSchema.ts";
 export {
   getBusinessId200Schema,
   getBusinessIdPathParamsSchema,
@@ -146,7 +152,10 @@ export {
   postSellersMutationRequestSchema,
   postSellersMutationResponseSchema,
 } from "./postSellersSchema.ts";
-export { postTeamsIdMembersMutationResponseSchema } from "./postTeamsIdMembersSchema.ts";
+export {
+  postTeamsIdMembersMutationResponseSchema,
+  postTeamsIdMembersPathParamsSchema,
+} from "./postTeamsIdMembersSchema.ts";
 export { postTeamsMutationResponseSchema } from "./postTeamsSchema.ts";
 export {
   putBusinessId200Schema,
@@ -171,6 +180,9 @@ export {
   putSellersIdMutationResponseSchema,
   putSellersIdPathParamsSchema,
 } from "./putSellersIdSchema.ts";
-export { putTeamsIdMutationResponseSchema } from "./putTeamsIdSchema.ts";
+export {
+  putTeamsIdMutationResponseSchema,
+  putTeamsIdPathParamsSchema,
+} from "./putTeamsIdSchema.ts";
 export { sellerBusinessSchema } from "./sellerBusinessSchema.ts";
 export { sellersSchema } from "./sellersSchema.ts";

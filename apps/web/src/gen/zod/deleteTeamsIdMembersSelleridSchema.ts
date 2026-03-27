@@ -5,4 +5,9 @@
 
 import * as z from "zod";
 
+export const deleteTeamsIdMembersSelleridPathParamsSchema = z.object({
+  id: z.coerce.number().int(),
+  sellerId: z.string(),
+});
+
 export const deleteTeamsIdMembersSelleridMutationResponseSchema = z.any();

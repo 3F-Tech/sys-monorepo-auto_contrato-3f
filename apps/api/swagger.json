@@ -844,6 +844,11 @@
                   "link": {
                     "type": "string"
                   },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
                   "change_status": {
                     "type": "string",
                     "nullable": true

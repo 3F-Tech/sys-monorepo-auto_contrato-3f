@@ -19,6 +19,7 @@ export const putContractsIdMutationRequestSchema = z.object({
   signed: z.optional(z.boolean()),
   signed_date: z.string().datetime().nullish(),
   link: z.optional(z.string()),
+  created_at: z.string().datetime().nullish(),
   change_status: z.string().nullish(),
   change_description: z.string().nullish(),
 });

@@ -71,6 +71,7 @@ playwright/.cache/
 apps/web/tests/
 skills/QA-Sentinal-*/
 skills/QA-UX-*/
+# toPromptsOpencode/
 
 # --- REGRAS DE EXCEÇÃO (O QUE NÃO PODE SER IGNORADO) ---
 # Garante que arquivos de configuração essenciais sempre subam
@@ -81,3 +82,42 @@ skills/QA-UX-*/
 !pnpm-lock.yaml
 !kubb.config.ts
 !prisma/schema.prisma
+
+
+# --- Arquivos do Sistema e Fantasmas (Windows/Git) ---
+nul
+[Nn][Uu][Ll]
+Thumbs.db
+.DS_Store
+
+# --- Pastas de Logs e Temporários (Visto no seu git status) ---
+tmp/
+temp/
+debug/
+reports/
+guide-test/
+.opencode/
+apps/api/tmp/
+
+# --- Scripts de Teste e Verificação Local ---
+# (Arquivos que você criou para testar o banco ou hooks e não devem subir)
+tmp_check_db.cjs
+tmp_check_db_extended.cjs
+tmp_check_sellers.cjs
+tmp_test.js
+apps/api/test_prisma.ts
+apps/api/src/scripts/
+tmp/check_contracts.ts
+tmp/verify_sync.ts
+
+# --- Build e Dependências (Padrão) ---
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+
+# --- Cache de Skills e Ferramentas de IA (Limpando o legado) ---
+skills/**/__pycache__/
+*.pyc
