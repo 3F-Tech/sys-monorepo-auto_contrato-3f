@@ -802,7 +802,7 @@ watch([() => props.contracts, signedFilter], ([newContracts, newFilter]) => {
 // Por enquanto, uma vez por carga de página/sessão de filtro está bom.
 
 const currentPage = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = 8;
 
 watch([searchQuery, showAlertsOnly, signedFilter], () => {
   currentPage.value = 1;

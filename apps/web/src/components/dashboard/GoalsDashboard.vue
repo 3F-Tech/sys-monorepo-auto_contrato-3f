@@ -1,116 +1,105 @@
 <template>
   <div class="space-y-8 animate-in fade-in duration-700">
-    <!-- Header with Action -->
-    <div class="flex flex-col lg:flex-row justify-between gap-6 pt-4">
-      <div class="flex items-start gap-3">
-        <Target class="h-6 w-6 text-brand-cyan mt-1" />
+    <!-- Header with Action (Refined Pro Max Layout) -->
+    <div
+      class="flex flex-col lg:flex-row justify-between gap-8 pt-2 pb-4 items-start lg:items-center border-b border-white/5 mb-4 px-2">
+      <div class="flex items-center gap-4 group/title cursor-default">
+        <div
+          class="p-3 rounded-2xl bg-brand-cyan/10 border border-brand-cyan/20 group-hover/title:bg-brand-cyan/20 transition-all duration-500 shadow-lg shadow-brand-cyan/5">
+          <Target class="h-6 w-6 text-brand-cyan" />
+        </div>
         <div class="flex flex-col">
-          <h3 class="text-xl font-bold text-white">Metas de Performance</h3>
-          <span class="text-xs text-white/40"
-            >Acompanhamento dinâmico • {{ currentPeriodLabel }}</span
-          >
+          <h3
+            class="text-2xl font-black text-white tracking-tighter leading-tight group-hover/title:text-brand-cyan transition-colors">
+            Metas de Performance</h3>
+          <div class="flex items-center gap-2">
+            <div class="h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse"></div>
+            <span class="text-[10px] text-white/30 font-black uppercase tracking-[0.25em]">{{ currentPeriodLabel
+            }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Premium Countdown Timer -->
-      <div
-        v-if="hasGoal"
-        class="flex items-center gap-6 sm:gap-8 px-6 sm:px-10 py-5 rounded-[2rem] bg-white/[0.03] border border-white/10 relative group/timer"
-      >
+      <!-- Premium Dashboard Status Bar (Countdown) -->
+      <div v-if="hasGoal"
+        class="flex items-center gap-8 px-8 py-5 rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10 relative group/timer shadow-2xl shadow-black/40 hover:bg-white/[0.04] hover:border-brand-cyan/20 transition-all duration-500 overflow-hidden">
+
+        <!-- Subtle Animated Reflection Layer -->
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover/timer:animate-[shimmer_3s_infinite] pointer-events-none">
+        </div>
+
         <div class="flex flex-col items-center relative z-10">
-          <span
-            class="text-[9px] font-black text-brand-cyan/50 uppercase tracking-[0.3em] mb-2"
-            >Tempo Restante</span
-          >
-          <div class="flex items-center gap-3 sm:gap-4">
-            <div class="flex flex-col items-center min-w-[2.5rem]">
-              <span
-                class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter"
-                >{{ countdown.days }}</span
-              >
-              <span
-                class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1"
-                >dias</span
-              >
+          <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-[0.4em] mb-3">Tempo Restante</span>
+          <div class="flex items-center gap-4 sm:gap-5">
+            <div class="flex flex-col items-center min-w-[32px]">
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{ countdown.days
+              }}</span>
+              <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">dias</span>
             </div>
-            <span class="text-brand-cyan/40 font-black text-xl mb-4">:</span>
-            <div class="flex flex-col items-center min-w-[2.5rem]">
-              <span
-                class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter"
-                >{{ countdown.hours }}</span
-              >
-              <span
-                class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1"
-                >horas</span
-              >
+            <div class="h-6 w-px bg-white/5 self-center mb-4"></div>
+            <div class="flex flex-col items-center min-w-[32px]">
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{ countdown.hours
+              }}</span>
+              <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">horas</span>
             </div>
-            <span class="text-brand-cyan/40 font-black text-xl mb-4">:</span>
-            <div class="flex flex-col items-center min-w-[2.5rem]">
-              <span
-                class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter"
-                >{{ countdown.minutes }}</span
-              >
-              <span
-                class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1"
-                >min</span
-              >
+            <div class="h-6 w-px bg-white/5 self-center mb-4"></div>
+            <div class="flex flex-col items-center min-w-[32px]">
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{
+                countdown.minutes }}</span>
+              <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">min</span>
             </div>
-            <span class="text-brand-cyan/40 font-black text-xl mb-4">:</span>
-            <div class="flex flex-col items-center min-w-[2.5rem]">
+            <div class="h-6 w-px bg-white/5 self-center mb-4 text-brand-cyan"></div>
+            <div class="flex flex-col items-center min-w-[32px]">
               <span
-                class="text-3xl font-black text-brand-cyan animate-pulse tabular-nums leading-none tracking-tighter"
-                >{{ countdown.seconds }}</span
-              >
-              <span
-                class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1"
-                >seg</span
-              >
+                class="text-3xl font-black text-brand-cyan animate-pulse tabular-nums leading-none tracking-tighter">{{
+                  countdown.seconds }}</span>
+              <span class="text-[7px] font-black text-brand-cyan/40 uppercase tracking-[0.15em] mt-2">seg</span>
             </div>
           </div>
         </div>
 
-        <div
-          class="hidden sm:block h-12 w-px bg-brand-cyan/10 relative z-10"
-        ></div>
 
-        <div class="hidden sm:flex flex-col items-start relative z-10">
-          <span
-            class="text-[12px] font-black text-white/70 uppercase tracking-[0.3em]"
-            >Fechamento</span
-          >
-          <span
-            class="text-[8px] font-bold text-brand-cyan uppercase tracking-widest leading-none mt-1"
-            >Último dia do Mês</span
-          >
+        <div class="hidden sm:flex flex-col items-start relative z-10 pl-6 border-l border-white/5 py-0.5">
+          <div class="flex items-center gap-2.5 mb-2 group/label">
+            <div class="p-1.5 rounded-lg bg-brand-cyan/10 border border-brand-cyan/20">
+              <Clock class="h-3 w-3 text-brand-cyan shadow-[0_0_8px_rgba(45,212,191,0.3)]" />
+            </div>
+            <span
+              class="text-[10px] font-black text-white uppercase tracking-[0.2em] transition-colors">Fechamento</span>
+          </div>
+          <p class="text-[9px] font-bold text-white/40 leading-relaxed max-w-[150px] uppercase tracking-tight">
+            Vigente até o último momento do mês atual
+          </p>
         </div>
       </div>
 
-      <div
-        v-if="canSetGoals"
-        class="flex flex-col sm:flex-row items-center gap-3"
-      >
-        <button
-          @click="$emit('open-costs')"
-          class="group flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 shadow-2xl shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform"
-        >
-          <DollarSign
-            class="h-4 w-4 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110"
-          />
-          <span class="text-[10px] font-black uppercase tracking-[0.2em]"
-            >Configurar Custos</span
-          >
+      <!-- Action Panel -->
+      <div v-if="canSetGoals" class="flex flex-col gap-2 min-w-[200px] lg:self-stretch justify-center">
+        <button @click="$emit('open-costs')"
+          class="group flex items-center justify-between gap-6 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-white/40 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/[0.05] shadow-lg shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform w-full">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-cyan/10 transition-colors">
+              <DollarSign
+                class="h-3.5 w-3.5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em]">Configurar Custos</span>
+          </div>
+          <ArrowRight
+            class="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" />
         </button>
 
-        <button
-          @click="$emit('open-settings')"
-          class="group flex items-center gap-3 px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 shadow-2xl shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform"
-        >
-          <Settings2
-            class="h-4 w-4 transition-transform duration-500 group-hover:rotate-90 group-hover:scale-110"
-          />
-          <span class="text-[10px] font-black uppercase tracking-[0.2em]"
-            >Configurar Metas</span
-          >
+        <button @click="$emit('open-settings')"
+          class="group flex items-center justify-between gap-6 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-white/40 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/[0.05] shadow-lg shadow-black/20 hover:shadow-brand-cyan/10 active:scale-95 transition-all duration-500 transform w-full">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-cyan/10 transition-colors">
+              <Settings2
+                class="h-3.5 w-3.5 transition-transform duration-500 group-hover:rotate-90 group-hover:scale-110" />
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em]">Configurar Metas</span>
+          </div>
+          <ArrowRight
+            class="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" />
         </button>
       </div>
     </div>
@@ -120,78 +109,49 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Overall Progress Radial -->
         <div
-          class="lg:col-span-4 p-8 rounded-[2.5rem] bg-brand-cyan/[0.03] border border-brand-cyan/10 hover:border-brand-cyan/30 transition-all duration-500 relative overflow-hidden group"
-        >
+          class="lg:col-span-4 p-8 rounded-[2.5rem] bg-brand-cyan/[0.03] border border-brand-cyan/10 hover:border-brand-cyan/30 transition-all duration-500 relative overflow-hidden group">
           <div
-            class="absolute inset-0 bg-gradient-to-br from-brand-cyan/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-          ></div>
+            class="absolute inset-0 bg-gradient-to-br from-brand-cyan/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+          </div>
 
-          <div
-            class="relative z-10 flex flex-col items-center justify-center h-full space-y-4"
-          >
+          <div class="relative z-10 flex flex-col items-center justify-center h-full space-y-4">
             <div class="flex flex-col items-center gap-4 w-full">
-              <span
-                class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]"
-                >Progresso Geral</span
-              >
+              <span class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]">Progresso Geral</span>
 
               <!-- Tab Switcher -->
-              <div
-                class="flex p-1 bg-white/5 rounded-xl border border-white/5 w-fit"
-              >
-                <button
-                  @click="radialTab = 'p1'"
-                  :class="
-                    radialTab === 'p1'
-                      ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105'
-                      : 'text-white/40 hover:text-white'
+              <div class="flex p-1 bg-white/5 rounded-xl border border-white/5 w-fit">
+                <button @click="radialTab = 'p1'" :class="radialTab === 'p1'
+                  ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105'
+                  : 'text-white/40 hover:text-white'
                   "
-                  class="px-5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300"
-                >
+                  class="px-5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300">
                   P1
                 </button>
-                <button
-                  @click="radialTab = 'tcv'"
-                  :class="
-                    radialTab === 'tcv'
-                      ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105'
-                      : 'text-white/40 hover:text-white'
+                <button @click="radialTab = 'tcv'" :class="radialTab === 'tcv'
+                  ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105'
+                  : 'text-white/40 hover:text-white'
                   "
-                  class="px-5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300"
-                >
+                  class="px-5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300">
                   TCV
                 </button>
               </div>
             </div>
 
             <div class="relative w-full aspect-square max-w-[240px]">
-              <apexchart
-                type="radialBar"
-                height="100%"
-                :options="radialOptions"
-                :series="[radialMetric.percent]"
-              />
-              <div
-                class="absolute inset-0 flex flex-col items-center justify-center -translate-y-2"
-              >
+              <apexchart type="radialBar" height="100%" :options="radialOptions" :series="[radialMetric.percent]" />
+              <div class="absolute inset-0 flex flex-col items-center justify-center -translate-y-2">
                 <span class="text-4xl font-black text-white tracking-tighter">
                   {{ radialMetric.percent.toFixed(0)
-                  }}<span class="text-brand-cyan text-xl">%</span>
+                  }}<span class="text-xl ml-1" :class="radialMetric.percentColor">%</span>
                 </span>
-                <span
-                  class="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-1"
-                  >{{ radialMetric.key.toUpperCase() }} Atingido</span
-                >
+                <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-1">{{
+                  radialMetric.key.toUpperCase() }} Atingido</span>
               </div>
             </div>
 
-            <div
-              class="grid grid-cols-2 gap-8 w-full pt-4 border-t border-brand-cyan/10"
-            >
+            <div class="grid grid-cols-2 gap-8 w-full pt-4 border-t border-brand-cyan/10">
               <div class="text-center">
-                <p
-                  class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1"
-                >
+                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">
                   Realizado
                 </p>
                 <p class="text-sm font-bold text-brand-cyan">
@@ -199,9 +159,7 @@
                 </p>
               </div>
               <div class="text-center border-l border-brand-cyan/10">
-                <p
-                  class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1"
-                >
+                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">
                   Meta Total
                 </p>
                 <p class="text-sm font-bold text-white/60">
@@ -214,85 +172,53 @@
 
         <!-- Metrics Comparison Chart -->
         <div
-          class="lg:col-span-8 p-8 rounded-[2.5rem] bg-brand-cyan/[0.03] border border-brand-cyan/10 relative overflow-hidden"
-        >
+          class="lg:col-span-8 p-8 rounded-[2.5rem] bg-brand-cyan/[0.03] border border-brand-cyan/10 relative overflow-hidden">
           <div class="flex items-center justify-between mb-8">
-            <span
-              class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]"
-              >Evolução P1 (Meta vs Realizado)</span
-            >
+            <span class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]">Evolução P1 (Meta vs
+              Realizado)</span>
             <div class="flex items-center gap-6">
               <div class="flex gap-4">
                 <div class="flex items-center gap-2">
-                  <div
-                    class="w-2 h-0.5 bg-brand-cyan shadow-[0_0_8px_rgba(45,212,191,0.5)]"
-                  ></div>
-                  <span
-                    class="text-[9px] font-bold text-white/40 uppercase tracking-tighter"
-                    >Realizado</span
-                  >
+                  <div class="w-2 h-0.5 bg-brand-cyan shadow-[0_0_8px_rgba(45,212,191,0.5)]"></div>
+                  <span class="text-[9px] font-bold text-white/40 uppercase tracking-tighter">Realizado</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div
-                    class="w-2 h-0.5 bg-white/20 border-t border-dashed border-white/40"
-                  ></div>
-                  <span
-                    class="text-[9px] font-bold text-white/40 uppercase tracking-tighter"
-                    >Planejado</span
-                  >
+                  <div class="w-2 h-0.5 bg-white/20 border-t border-dashed border-white/40"></div>
+                  <span class="text-[9px] font-bold text-white/40 uppercase tracking-tighter">Planejado</span>
                 </div>
               </div>
-              <button
-                v-if="canSetGoals"
-                @click="$emit('open-periods')"
-                class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 text-[9px] font-black uppercase tracking-widest transition-all duration-300"
-              >
-                <Settings2
-                  class="h-3 w-3 transition-transform duration-500 group-hover:rotate-90"
-                />
+              <button v-if="canSetGoals" @click="$emit('open-periods')"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-brand-cyan hover:border-brand-cyan/30 hover:bg-brand-cyan/5 text-[9px] font-black uppercase tracking-widest transition-all duration-300">
+                <Settings2 class="h-3 w-3 transition-transform duration-500 group-hover:rotate-90" />
                 Configurar Períodos
               </button>
             </div>
           </div>
 
           <div class="h-[280px]">
-            <apexchart
-              :key="lineChartKey"
-              type="line"
-              height="100%"
-              :options="lineOptions"
-              :series="lineSeries"
-            />
+            <apexchart :key="lineChartKey" type="line" height="100%" :options="lineOptions" :series="lineSeries" />
           </div>
         </div>
       </div>
 
       <!-- Metrics Grid Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div
-          v-for="metric in displayMetrics"
-          :key="metric.key"
-          class="p-6 rounded-[2.2rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
-        >
+        <div v-for="metric in displayMetrics" :key="metric.key"
+          class="p-6 rounded-[2.2rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden">
           <div
-            class="absolute -top-12 -right-12 w-24 h-24 bg-brand-cyan/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-          ></div>
+            class="absolute -top-12 -right-12 w-24 h-24 bg-brand-cyan/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+          </div>
 
           <div class="flex items-start justify-between mb-6 relative z-10">
             <div
-              class="p-2.5 rounded-2xl bg-white/5 border border-white/5 group-hover:border-brand-cyan/20 transition-colors duration-500"
-            >
-              <DollarSign
-                class="h-3.5 w-3.5 text-white/40 group-hover:text-brand-cyan transition-colors"
-              />
+              class="p-2.5 rounded-2xl bg-white/5 border border-white/5 group-hover:border-brand-cyan/20 transition-colors duration-500">
+              <DollarSign class="h-3.5 w-3.5 text-white/40 group-hover:text-brand-cyan transition-colors" />
             </div>
             <div class="text-right">
               <p class="text-[10px] font-black" :class="metric.percentColor">
                 {{ metric.percent.toFixed(0) }}%
               </p>
-              <p
-                class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5"
-              >
+              <p class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
                 atingido
               </p>
             </div>
@@ -300,47 +226,32 @@
 
           <div class="space-y-4 relative z-10">
             <div>
-              <p
-                class="text-[10px] font-black text-brand-cyan/60 uppercase tracking-[0.1em] mb-1.5"
-              >
+              <p class="text-[10px] font-black text-brand-cyan/60 uppercase tracking-[0.1em] mb-1.5">
                 {{ metric.label }} (Meta)
               </p>
               <p
-                class="text-xl font-black text-white tracking-tight group-hover:text-brand-cyan transition-colors duration-500"
-              >
+                class="text-xl font-black text-white tracking-tight group-hover:text-brand-cyan transition-colors duration-500">
                 {{ formatCurrency(metric.target) }}
               </p>
             </div>
 
             <div class="space-y-2">
-              <div
-                class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden p-[1px]"
-              >
-                <div
-                  class="h-full transition-all duration-1000 ease-out rounded-full relative"
-                  :class="metric.barColor"
-                  :style="{ width: Math.min(metric.percent, 100) + '%' }"
-                >
+              <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden p-[1px]">
+                <div class="h-full transition-all duration-1000 ease-out rounded-full relative" :class="metric.barColor"
+                  :style="{ width: Math.min(metric.percent, 100) + '%' }">
                   <div
-                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-20 transform -translate-x-full group-hover:animate-[shimmer_2s_infinite]"
-                  ></div>
+                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-20 transform -translate-x-full group-hover:animate-[shimmer_2s_infinite]">
+                  </div>
                 </div>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[9px] font-medium text-white/50 uppercase"
-                  >Realizado: {{ formatCurrency(metric.actual) }}</span
-                >
-                <span
-                  class="text-[9px] font-black text-white/40"
-                  v-if="metric.remaining > 0"
-                >
+                <span class="text-[9px] font-medium text-white/50 uppercase">Realizado: {{ formatCurrency(metric.actual)
+                  }}</span>
+                <span class="text-[9px] font-black text-white/40" v-if="metric.remaining > 0">
                   Falta {{ formatCurrency(metric.remaining) }}
                 </span>
-                <span
-                  v-else
-                  class="text-[9px] font-black text-brand-cyan uppercase tracking-tighter animate-pulse"
-                  >Meta Batida!</span
-                >
+                <span v-else class="text-[9px] font-black text-brand-cyan uppercase tracking-tighter animate-pulse">Meta
+                  Batida!</span>
               </div>
             </div>
           </div>
@@ -349,29 +260,19 @@
     </div>
 
     <!-- Empty State -->
-    <div
-      v-else
-      class="py-24 px-6 rounded-[3rem] border border-dashed border-white/10 bg-brand-surface/20 flex flex-col items-center justify-center text-center space-y-6 animate-pulse"
-    >
-      <div
-        class="p-6 rounded-3xl bg-white/5 border border-white/10 ring-8 ring-white/[0.02]"
-      >
+    <div v-else
+      class="py-24 px-6 rounded-[3rem] border border-dashed border-white/10 bg-brand-surface/20 flex flex-col items-center justify-center text-center space-y-6 animate-pulse">
+      <div class="p-6 rounded-3xl bg-white/5 border border-white/10 ring-8 ring-white/[0.02]">
         <Target class="h-12 w-12 text-white/10" />
       </div>
       <div class="max-w-xs space-y-2">
         <h4 class="text-lg font-black text-white/60 tracking-tight uppercase">
           Dashboard Inativo
         </h4>
-        <p
-          class="text-xs font-medium text-white/20 leading-relaxed uppercase tracking-widest"
-        >
+        <p class="text-xs font-medium text-white/20 leading-relaxed uppercase tracking-widest">
           Nenhuma meta definida para {{ currentPeriodLabel }}.
-          <span v-if="canSetGoals" class="text-brand-cyan/60 block mt-2"
-            >Toque em \"Configurar\" para iniciar.</span
-          >
-          <span v-else class="block mt-2"
-            >Aguarde a liberação do seu gestor.</span
-          >
+          <span v-if="canSetGoals" class="text-brand-cyan/60 block mt-2">Toque em \"Configurar\" para iniciar.</span>
+          <span v-else class="block mt-2">Aguarde a liberação do seu gestor.</span>
         </p>
       </div>
     </div>
@@ -380,7 +281,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
-import { Target, Settings2, DollarSign } from "lucide-vue-next";
+import { Target, Settings2, DollarSign, Clock, ArrowRight } from "lucide-vue-next";
 import VueApexCharts from "vue3-apexcharts";
 import { useAuthStore } from "../../store/auth";
 import type { Goal } from "../../api/goalService";
@@ -516,15 +417,25 @@ const displayMetrics = computed(() => {
     const percent =
       m.target > 0 ? (m.actual / m.target) * 100 : m.actual > 0 ? 100 : 0;
     const remaining = Math.max(0, m.target - m.actual);
-    let barColor = "bg-brand-cyan shadow-[0_0_15px_rgba(0,212,255,0.4)]";
-    let percentColor = "text-brand-cyan";
+    let barColor = "";
+    let percentColor = "";
 
-    if (percent < 50) {
+    if (percent < 80) {
+      // Vermelho: 0 até 79%
       barColor = "bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]";
       percentColor = "text-rose-400";
-    } else if (percent < 80) {
+    } else if (percent < 100) {
+      // Amarelo: 80 até 99%
       barColor = "bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)]";
       percentColor = "text-amber-400";
+    } else if (percent <= 110) {
+      // Verde: 100 até 110%
+      barColor = "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+      percentColor = "text-emerald-400";
+    } else {
+      // Azul: Acima de 110%
+      barColor = "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]";
+      percentColor = "text-blue-400";
     }
     return { ...m, percent, remaining, barColor, percentColor };
   });
@@ -546,9 +457,17 @@ const radialMetric = computed(() => {
   );
 });
 
-const radialOptions = {
+const getHexColor = (barColor: string) => {
+  if (barColor.includes("rose")) return "#f43f5e";
+  if (barColor.includes("amber")) return "#fbbf24";
+  if (barColor.includes("emerald")) return "#10b981";
+  if (barColor.includes("blue")) return "#3b82f6";
+  return "#00d4ff";
+};
+
+const radialOptions = computed(() => ({
   chart: { id: "goal-radial-bar", sparkline: { enabled: true } },
-  colors: ["#00d4ff"],
+  colors: [getHexColor(radialMetric.value.barColor)],
   plotOptions: {
     radialBar: {
       hollow: { size: "75%" },
@@ -557,7 +476,7 @@ const radialOptions = {
     },
   },
   stroke: { lineCap: "round" as const },
-};
+}));
 
 // Data Logic
 const p1ActualByPeriod = computed(() => {
@@ -670,10 +589,12 @@ const lineSeries = computed(() => [
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(200%);
   }
 }
+
 .animate-[shimmer_2s_infinite] {
   animation: shimmer 2s infinite;
 }

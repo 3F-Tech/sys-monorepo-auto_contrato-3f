@@ -47,7 +47,7 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 
 ## 🎨 Identidade Visual (Design System)
 
-> **Consulte o `.antigravityrules` para os tokens completos.** Resumo essencial:
+> **Consulte o `GEMINI.md` para os tokens completos.** Resumo essencial:
 
 - **Tema:** Modo escuro exclusivo. Nunca use fundo branco em novas telas.
 - **Fundo principal:** `#0d1b2a` (navy profundo) — painéis de formulário: `#111c29`
@@ -62,4 +62,4 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 - Priorize mobile-first para os formulários.
 - **Geração de PDF:** O sistema exporta o Google Doc para PDF via Google Drive API apenas para envio ao Clicksign. Outras automações de documento continuam externas.
 - Mantenha os nomes de colunas do banco exatamente como definidos no Schema SQL fornecido.
-- Sempre consulte o `.antigravityrules.md` antes de fazer QUALQUER alteração no projeto, pois ele é o cerne da IA no nosso projeto.
+- Sempre consulte o `GEMINI.md` antes de fazer QUALQUER alteração no projeto, pois ele é o cerne da IA no nosso projeto.

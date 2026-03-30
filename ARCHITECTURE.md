@@ -24,7 +24,7 @@
 ├── packages/               # Configurações e pacotes compartilhados
 ├── kubb.config.ts          # Configuração de geração automática de contratos de API
 ├── dashboard-filters.md    # Documentação dos filtros do dashboard (mês/BU/vendedor)
-├── .antigravityrules.md    # Regras globais (seu "cérebro" de desenvolvimento)
+├── GEMINI.md               # Regras globais (seu "cérebro" de desenvolvimento)
 └── ARCHITECTURE.md         # Este guia
 
 ## 👥 Papéis (Roles) do Sistema

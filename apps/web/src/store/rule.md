@@ -52,4 +52,4 @@ Responsável pela listagem de vendedores para gestão da equipe.
 - **Hooks**: As stores são a ponte entre os hooks brutos do Kubb e os componentes da UI.
 
 ## 📝 Manutenção
-Ao criar uma nova store, adicione-a aqui e referencie-a no `.antigravityrules`.
+Ao criar uma nova store, adicione-a aqui e referencie-a no `GEMINI.md`.

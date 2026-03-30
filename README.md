@@ -7,7 +7,7 @@ Sistema monorepo para gestão de vendedores e automação de disparos de contrat
 ## 🧠 Guia de Contexto (Para IAs e Desenvolvedores)
 
 Antes de codificar, consulte os arquivos mestre na raiz:
-- [**.antigravityrules**](./.antigravityrules): Padrões de escrita, comportamento da IA e regras técnicas.
+- [**GEMINI.md**](./GEMINI.md): Padrões de escrita, comportamento da IA e regras técnicas.
 - [**ARCHITECTURE.md**](./ARCHITECTURE.md): Mapa de pastas, fluxo de dados e integrações.
 - [**CONTEXT.md**](./CONTEXT.md): Regras de negócio, escopo da V1 e perfis de usuário.
 

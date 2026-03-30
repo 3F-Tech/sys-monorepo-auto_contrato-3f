@@ -53,4 +53,4 @@ Caso a opção **"Período Geral"** seja selecionada, o sistema remove as restri
 *Nota: Esta lógica garante que o dashboard reflita exatamente o ciclo de faturamento e as metas comerciais da empresa.*
 
 ## 6. Visualização: ApexCharts
-O dashboard utiliza a biblioteca **ApexCharts** (`vue3-apexcharts`) para renderizar os indicadores de NMRR e TCV. As cores dos gráficos devem seguir rigorosamente o Design System estabelecido no `.antigravityrules.md` (Ciano para métricas positivas, Azul para comparativos).
+O dashboard utiliza a biblioteca **ApexCharts** (`vue3-apexcharts`) para renderizar os indicadores de NMRR e TCV. As cores dos gráficos devem seguir rigorosamente o Design System estabelecido no `GEMINI.md` (Ciano para métricas positivas, Azul para comparativos).

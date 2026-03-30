@@ -36,193 +36,137 @@
 
     <!-- Modals -->
     <ProfileModal :is-open="profileModalOpen" @close="profileModalOpen = false" @updated="handleProfileUpdated" />
-    <SetGoalModal 
-      :is-open="goalModalOpen" 
-      :show-periods-only="goalModalMode === 'periods'"
-      :initial-view="goalModalMode === 'periods' ? 'form' : 'list'"
-      :initial-target="activeTarget"
-      @saved="handleGoalSaved"
-      @close="goalModalOpen = false" 
-    />
-    <SetCostsModal 
-      :is-open="costsModalOpen"
-      :month="selectedMonthNum"
-      :year="selectedYearNum"
-      @close="costsModalOpen = false"
-      @saved="handleCostsSaved"
-    />
+    <SetGoalModal :is-open="goalModalOpen" :show-periods-only="goalModalMode === 'periods'"
+      :initial-view="goalModalMode === 'periods' ? 'form' : 'list'" :initial-target="activeTarget"
+      @saved="handleGoalSaved" @close="goalModalOpen = false" />
+    <SetCostsModal :is-open="costsModalOpen" :month="selectedMonthNum" :year="selectedYearNum"
+      @close="costsModalOpen = false" @saved="handleCostsSaved" />
 
 
 
-    <ConfirmModal 
-      :is-open="dissociateConfirmOpen" 
-      title="Remover da Equipe"
+    <ConfirmModal :is-open="dissociateConfirmOpen" title="Remover da Equipe"
       :message="`Tem certeza que deseja remover este vendedor da sua equipe? Ele continuará no sistema, mas deixará de estar sob sua gestão.`"
-      confirm-text="Remover"
-      cancel-text="Manter"
-      type="warning"
-      icon="circle"
-      @confirm="confirmDissociate"
-      @cancel="dissociateConfirmOpen = false"
-    />
+      confirm-text="Remover" cancel-text="Manter" type="warning" icon="circle" @confirm="confirmDissociate"
+      @cancel="dissociateConfirmOpen = false" />
 
 
-    <main class="max-w-7xl mx-auto px-6 py-10 space-y-12">
-        <!-- Welcome Section -->
-        <section class="relative py-12 px-10 rounded-[2.5rem] bg-gradient-to-br from-brand-offset to-brand-deep border border-brand-glass-border overflow-hidden">
-          <!-- Abstract Background Orbs -->
-          <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-cyan/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-brand-blue/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
-          
-          <div class="relative z-10 space-y-6">
-            <div class="flex items-center gap-3">
-              <span class="px-3 py-1 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-[10px] font-black uppercase tracking-[0.2em]">Painel de Controle</span>
-              <div class="h-1 w-1 rounded-full bg-white/20"></div>
-              <span class="text-white/30 text-[10px] font-bold uppercase tracking-widest">{{ new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) }}</span>
-            </div>
-            
-            <div class="space-y-2">
-              <h1 class="text-4xl md:text-5xl font-black tracking-tight leading-tight">
-                Olá, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue">{{ firstName }}</span>.
-              </h1>
-              <p class="text-white/40 text-lg max-w-xl font-medium leading-relaxed">
-                Sua central de inteligência para gestão e automação de contratos da <span class="text-white/80">3F Venture</span>.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Dynamic Filter Bar (Now Sticky for the whole dashboard) -->
-        <div class="sticky top-20 z-40 py-4 -mx-2 px-4 bg-brand-deep/80 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-brand-deep/50 flex flex-wrap items-center gap-4">
-          
-          <!-- Mode Toggle (Only for Admin/Coord) -->
-          <div v-if="['admin', 'coord'].includes(user?.type || '')" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
-            <button 
-              @click="dashboardFilterType = 'bu'" 
-              :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Por BU
-            </button>
-            <button 
-              @click="dashboardFilterType = 'team'" 
-              :class="dashboardFilterType === 'team' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Por Equipe
-            </button>
-          </div>
-
-          <!-- Head (Coordenador) Switcher -->
-          <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
-            <button 
-              @click="dashboardFilterType = 'team'; selectedTeamId = (teamStore.teams.length === 1 ? 'team_' + teamStore.teams[0].id : user.id.toString())" 
-              :class="(dashboardFilterType === 'team' && selectedTeamId && !selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Minhas Equipes
-            </button>
-            <button 
-              @click="dashboardFilterType = 'bu'; selectedBUId = '99'" 
-              :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Minhas BUs
-            </button>
-          </div>
-
-          <!-- Seller/SDR Mode Toggle -->
-          <div v-if="['seller', 'sdr'].includes(user?.type || '') && user?.team_id" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
-            <button 
-              @click="selectedSellerId = user?.id?.toString() || ''; selectedTeamId = ''" 
-              :class="selectedSellerId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Minha Meta
-            </button>
-            <button 
-              @click="selectedSellerId = ''; selectedTeamId = 'team_' + user?.team_id" 
-              :class="selectedTeamId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'" 
-              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300"
-            >
-              Meta Equipe
-            </button>
-          </div>
-
-          <!-- BU Filter (In Mode BU or Coord) -->
-          <div v-if="dashboardFilterType === 'bu' && ['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[200px] flex-1 md:flex-none">
-            <CustomSelect 
-              v-model="selectedBUId" 
-              :options="buOptionsFormatted"
-              placeholder="Selecionar BU"
-              :icon="Building2"
-            />
-          </div>
-
-          <!-- Coordinator Filter (Admin only) -->
-          <div v-if="dashboardFilterType === 'coord' && user?.type === 'admin'" class="min-w-[260px] flex-1 md:flex-none">
-            <CustomSelect 
-              v-model="selectedCoordId" 
-              :options="coordOptionsFormatted"
-              placeholder="Selecionar Coordenador"
-              :icon="Users"
-              searchable
-            />
-          </div>
-
-          <!-- Team/Seller Filters (In Mode Team or for Seller) -->
-          <template v-if="dashboardFilterType === 'team' || (user?.type === 'seller')">
-            <!-- Team Filter -->
-            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
-               <CustomSelect 
-                v-model="selectedTeamId" 
-                :options="teamOptionsFormatted"
-                :placeholder="['seller', 'sdr'].includes(user?.type || '') ? 'Minha Meta vs Equipe' : 'Selecionar Equipe'"
-                :icon="Users"
-                searchable
-                :allow-clear="true"
-              />
-
-            </div>
-            
-            <!-- Hidden filter when in Minha Meta to ensure logic clarity -->
-            <div v-if="user?.type === 'head' && selectedTeamId?.startsWith('head_own_')" class="hidden"></div>
-
-
-            <!-- Seller Filter (For Admin, Coord, Head, etc) -->
-            <div v-if="['admin', 'coord', 'head'].includes(user?.type || '') && !(user?.type === 'head' && selectedTeamId?.startsWith('head_own_'))" class="min-w-[260px] flex-1 md:flex-none">
-               <CustomSelect 
-                v-model="selectedSellerId" 
-                :options="sellerOptionsFormatted"
-                placeholder="Selecionar Vendedor"
-                :icon="Users2"
-                searchable
-                allow-clear
-              />
-            </div>
-          </template>
-
-          <!-- Month Filter (Common) -->
-          <div class="min-w-[200px] flex-1 md:flex-none">
-            <CustomSelect 
-              v-model="selectedMonth" 
-              :options="extendedMonthOptionsFormatted"
-              placeholder="Selecione o Mês"
-              :icon="Calendar"
-              :allow-clear="false"
-            />
-          </div>
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-4">
+      <!-- Welcome Section -->
+      <section class="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 pb-6 border-b border-white/5">
+        <div class="space-y-1">
+          <h1 class="text-3xl md:text-4xl font-black tracking-tight leading-tight">
+            Olá, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue">{{ firstName
+            }}</span>.
+          </h1>
+          <p class="text-white/40 text-sm md:text-base max-w-xl font-medium leading-relaxed">
+            Sua central de inteligência para gestão e automação de contratos da <span class="text-white/70">3F
+              Venture</span>.
+          </p>
         </div>
 
-        <!-- Goals Dashboard Area -->
-        <GoalsDashboard 
-          :goal="activeGoal || null" 
-          :actuals="currentPerformance"
-          :contracts="filteredP1Contracts"
-          @open-settings="handleOpenGoalSettings('goals')"
-          @open-periods="handleOpenGoalSettings('periods')"
-          @open-costs="costsModalOpen = true"
-        />
+        <div class="flex flex-row justify-center items-center gap-2">
+          <Calendar class="h-3 w-3 text-brand-cyan" />
+          <span class="text-white/30 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap">{{ new
+            Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) }}</span>
+        </div>
+      </section>
+
+      <!-- Dynamic Filter Bar (Now Sticky for the whole dashboard) -->
+      <div
+        class="sticky top-20 z-40 pb-4 -mx-2 px-4 bg-brand-deep/80 backdrop-blur-xl border-b border-white/5 shadow-2xl shadow-brand-deep/50 flex flex-wrap items-center gap-4">
+
+        <!-- Mode Toggle (Only for Admin/Coord) -->
+        <div v-if="['admin', 'coord'].includes(user?.type || '')"
+          class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <button @click="dashboardFilterType = 'bu'"
+            :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Por BU
+          </button>
+          <button @click="dashboardFilterType = 'team'"
+            :class="dashboardFilterType === 'team' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Por Equipe
+          </button>
+        </div>
+
+        <!-- Head (Coordenador) Switcher -->
+        <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <button
+            @click="dashboardFilterType = 'team'"
+            :class="(dashboardFilterType === 'team' && selectedTeamId && !selectedTeamId?.startsWith('head_own_')) ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Minhas Equipes
+          </button>
+          <button @click="dashboardFilterType = 'bu'"
+            :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Minhas BUs
+          </button>
+        </div>
+
+        <!-- Seller/SDR Mode Toggle -->
+        <div v-if="['seller', 'sdr'].includes(user?.type || '') && user?.team_id"
+          class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+          <button @click="selectedSellerId = user?.id?.toString() || ''; selectedTeamId = ''"
+            :class="selectedSellerId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Minha Meta
+          </button>
+          <button @click="selectedSellerId = ''; selectedTeamId = 'team_' + user?.team_id"
+            :class="selectedTeamId ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+            class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">
+            Meta Equipe
+          </button>
+        </div>
+
+        <!-- BU Filter (In Mode BU or Coord) -->
+        <div v-if="dashboardFilterType === 'bu' && ['admin', 'coord', 'head'].includes(user?.type || '')"
+          class="min-w-[200px] flex-1 md:flex-none">
+          <CustomSelect v-model="selectedBUId" :options="buOptionsFormatted" placeholder="Selecionar BU"
+            :icon="Building2" />
+        </div>
+
+        <!-- Coordinator Filter (Admin only) -->
+        <div v-if="dashboardFilterType === 'coord' && user?.type === 'admin'" class="min-w-[260px] flex-1 md:flex-none">
+          <CustomSelect v-model="selectedCoordId" :options="coordOptionsFormatted" placeholder="Selecionar Coordenador"
+            :icon="Users" searchable />
+        </div>
+
+        <!-- Team/Seller Filters (In Mode Team or for Seller) -->
+        <template v-if="dashboardFilterType === 'team' || (user?.type === 'seller')">
+          <!-- Team Filter -->
+          <div v-if="['admin', 'coord', 'head'].includes(user?.type || '')" class="min-w-[260px] flex-1 md:flex-none">
+            <CustomSelect v-model="selectedTeamId" :options="teamOptionsFormatted"
+              :placeholder="['seller', 'sdr'].includes(user?.type || '') ? 'Minha Meta vs Equipe' : 'Selecionar Equipe'"
+              :icon="Users" searchable :allow-clear="true" />
+
+          </div>
+
+          <!-- Hidden filter when in Minha Meta to ensure logic clarity -->
+          <div v-if="user?.type === 'head' && selectedTeamId?.startsWith('head_own_')" class="hidden"></div>
+
+
+          <!-- Seller Filter (For Admin, Coord, Head, etc) -->
+          <div
+            v-if="['admin', 'coord', 'head'].includes(user?.type || '') && !(user?.type === 'head' && selectedTeamId?.startsWith('head_own_'))"
+            class="min-w-[260px] flex-1 md:flex-none">
+            <CustomSelect v-model="selectedSellerId" :options="sellerOptionsFormatted" placeholder="Selecionar Vendedor"
+              :icon="Users2" searchable allow-clear />
+          </div>
+        </template>
+
+        <!-- Month Filter (Common) -->
+        <div class="min-w-[200px] flex-1 md:flex-none">
+          <CustomSelect v-model="selectedMonth" :options="extendedMonthOptionsFormatted" placeholder="Selecione o Mês"
+            :icon="Calendar" :allow-clear="false" />
+        </div>
+      </div>
+
+      <!-- Goals Dashboard Area -->
+      <GoalsDashboard :goal="activeGoal || null" :actuals="currentPerformance" :contracts="filteredP1Contracts"
+        @open-settings="handleOpenGoalSettings('goals')" @open-periods="handleOpenGoalSettings('periods')"
+        @open-costs="costsModalOpen = true" />
 
 
 
@@ -232,7 +176,8 @@
             <TrendingUp class="h-4 w-4 text-brand-cyan" />
             Performance
           </h2>
-          <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Indicadores sincronizados em tempo real</p>
+          <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Indicadores sincronizados em tempo
+            real</p>
         </div>
       </div>
       <!-- Stats Grid (Grouped by Category) -->
@@ -247,14 +192,16 @@
             <div v-for="(stat, index) in stats.filter(s => s.type === 'finance')" :key="stat.label"
               class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
               :style="{ animationDelay: (index * 100) + 'ms' }">
-              
 
-              <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
+
+              <div
+                class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
                 <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
               </div>
 
               <div class="flex items-center justify-between mb-4 relative z-10">
-                <div class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
+                <div
+                  class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
                   <component :is="stat.icon" class="h-5 w-5" />
                 </div>
                 <div class="flex flex-col items-end">
@@ -265,21 +212,28 @@
 
               <div class="space-y-1 relative z-10">
                 <div class="flex items-center gap-1.5">
-                  <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
-                  <Info v-if="stat.tooltip" :title="stat.tooltip" class="h-3 w-3 text-white/20 cursor-help hover:text-brand-cyan transition-colors" />
+                  <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label
+                  }}</p>
+                  <Info v-if="stat.tooltip" :title="stat.tooltip"
+                    class="h-3 w-3 text-white/20 cursor-help hover:text-brand-cyan transition-colors" />
                 </div>
                 <div class="flex items-baseline gap-1">
                   <div v-if="isLoading" class="space-y-2 mb-1">
                     <div class="h-8 w-32 bg-white/10 rounded-xl animate-pulse relative overflow-hidden">
-                      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+                      <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer">
+                      </div>
                     </div>
                   </div>
-                  <h3 v-else class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
+                  <h3 v-else
+                    class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
                     {{ stat.value }}
                   </h3>
                 </div>
               </div>
-              <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div
+                class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity">
+              </div>
             </div>
           </div>
         </section>
@@ -294,13 +248,15 @@
             <div v-for="(stat, index) in stats.filter(s => s.type !== 'finance')" :key="stat.label"
               class="p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.05] transition-all duration-500 group relative overflow-hidden"
               :style="{ animationDelay: (index * 100) + 'ms' }">
-              
-              <div class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
+
+              <div
+                class="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 group-hover:text-brand-cyan transition-all duration-700 pointer-events-none">
                 <component :is="stat.icon" class="h-32 w-32 rotate-[-15deg]" />
               </div>
 
               <div class="flex items-center justify-between mb-4 relative z-10">
-                <div class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
+                <div
+                  class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
                   <component :is="stat.icon" class="h-5 w-5" />
                 </div>
                 <div class="flex flex-col items-end">
@@ -310,19 +266,25 @@
               </div>
 
               <div class="space-y-1 relative z-10">
-                <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}</p>
+                <p class="text-white/50 text-[10px] font-bold uppercase tracking-[0.1em] leading-tight">{{ stat.label }}
+                </p>
                 <div class="flex items-baseline gap-1">
                   <div v-if="isLoading" class="space-y-2 mb-1">
                     <div class="h-8 w-24 bg-white/10 rounded-xl animate-pulse relative overflow-hidden">
-                      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer"></div>
+                      <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer">
+                      </div>
                     </div>
                   </div>
-                  <h3 v-else class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
+                  <h3 v-else
+                    class="text-[26px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300">
                     {{ stat.value }}
                   </h3>
                 </div>
               </div>
-              <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div
+                class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity">
+              </div>
             </div>
           </div>
         </section>
@@ -332,7 +294,8 @@
       <section class="space-y-6">
         <ContractList :contracts="filteredGeneralContracts" :isHead="user?.type === 'head'"
           :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :filterMode="contractFilterMode"
-          :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="isLoading" @update:filterMode="handleFilterModeChange" />
+          :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="isLoading"
+          @update:filterMode="handleFilterModeChange" />
       </section>
 
       <!-- Team/BU Users Section (Legacy removed for all Leadership) -->
@@ -344,28 +307,33 @@
           </h3>
           <div class="flex items-center justify-between gap-4">
             <div class="relative group/search">
-              <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20 group-focus-within/search:text-brand-cyan transition-colors" />
+              <Search
+                class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20 group-focus-within/search:text-brand-cyan transition-colors" />
               <input v-model="searchQuery" type="text" placeholder="Buscar por nome..."
                 class="pl-9 pr-4 py-1.5 rounded-lg bg-brand-surface border border-brand-glass-border text-[10px] text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan/50 focus:bg-brand-cyan/5 transition-all w-48" />
             </div>
-            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">{{ visibleUsers.length }} Integrantes</span>
+            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">{{ visibleUsers.length }}
+              Integrantes</span>
           </div>
         </div>
 
         <div v-if="sellerStore.loading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div v-for="i in 3" :key="i" class="h-32 rounded-2xl bg-brand-offset/50 animate-pulse border border-brand-glass-border"></div>
+          <div v-for="i in 3" :key="i"
+            class="h-32 rounded-2xl bg-brand-offset/50 animate-pulse border border-brand-glass-border"></div>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div v-for="seller in visibleUsers" :key="seller.id"
             class="p-6 rounded-2xl bg-brand-offset border border-brand-glass-border hover:border-brand-cyan/30 transition-all flex items-center justify-between group">
             <div class="flex items-center gap-4">
-              <div class="h-12 w-12 rounded-full bg-brand-surface border border-brand-glass-border flex items-center justify-center text-brand-cyan font-bold group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
+              <div
+                class="h-12 w-12 rounded-full bg-brand-surface border border-brand-glass-border flex items-center justify-center text-brand-cyan font-bold group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
                 {{ seller.name ? seller.name[0] : '?' }}
               </div>
               <div>
                 <h4 class="font-bold text-sm">{{ seller.name }}</h4>
-                <p class="text-[10px] text-white/40 uppercase tracking-wider font-medium">{{ getRoleLabel(seller.type) }}</p>
+                <p class="text-[10px] text-white/40 uppercase tracking-wider font-medium">{{ getRoleLabel(seller.type)
+                }}</p>
               </div>
             </div>
           </div>
@@ -383,9 +351,11 @@
           <button v-for="action in filteredActions" :key="action.title"
             @click="action.handler ? action.handler() : null"
             class="text-left p-10 rounded-[2.5rem] bg-brand-offset border border-brand-glass-border hover:border-brand-cyan/50 hover:bg-white/[0.02] transition-all duration-500 group relative overflow-hidden flex flex-col items-start gap-8 shadow-2xl hover:shadow-brand-cyan/5">
-            
+
             <!-- Graphic background detail -->
-            <div class="absolute -right-10 -top-10 h-40 w-40 bg-brand-cyan/5 blur-3xl rounded-full group-hover:bg-brand-cyan/10 transition-colors"></div>
+            <div
+              class="absolute -right-10 -top-10 h-40 w-40 bg-brand-cyan/5 blur-3xl rounded-full group-hover:bg-brand-cyan/10 transition-colors">
+            </div>
 
             <div
               class="p-5 rounded-2xl bg-brand-surface border border-brand-glass-border text-brand-cyan group-hover:scale-110 group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-500 shadow-xl">
@@ -396,15 +366,16 @@
                 action.title }}</h4>
               <p class="text-white/40 text-sm leading-relaxed font-medium">{{ action.description }}</p>
             </div>
-            
-            <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-500">
+
+            <div
+              class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-500">
               Começar agora
               <ArrowRight class="h-3 w-3" />
             </div>
           </button>
         </div>
       </section>
-      
+
       <!-- Team Manager (Dynamic placement) -->
       <section v-if="['admin', 'head', 'coord'].includes(user?.type || '')" class="pt-4">
         <TeamManager />
@@ -414,7 +385,7 @@
 
 
       <!-- Management section for admin, head and coord -->
-      <section v-if="['admin', 'head', 'coord']. some(r => r === user?.type)"
+      <section v-if="['admin', 'head', 'coord'].some(r => r === user?.type)"
         class="p-10 rounded-3xl bg-gradient-to-br from-brand-offset to-brand-deep border border-brand-glass-border relative overflow-hidden text-center space-y-6">
         <div class="h-20 w-20 mx-auto rounded-3xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
           <Settings class="h-10 w-10 animate-spin-slow" />
@@ -422,7 +393,8 @@
         <div class="space-y-2">
           <h2 class="text-2xl font-bold">Gestão do Sistema</h2>
           <p class="text-white/40 text-sm max-w-md mx-auto">
-            {{ user?.type === 'admin' ? 'Gerencie usuários, permissões e unidades de negócio de toda a plataforma.' : 'Gerencie os usuários e permissões da sua equipe ou unidade.' }}
+            {{ user?.type === 'admin' ? 'Gerencie usuários, permissões e unidades de negócio de toda a plataforma.' :
+              'Gerencie os usuários e permissões da sua equipe ou unidade.' }}
           </p>
         </div>
         <div class="flex flex-wrap justify-center gap-4">
@@ -542,7 +514,7 @@ const handleOpenGoalSettings = (mode: 'goals' | 'periods') => {
   } else {
     activeTarget.value = null;
   }
-  
+
   goalModalMode.value = mode;
   goalModalOpen.value = true;
 };
@@ -559,7 +531,7 @@ const isLoading = computed(() => contractStore.loading || isFiltering.value);
 const currentPerformance = computed(() => {
   const p1Contracts = signedP1Contracts.value;
   const genContracts = signedGeneralContracts.value;
-  
+
   const p1 = p1Contracts.reduce((acc, curr) => {
     const fpa = parseFloat(curr.first_payment_amount as any) || 0;
     if (fpa > 0) return acc + fpa;
@@ -567,7 +539,7 @@ const currentPerformance = computed(() => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
     return acc + impl + monthly;
   }, 0);
-  
+
   const tcv = genContracts.reduce((acc, curr) => {
     const monthly = parseFloat(curr.monthly_fee as any) || 0;
     const implementation = parseFloat(curr.implementation_fee as any) || 0;
@@ -617,7 +589,7 @@ const currentCacValue = computed(() => {
 
 const activeGoal = computed(() => {
   const [year, month] = selectedMonth.value.split('-').map(Number);
-  
+
   if (dashboardFilterType.value === 'bu') {
     const buId = selectedBUId.value || (user.value?.type === 'coord' ? (user.value as any)?.seller_business?.[0]?.business_id?.toString() : null);
     if (!buId) return null;
@@ -637,7 +609,7 @@ const activeGoal = computed(() => {
     const head = sellerStore.allSellers.find(s => s.id?.toString() === selectedCoordId.value);
     const buIds = (head as any)?.seller_business?.map((sb: any) => sb.business_id.toString()) || [];
     if (buIds.length === 0) return null;
-    
+
     const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
     return sumGoals(buGoals, 'head', selectedCoordId.value, month, year) || null;
   }
@@ -656,7 +628,7 @@ const activeGoal = computed(() => {
     const head = sellerStore.allSellers.find(s => s.id?.toString() === headId);
     const buIds = (head as any)?.seller_business?.map((sb: any) => sb.business_id.toString()) || [];
     if (buIds.length === 0) return null;
-    
+
     const buGoals = goalStore.goals.filter(g => g.target_type === 'bu' && buIds.includes(g.target_id.toString()) && g.month === month && g.year === year);
     return sumGoals(buGoals, 'head', headId, month, year);
   }
@@ -668,47 +640,47 @@ const activeGoal = computed(() => {
     if (!team) return null;
 
     // Tenta encontrar uma meta definida diretamente para a Equipe
-    const directTeamGoal = goalStore.goals.find(g => 
-      g.target_type === 'team' && 
-      (g.target_id.toString() === teamIdStr || g.target_id.toString() === teamId.toString()) && 
-      g.month === month && 
+    const directTeamGoal = goalStore.goals.find(g =>
+      g.target_type === 'team' &&
+      (g.target_id.toString() === teamIdStr || g.target_id.toString() === teamId.toString()) &&
+      g.month === month &&
       g.year === year
     );
     if (directTeamGoal) return directTeamGoal;
-    
+
     const memberIds = team.sellers_sellers_team_idToteams?.map((m: any) => m.id.toString()) || [];
-    const memberGoals = goalStore.goals.filter(g => 
-      g.target_type === 'seller' && 
-      memberIds.includes(g.target_id.toString()) && 
-      g.month === month && 
+    const memberGoals = goalStore.goals.filter(g =>
+      g.target_type === 'seller' &&
+      memberIds.includes(g.target_id.toString()) &&
+      g.month === month &&
       g.year === year
     );
-    
+
     return sumGoals(memberGoals, 'team', teamId.toString(), month, year);
   }
 
   const members = sellerStore.allSellers.filter(s => s.head_id?.toString() === teamIdStr || s.id?.toString() === teamIdStr);
   const memberIds = members.map(m => m.id?.toString() || '');
-  
+
   // Tenta encontrar uma meta definida diretamente para o Head/Equipe
-  const directGoal = goalStore.goals.find(g => 
-    (g.target_type === 'head' || g.target_type === 'team') && 
-    (g.target_id.toString() === teamIdStr || 
-     g.target_id.toString() === teamIdStr.replace('team_', '').replace('head_own_', '')) && 
-    g.month === month && 
+  const directGoal = goalStore.goals.find(g =>
+    (g.target_type === 'head' || g.target_type === 'team') &&
+    (g.target_id.toString() === teamIdStr ||
+      g.target_id.toString() === teamIdStr.replace('team_', '').replace('head_own_', '')) &&
+    g.month === month &&
     g.year === year
   );
-  
+
   if (directGoal) return directGoal;
 
   // Se não houver meta direta, soma as metas individuais dos vendedores
-  const memberGoals = goalStore.goals.filter(g => 
-    g.target_type === 'seller' && 
-    memberIds.includes(g.target_id.toString()) && 
-    g.month === month && 
+  const memberGoals = goalStore.goals.filter(g =>
+    g.target_type === 'seller' &&
+    memberIds.includes(g.target_id.toString()) &&
+    g.month === month &&
     g.year === year
   );
-  
+
   return sumGoals(memberGoals, 'team', teamIdStr, month, year) || null;
 });
 
@@ -716,9 +688,9 @@ const sumGoals = (goals: Goal[], type: string, id: string, month: number, year: 
   if (!goals.length) return null;
   // Limpa o ID de qualquer prefixo (ex: team_123 -> 123)
   const cleanId = id.replace('team_', '').replace('head_own_', '');
-  
+
   const init = { p1: 0, tcv: 0, nmrr: 0, implementation: 0, monthly: 0 };
-  
+
   const result = goals.reduce((acc, g) => {
     acc.p1 += Number(g.p1 || 0);
     acc.tcv += Number(g.tcv || 0);
@@ -732,12 +704,12 @@ const sumGoals = (goals: Goal[], type: string, id: string, month: number, year: 
   // siga uma linha linear baseada no total somado, sem "herdar" conflitos
   // de curvas individuais dos vendedores, a menos que uma meta específica
   // seja criada para o grupo.
-  return { 
-    ...result, 
-    id: 0, 
-    target_type: type, 
-    target_id: cleanId, 
-    month, 
+  return {
+    ...result,
+    id: 0,
+    target_type: type,
+    target_id: cleanId,
+    month,
     year,
     p1_period_1: null,
     p1_period_2: null,
@@ -754,7 +726,7 @@ const userInitials = computed(() => user.value?.name?.split(' ').slice(0, 2).map
 const buOptionsFormatted = computed(() => {
   const options: { value: string; label: string }[] = [];
 
-  
+
   // Opção consolidada para Administradores e Coordenadores
   if (user.value?.type === 'admin') {
     options.push({ value: '99', label: '3F Venture' });
@@ -768,7 +740,7 @@ const buOptionsFormatted = computed(() => {
       const name = bu.name?.toLowerCase() || '';
       if (name.includes('3f') || name.includes('group') || name.includes('venture')) return;
     }
-    
+
     // Para Head e Coord, mostra apenas as BUs às quais ele está vinculado
     if (user.value?.type === 'head' || user.value?.type === 'coord') {
       const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
@@ -794,7 +766,7 @@ const coordOptionsFormatted = computed(() => {
 
 const teamOptionsFormatted = computed(() => {
   const options: { value: string; label: string }[] = [];
-  
+
   // Para ADMIN, HEAD e COORD, mostramos as equipes REAIS cadastradas
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
     teamStore.teams.forEach(t => {
@@ -802,7 +774,7 @@ const teamOptionsFormatted = computed(() => {
     });
     return options;
   }
-  
+
   // Para Vendedor, permite alternar entre sua meta individual e a da sua equipe
   if (user.value?.type === 'seller' && user.value.team_id) {
     const myTeam = teamStore.teams.find(t => t.id === user.value?.team_id);
@@ -814,7 +786,7 @@ const teamOptionsFormatted = computed(() => {
 
 const sellerOptionsFormatted = computed(() => {
   let sellers = sellerStore.allSellers;
-  
+
   if (selectedTeamId.value) {
     if (selectedTeamId.value.startsWith('head_own_')) {
       const headId = selectedTeamId.value.replace('head_own_', '');
@@ -828,8 +800,8 @@ const sellerOptionsFormatted = computed(() => {
   }
 
   return [
-    ...sellers.map(s => ({ 
-      value: s.id?.toString() || '', 
+    ...sellers.map(s => ({
+      value: s.id?.toString() || '',
       label: s.id?.toString() === user.value?.id?.toString() ? `${s.name} (Eu)` : (s.name || '')
     }))
   ];
@@ -844,13 +816,13 @@ const selectedMonth = ref(new Date().toISOString().substring(0, 7));
 
 const monthOptions = computed(() => {
   const current = new Date();
-  
+
   const getLabel = (d: Date) => d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
   const getValue = (d: Date) => d.toISOString().substring(0, 7);
-  
+
   const prev = new Date(current); prev.setMonth(current.getMonth() - 1);
   const next = new Date(current); next.setMonth(current.getMonth() + 1);
-  
+
   return [
     { label: getLabel(prev), value: getValue(prev) },
     { label: 'Atual', value: getValue(current) },
@@ -893,7 +865,7 @@ const contractsForP1 = computed(() => {
   // O Mês de Competência P1 segundo a Regra do Dashboard:
   // 06 do Mês Selecionado até 05 do Mês Seguinte.
   // Em JS Date (0-indexed), o Mês Selecionado é (month - 1). O mês seguinte é (month).
-  const startDate = new Date(year, month - 1, 6, 0, 0, 0); 
+  const startDate = new Date(year, month - 1, 6, 0, 0, 0);
   const endDate = new Date(year, month, 5, 23, 59, 59);
 
   return allContracts.filter(c => {
@@ -1005,15 +977,15 @@ const filterBUOptions = computed(() => {
 const filterSellerOptions = computed(() => {
   if (!user.value) return [];
   const all = [...sellerStore.allSellers];
-  
+
   // Garante que o usuário atual esteja na lista se ele for um líder
   // (caso ele não seja puramente type: 'seller')
   if (['admin', 'head', 'coord'].includes(user.value.type || '') && !all.find(s => s.id === user.value?.id)) {
-     all.unshift({
-        id: user.value.id,
-        name: user.value.name,
-        type: user.value.type as any
-     } as Sellers);
+    all.unshift({
+      id: user.value.id,
+      name: user.value.name,
+      type: user.value.type as any
+    } as Sellers);
   }
 
   let filtered = all;
@@ -1028,7 +1000,7 @@ const filterSellerOptions = computed(() => {
   } else if (user.value.type === 'coord') {
     const myBUIds = (user.value as any).seller_business?.map((sb: any) => sb.business_id) || [];
     const buId = selectedBUId.value ? Number(selectedBUId.value) : null;
-    
+
     filtered = filtered.filter(s => {
       if (s.id === user.value?.id) return true;
       const sBUs = (s as any).seller_business?.map((sb: any) => sb.business_id) || [];
@@ -1173,7 +1145,7 @@ const stats = computed(() => {
     },
     {
       label: 'ROI P1',
-      value: costsStore.totalCommercialCosts > 0 
+      value: costsStore.totalCommercialCosts > 0
         ? new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(totalP1 / costsStore.totalCommercialCosts) + 'x'
         : '0x',
       icon: TrendingUp,
@@ -1272,7 +1244,7 @@ const handleDissociateMember = (sellerId: string) => {
 
 const confirmDissociate = async () => {
   if (!sellerToDissociate.value) return;
-  
+
   const res = await sellerStore.updateSeller(sellerToDissociate.value, { head_id: null });
   if (res.success) {
     await sellerStore.fetchAllSellers();
@@ -1376,14 +1348,30 @@ watch(selectedBUId, () => {
   selectedSellerId.value = '';
 });
 
-// Resetar filtros ao trocar o modo (BU vs Coordenador vs Equipe)
+// Resetar e selecionar automaticamente o primeiro item ao trocar o modo (BU vs Coordenador vs Equipe)
 watch(dashboardFilterType, (newMode) => {
+  // Resetamos as seleções transversais
   selectedBUId.value = '';
   selectedCoordId.value = '';
   selectedSellerId.value = '';
-  // Se for head, mantém sua equipe, senão reseta.
+  
   if (authStore.user?.type !== 'head') {
     selectedTeamId.value = '';
+  }
+
+  // Seleção automática por modo
+  if (newMode === 'bu' && buOptionsFormatted.value.length > 0) {
+    selectedBUId.value = buOptionsFormatted.value[0].value;
+  } else if (newMode === 'team' && teamOptionsFormatted.value.length > 0) {
+    // Se for head, tenta manter ou pegar a primeira equipe real
+    if (authStore.user?.type === 'head') {
+      const firstTeam = teamOptionsFormatted.value.find(t => t.value.startsWith('team_'));
+      if (firstTeam) selectedTeamId.value = firstTeam.value;
+    } else {
+      selectedTeamId.value = teamOptionsFormatted.value[0].value;
+    }
+  } else if (newMode === 'coord' && coordOptionsFormatted.value.length > 0) {
+    selectedCoordId.value = coordOptionsFormatted.value[0].value;
   }
 });
 
@@ -1427,6 +1415,7 @@ watch(selectedMonth, async (newVal) => {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
