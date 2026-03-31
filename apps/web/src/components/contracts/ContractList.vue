@@ -311,7 +311,7 @@
                   </button>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                  <button v-if="!(contract as any).canceled_at" @click="handleToggleSigned(contract)"
+                  <button v-if="(contract as any).approved && !(contract as any).canceled_at" @click="handleToggleSigned(contract)"
                     :disabled="contract.change_status === 'alert' || contract.signed"
                     :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 group/btn shadow-lg',
                       contract.change_status === 'alert' ? 'opacity-50 cursor-not-allowed grayscale' : '',
@@ -325,7 +325,7 @@
                     <span v-else class="text-[10px] font-black uppercase tracking-[0.15em]">Marcar Assinado</span>
                   </button>
 
-                  <button v-if="!isLeadership && contract.change_status !== 'alert' && !(contract as any).canceled_at"
+                  <button v-if="!isLeadership && !(contract as any).approved && contract.change_status !== 'alert' && !(contract as any).canceled_at"
                     @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed"
                     :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
                       'bg-brand-offset border-brand-glass-border text-white/30 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5',
