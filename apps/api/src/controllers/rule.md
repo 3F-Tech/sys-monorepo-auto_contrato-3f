@@ -32,6 +32,10 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
   - **Exceção BOMMA**: Contratos da BU Bomma seguem a nomenclatura: `{{ Razão Social }} & BOMMA ASSESSORIA DE MARKETING LTDA - {{ NOME FORMAL DO CONTRATO }}`.
   - **Conversão**: Valores monetários e datas brasileiros devem ser convertidos para `Decimal` e `DateTime` antes da persistência.
 - **Clicksign Integration**: O backend deve ser capaz de exportar o Doc gerado para PDF (via Drive API) e enviar para o Clicksign via `ClickSignService.ts`.
+- **Fluxo de Aprovação Manual**: Por padrão, o `handleContractSubmit` salva o contrato como **Rascunho** (`approved: false`). O envio para o Clicksign deve ser disparado manualmente via ação do usuário no frontend.
+- **Campos de Controle**:
+  - `approved` (boolean): `false` para rascunho, `true` após envio ao Clicksign.
+  - `approved_at` (DateTime): Timestamp da aprovação manual.
 - **Formatação p/ Google Docs**:
   - **Moeda**: Adicione sempre "R$ " antes de valores monetários.
   - **Instagram**: Adicione sempre "@" antes de handles de redes sociais.
@@ -105,6 +109,7 @@ Falhas nas etapas 2 e 3 são logadas mas não bloqueiam as etapas seguintes.
 | `/contracts-sheets/bomma-assessoria-social-videos` | `submitBommaAssessoriaSocialVideos` | Bomma Ass. + Social (Vídeos) |
 | `/contracts-sheets/bomma-social-ilimitado` | `submitBommaSocialIlimitado` | Bomma Social Media (Ilimitado) |
 | `/contracts-sheets/bomma-social-determinada` | `submitBommaSocialDeterminada` | Bomma Social Media (Determinada) |
+| `/contracts/:id/send-to-signature` | `sendContractToClickSign` | Envio Manual Clicksign (v3) |
 
 ## 📋 Schema de Entrada (Zod — `contractSubmissionSchema`)
 - **Obrigatórios**: Razão Social, CNPJ, CEP, endereço completo, representante (nome/email/CPF), valores (taxa, mensalidade, primeiro pagamento, data, dia vencimento), data assinatura, vendedor (nome/email/CPF).

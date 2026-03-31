@@ -147,8 +147,11 @@
               <span
                 :class="['text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm',
                   contract.canceled_at ? 'bg-red-500/20 text-red-500 border border-red-500/20' :
-                    contract.signed ? 'bg-green-500/20 text-green-300 border border-green-500/20' : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20']">
-                {{ contract.canceled_at ? 'Cancelado' : (contract.signed ? 'Assinado' : 'Pendente') }}
+                    contract.signed ? 'bg-green-500/20 text-green-300 border border-green-500/20' :
+                      !(contract as any).approved ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20' : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20']">
+                {{ contract.canceled_at ? 'Cancelado' : (contract.signed ? 'Assinado' : (!(contract as any).approved ?
+                  'Rascunho' :
+                  'Pendente')) }}
               </span>
             </div>
             <ChevronDown :class="['h-4 w-4 text-white/30 transition-transform duration-300',
@@ -171,8 +174,13 @@
                     Link do Documento
                   </label>
                   <div class="flex gap-2">
-                    <input v-model="editingLink" type="url" placeholder="Cole o link aqui..."
-                      class="flex-1 px-4 py-3 rounded-xl bg-brand-offset border border-brand-glass-border text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan transition-all shadow-inner" />
+                    <div class="relative flex-1 group/input">
+                      <img src="/drive.png" v-if="editingLink.trim().includes('google.com')"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 object-contain opacity-50 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                      <input v-model="editingLink" type="url" placeholder="Cole o link aqui..."
+                        :class="editingLink.trim().includes('google.com') ? 'pl-11' : 'pl-4'"
+                        class="w-full pr-4 py-3 rounded-xl bg-brand-offset border border-brand-glass-border text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan transition-all shadow-inner" />
+                    </div>
 
                     <a v-if="contract.link" :href="contract.link" target="_blank" rel="noopener noreferrer"
                       title="Abrir Link"
@@ -248,25 +256,31 @@
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <Calendar class="h-3 w-3 text-brand-cyan/60" />
-                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Datas do Sistema</span>
+                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Datas do
+                          Sistema</span>
                       </div>
-                      <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)" 
+                      <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)"
                         class="text-[9px] font-bold text-brand-cyan hover:underline uppercase tracking-widest transition-all">
                         Editar Datas
                       </button>
                     </div>
 
-                    <div v-if="isEditingDates === contract.id?.toString()" class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div v-if="isEditingDates === contract.id?.toString()"
+                      class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
                       <div class="space-y-1">
-                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de Criação</label>
-                        <input v-model="editCreatedAt" type="date" class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
+                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de
+                          Criação</label>
+                        <input v-model="editCreatedAt" type="date"
+                          class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
                       </div>
                       <div class="space-y-1">
-                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de Assina.</label>
-                        <input v-model="editSignedDate" type="date" class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
+                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">Data de
+                          Assina.</label>
+                        <input v-model="editSignedDate" type="date"
+                          class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
                       </div>
                       <div class="col-span-2 flex gap-2 pt-1">
-                        <button @click="saveDates(contract)" :disabled="isSavingDates" 
+                        <button @click="saveDates(contract)" :disabled="isSavingDates"
                           class="flex-1 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-[9px] uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-lg shadow-brand-cyan/10">
                           {{ isSavingDates ? 'Salvando...' : 'Salvar Alterações' }}
                         </button>
@@ -288,7 +302,8 @@
                     <Settings2 class="h-3 w-3" />
                     Ações Administrativas
                   </label>
-                  <button v-if="(contract as any).canceled_at" @click="handleDeleteContract(contract)"
+                  <button v-if="(contract as any).canceled_at || !(contract as any).approved"
+                    @click="handleDeleteContract(contract)"
                     class="text-[10px] py-1 px-3 rounded-md font-bold uppercase tracking-widest text-white/20 hover:text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 transition-all"
                     title="Excluir Contrato Permanentemente">
                     <Trash2 class="h-3 w-3" />
@@ -310,18 +325,27 @@
                     <span v-else class="text-[10px] font-black uppercase tracking-[0.15em]">Marcar Assinado</span>
                   </button>
 
-                  <button
-                    v-if="!isLeadership && contract.change_status !== 'alert' && !(contract as any).canceled_at"
-                    @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed" :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
+                  <button v-if="!isLeadership && contract.change_status !== 'alert' && !(contract as any).canceled_at"
+                    @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed"
+                    :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
                       'bg-brand-offset border-brand-glass-border text-white/30 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5',
                       (!contract.link || contract.signed) ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none' : '']">
                     <AlertCircle class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
                     <span class="text-[10px] font-black uppercase tracking-[0.15em]">Aviso Mudança</span>
                   </button>
 
-                  <!-- Botão Cancelar Contrato (visível apenas para contratos não assinados e não finalizados/alertas) -->
-                  <button v-if="!(contract as any).canceled_at" @click="confirmCancelContract(contract)"
-                    :disabled="contract.signed"
+                  <button v-if="!(contract as any).approved && !(contract as any).canceled_at"
+                    @click="confirmSendToClicksign(contract)" :disabled="!contract.link || isSendingToClicksign"
+                    :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
+                      'bg-[#FF4B12]/10 border-[#FF4B12]/30 text-[#FF4B12] hover:bg-[#FF4B12]/20 hover:border-[#FF4B12]',
+                      (!contract.link || isSendingToClicksign) ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none' : '']">
+                    <img src="/clicksign.png"
+                      class="h-8 w-8 object-contain opacity-70 group-hover/btn:opacity-100 transition-all duration-300 group-hover/btn:scale-110" />
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-center">Enviar Clicksign</span>
+                  </button>
+
+                  <button v-if="(contract as any).approved && !(contract as any).canceled_at"
+                    @click="confirmCancelContract(contract)" :disabled="contract.signed"
                     :class="['p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg bg-brand-offset border-brand-glass-border text-white/30 group/btn',
                       contract.signed ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none' : 'hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/5']">
                     <Ban class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
@@ -525,7 +549,8 @@
             </button>
             <button @click="cancelContractStatus" :disabled="isCanceling"
               class="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white transition-colors font-bold text-sm shadow-lg shadow-red-500/20 flex items-center gap-2">
-              <span v-if="isCanceling" class="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+              <span v-if="isCanceling"
+                class="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
               {{ isCanceling ? 'Cancelando...' : 'Sim, Cancelar' }}
             </button>
           </div>
@@ -534,13 +559,19 @@
     </Transition>
 
     <!-- Modal Detalhes de Signatários -->
-    <SignersModal 
-      :isOpen="showSignersModal"
-      :loading="loadingSigners"
-      :contractTitle="selectedContractForSigners?.title || ''"
-      :signers="currentSigners"
-      @close="showSignersModal = false"
-    />
+    <SignersModal :isOpen="showSignersModal" :loading="loadingSigners"
+      :contractTitle="selectedContractForSigners?.title || ''" :signers="currentSigners"
+      @close="showSignersModal = false" />
+
+    <!-- Modal Confirmação Envio Clicksign -->
+    <ConfirmModal :isOpen="showSendToClicksignModal" title="Enviar para Clicksign"
+      message="Ao confirmar, o contrato será enviado para os signatários. Se desejar fazer alterações após o envio, você precisará cancelar o contrato atual e gerar um novo. Confirmar envio?"
+      confirmText="Sim, Enviar Agora" cancelText="Ainda não" type="orange" :isLoading="isSendingToClicksign"
+      :loadingMessage="progressMessage" @confirm="executeSendToClicksign" @cancel="showSendToClicksignModal = false">
+      <template #icon>
+        <img src="/clicksign.png" class="h-8 w-8 object-contain" />
+      </template>
+    </ConfirmModal>
   </div>
 </template>
 
@@ -616,6 +647,12 @@ const contractToCancel = ref<Contracts | null>(null);
 const isCanceling = ref(false);
 const isSyncing = ref<string | null>(null);
 
+// Estados para Envio Manual ao Clicksign
+const showSendToClicksignModal = ref(false);
+const selectedContractForSend = ref<Contracts | null>(null);
+const isSendingToClicksign = ref(false);
+const progressMessage = ref('');
+
 // Estados para Modal de Signatários
 const showSignersModal = ref(false);
 const loadingSigners = ref(false);
@@ -638,7 +675,7 @@ const startEditingDates = (contract: Contracts) => {
   } else {
     editCreatedAt.value = '';
   }
-  
+
   if (contract.signed_date) {
     const date = new Date(contract.signed_date);
     editSignedDate.value = date.toISOString().split('T')[0];
@@ -655,7 +692,7 @@ const saveDates = async (contract: Contracts) => {
       created_at: editCreatedAt.value ? new Date(editCreatedAt.value + 'T12:00:00Z').toISOString() : undefined,
       signed_date: editSignedDate.value ? new Date(editSignedDate.value + 'T12:00:00Z').toISOString() : null,
     } as any);
-    
+
     if (res.success) {
       toastSuccess('Datas atualizadas com sucesso');
       isEditingDates.value = null;
@@ -672,7 +709,7 @@ const saveDates = async (contract: Contracts) => {
 
 const openSignersModal = async (contract: Contracts) => {
   if (!contract.id) return;
-  
+
   selectedContractForSigners.value = contract;
   showSignersModal.value = true;
   loadingSigners.value = true;
@@ -739,11 +776,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 const backgroundSyncPending = async (contractsToSync: Contracts[]) => {
   if (!contractsToSync.length) return;
-  
+
   // Filtra apenas contratos que TENHAM ID do clicksign
-  const candidates = contractsToSync.filter(c => 
-    !c.signed && 
-    !c.canceled_at && 
+  const candidates = contractsToSync.filter(c =>
+    !c.signed &&
+    !c.canceled_at &&
     ((c as any).envelope_id || c.document_id)
   );
 
@@ -751,10 +788,10 @@ const backgroundSyncPending = async (contractsToSync: Contracts[]) => {
 
   // Limita a 5 (mais seguro para rate limit)
   const limited = candidates.slice(0, 5);
-  
+
   for (const contract of limited) {
     if (!contract.id) continue;
-    
+
     try {
       // Sincronização silenciosa
       const response = await client.post(`/contracts/${contract.id}/sync`);
@@ -769,7 +806,7 @@ const backgroundSyncPending = async (contractsToSync: Contracts[]) => {
         }
       }
       // Pequeno delay entre requisições para evitar 429 (Rate Limit)
-      await sleep(1000); 
+      await sleep(1000);
     } catch (e: any) {
       // Se for um 400 avisando que não tem ID, apenas ignoramos silenciosamente
       if (e.response?.status === 400 && e.response?.data?.error?.includes('ID do Clicksign')) {
@@ -1005,6 +1042,68 @@ const executeDelete = async () => {
   }
 
   contractToDelete.value = null;
+};
+
+const confirmSendToClicksign = (contract: Contracts) => {
+  selectedContractForSend.value = contract;
+  showSendToClicksignModal.value = true;
+};
+
+const executeSendToClicksign = async () => {
+  if (!selectedContractForSend.value) return;
+
+  const contractId = selectedContractForSend.value.id;
+  const trackingId = `manual-send-${contractId}-${Date.now()}`;
+
+  isSendingToClicksign.value = true;
+  progressMessage.value = 'Iniciando processo...';
+
+  // SSE Listener para progresso em tempo real
+  const apiUrl = (import.meta as any).env.DEV ? 'http://localhost:3007' : '/api';
+  const eventSource = new EventSource(`${apiUrl}/contracts/progress/${trackingId}`);
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      if (data.status === 'processing' || data.status === 'connected') {
+        progressMessage.value = data.step || 'Processando...';
+      } else if (data.status === 'completed') {
+        toastSuccess('Contrato enviado com sucesso!');
+        isSendingToClicksign.value = false;
+        showSendToClicksignModal.value = false;
+        eventSource.close();
+      } else if (data.status === 'error') {
+        toastError('Erro no processamento: ' + data.log);
+        isSendingToClicksign.value = false;
+        showSendToClicksignModal.value = false;
+        eventSource.close();
+      }
+    } catch (e) {
+      console.error('Erro ao processar mensagem SSE:', e);
+    }
+  };
+
+  eventSource.onerror = () => {
+    console.error('Erro na conexão SSE');
+    eventSource.close();
+  };
+
+  try {
+    const result = await contractStore.sendToSignature(Number(contractId), trackingId);
+
+    if (!result.success) {
+      toastError('Erro ao enviar contrato: ' + (result.error as any)?.message);
+      isSendingToClicksign.value = false;
+      showSendToClicksignModal.value = false;
+      eventSource.close();
+    }
+  } catch (err: any) {
+    toastError('Erro inesperado: ' + err.message);
+    isSendingToClicksign.value = false;
+    showSendToClicksignModal.value = false;
+    eventSource.close();
+  }
 };
 
 const confirmCancelContract = (contract: Contracts) => {

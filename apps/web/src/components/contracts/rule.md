@@ -41,8 +41,17 @@ Componente que exibe o progresso de assinaturas de um contrato em tempo real.
 - **Sincronização Passiva:** Cada abertura do modal já realiza uma nova consulta, mantendo dados frescos.
 
 ## 🔴 ConfirmModal.vue
-- Usado para confirmar ações destrutivas (excluir, cancelar).
+- Usado para confirmar ações destrutivas (excluir, cancelar) ou ações críticas de envio (aprovação manual).
 - Segue a mesma política de bloqueio de scroll com `watch(isOpen, ...)`.
+
+## ✉️ Botão "Enviar Clicksign" (Aprovação Manual)
+No componente `ContractList.vue`, o botão de envio manual deve:
+1. **Identidade Visual**: Utiliza a cor oficial da Clicksign (`#FF4B12`) em vez do ciano da marca, para destacar a ação externa.
+2. **Ícone**: Utiliza a imagem `clicksign.png` em vez de ícones Lucide.
+3. **Visibilidade**: Aparecer apenas para contratos com `approved: false` e não cancelados.
+4. **Bloqueio**: Ficar desabilitado (`disabled`) se o `link` do documento Google Drive não estiver presente ou se `isSendingToClicksign` for verdadeiro.
+5. **Confirmação**: Abrir o `ConfirmModal` com `type="orange"` e o logo da marca no slot de ícone.
+6. **Progresso**: Exibir o status de cada etapa do envio via `toastInfo` (SSE) e `toastSuccess` ao final.
 
 > [!IMPORTANT]
 > **Lei de Modais:** NENHUM modal pode ser exibido sem implementar o bloqueio de scroll do `body`. Use `watch` na prop `isOpen`/`show` para adicionar/remover `document.body.style.overflow = 'hidden'`.

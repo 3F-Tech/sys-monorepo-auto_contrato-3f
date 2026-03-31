@@ -69,6 +69,24 @@ export class ClickSignService {
     }
 
     /**
+     * Higieniza o nome do signatário para os padrões da Clicksign v3.
+     * Remove números, símbolos e garante sobrenome se necessário.
+     */
+    private static sanitizeSignerName(name: string): string {
+        // Remove números e garante que não hajam espaços duplos
+        let clean = name.replace(/[0-9]/g, '').replace(/\s+/g, ' ').trim();
+        
+        // Se após a limpeza o nome não tiver pelo menos dois termos, adiciona um termo genérico
+        // V3 da Clicksign rejeita nomes de uma única palavra.
+        const parts = clean.split(' ');
+        if (parts.length < 2) {
+            clean = `${clean} Signatário`.trim();
+        }
+        
+        return clean;
+    }
+
+    /**
      * Adiciona um signatário ao envelope (v3).
      */
     static async addSignerToEnvelope(envelopeId: string, signerData: {
@@ -83,7 +101,7 @@ export class ClickSignService {
                     type: 'signers',
                     attributes: {
                         email: signerData.email,
-                        name: signerData.name,
+                        name: this.sanitizeSignerName(signerData.name),
                         documentation: signerData.cpf ? this.maskCPF(signerData.cpf) : undefined,
                         has_documentation: !!signerData.cpf,
                         group: 1,

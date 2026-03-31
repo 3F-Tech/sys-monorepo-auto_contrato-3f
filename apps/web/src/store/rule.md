@@ -24,6 +24,7 @@ Responsável pelos contratos visíveis ao usuário no dashboard.
   - `fetchTeamContracts(headId)` → Para `head`.
   - `fetchAllContracts()` → Para `admin` ou `coord`.
   - `updateContract(id, data)` → Atualiza `signed`, `signed_date`, `created_at`, `link`, `change_status`, `change_description`.
+  - `sendToSignature(id, trackingId)` → Dispara o envio manual ao Clicksign e atualiza `approved: true`.
 
 ### `useSellerStore` (`seller.ts`)
 Responsável pela listagem de vendedores para gestão da equipe.

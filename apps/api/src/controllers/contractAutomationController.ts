@@ -43,6 +43,196 @@ const BOMMA_CONTRACT_NAMES: Record<string, string> = {
 };
 
 /**
+ * Funções Auxiliares e Lógica de Negócio do Clicksign
+ */
+
+const BU_SIGNERS_MAP: Record<string, { name: string, email: string, cpf: string }> = {
+    'BOMMA': { name: 'Natália Selister Piccoli', email: 'natalia@bommamkt.com.br', cpf: '013.266.710-06' },
+    'SEED': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@seedagromarketing.com.br', cpf: '023.275.400-46' },
+    'IMPULSE': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@3fventure.com.br', cpf: '023.275.400-46' }
+};
+
+/**
+ * Executa o fluxo completo do Clicksign v3 (Envelopes)
+ */
+const executeClickSignv3Flow = async (params: {
+    contractId: bigint,
+    fileId: string,
+    fileName: string,
+    buName: string,
+    signerName: string,
+    signerEmail: string,
+    signerCpf: string,
+    witnessEmails: string[],
+    trackingId?: string,
+    isDebug?: boolean,
+    sellerName?: string,
+    sellerEmail?: string,
+    sellerCpf?: string
+}) => {
+    const { contractId, fileId, fileName, buName, signerName, signerEmail, signerCpf, witnessEmails, trackingId, isDebug, sellerName, sellerEmail, sellerCpf } = params;
+    const clicksignStartTime = Date.now();
+
+    console.log(`[CLICKSIGN] Iniciando exportação PDF e upload para Clicksign para contrato ${contractId}...`);
+    if (trackingId) {
+        progressTracker.emitProgress(trackingId, {
+            status: 'processing',
+            progress: 60,
+            step: 'Clicksign: Exportando PDF...',
+            log: 'Convertendo Google Doc para PDF'
+        });
+    }
+
+    // 1. Exporta Doc para PDF (Base64)
+    const pdfBase64 = await GoogleDriveService.exportFileToPDF(fileId);
+
+    console.log('[CLICKSIGN] Iniciando fluxo v3 (Envelopes)...');
+
+    // 2. Criar Envelope (v3)
+    const envelope = await ClickSignService.createEnvelope(fileName);
+    const envelopeId = envelope.id;
+    console.log(`[CLICKSIGN v3] Envelope criado: ${envelopeId}`);
+    
+    if (trackingId) {
+        progressTracker.emitProgress(trackingId, {
+            status: 'processing',
+            progress: 70,
+            step: 'Clicksign: Criando envelope v3...',
+            log: `ID: ${envelopeId}`
+        });
+    }
+
+    const document = await ClickSignService.addDocumentToEnvelope(envelopeId, fileName, pdfBase64);
+    const documentId = document.id;
+    console.log(`[CLICKSIGN v3] Documento adicionado: ${documentId}`);
+
+    // 3. Preparar Signatários (v3)
+    const signersToProcess: any[] = [];
+
+    // 3a. Signatário Contratante (Cliente)
+    if (signerEmail && signerName) {
+        signersToProcess.push({
+            email: signerEmail,
+            name: signerName,
+            cpf: signerCpf,
+            role: 'contractor'
+        });
+    }
+
+    // 3b. Signatário Contratada (BU)
+    const buKey = Object.keys(BU_SIGNERS_MAP).find(k => buName.toUpperCase().includes(k));
+    if (buKey) {
+        const signerData = { ...BU_SIGNERS_MAP[buKey] };
+        
+        if (isDebug) {
+            const targetEmails = [
+                'luisfernando@3fventure.com.br',
+                'natalia@bommamkt.com.br',
+                'leticia@bommamkt.com.br',
+                'erika@seedagromarketing.com.br',
+                'luisfernando@seedagromarketing.com.br'
+            ];
+            if (targetEmails.includes(signerData.email.toLowerCase())) {
+                signerData.email = signerData.email.replace('@', '+test@');
+            }
+        }
+
+        signersToProcess.push({
+            ...signerData,
+            role: 'contractee'
+        });
+    }
+
+    // 3c. Vendedor e Testemunhas
+    const addedEmails = new Set(signersToProcess.map(s => s.email.toLowerCase()));
+
+    // Vendedor (se houver dados suficientes)
+    if (sellerEmail && sellerName && !addedEmails.has(sellerEmail.toLowerCase())) {
+        signersToProcess.push({
+            email: sellerEmail,
+            name: sellerName,
+            cpf: sellerCpf,
+            role: 'witness'
+        });
+        addedEmails.add(sellerEmail.toLowerCase());
+    }
+
+    // Testemunhas Adicionais
+    for (const email of witnessEmails) {
+        if (email && !addedEmails.has(email.toLowerCase())) {
+            // Nota: Como só temos o e-mail no witnesses_email, o Clicksign pedirá o preenchimento do nome/CPF se necessário 
+            // ou podemos tentar inferir. Por segurança, enviamos apenas o e-mail se não tivermos os outros dados.
+            // Mas o ClickSignService.addSignerToEnvelope espera um objeto com name.
+            // No fluxo atual, as testemunhas são enviadas com nome "Testemunha" se não houver.
+            signersToProcess.push({
+                email: email,
+                name: 'Testemunha Adicional',
+                role: 'witness'
+            });
+            addedEmails.add(email.toLowerCase());
+        }
+    }
+
+    const bulkOps: any[] = [];
+    const addedSignersInfo: { id: string, name: string }[] = [];
+
+    for (const s of signersToProcess) {
+        if (trackingId) {
+            progressTracker.emitProgress(trackingId, {
+                status: 'processing',
+                progress: 85,
+                step: 'Clicksign: Adicionando signatários...',
+                log: `Adicionando: ${s.name} (${s.role})`
+            });
+        }
+        
+        const signer = await ClickSignService.addSignerToEnvelope(envelopeId, s);
+        const signerId = signer.id;
+        addedSignersInfo.push({ id: signerId, name: s.name });
+
+        bulkOps.push({
+            op: 'add',
+            ref: { type: 'requirements', id: envelopeId },
+            data: {
+                type: 'requirements',
+                attributes: { action: 'provide_evidence', auth: 'email' },
+                relationships: {
+                    document: { data: { type: 'documents', id: documentId } },
+                    signer: { data: { type: 'signers', id: signerId } }
+                }
+            }
+        });
+
+        bulkOps.push({
+            op: 'add',
+            ref: { type: 'requirements', id: envelopeId },
+            data: {
+                type: 'requirements',
+                attributes: { action: 'agree', role: s.role },
+                relationships: {
+                    document: { data: { type: 'documents', id: documentId } },
+                    signer: { data: { type: 'signers', id: signerId } }
+                }
+            }
+        });
+    }
+
+    if (bulkOps.length > 0) {
+        await ClickSignService.addBulkRequirements(envelopeId, bulkOps);
+    }
+
+    await ClickSignService.finalizeEnvelope(envelopeId);
+
+    const signatureMessage = `Olá! Preciso da sua assinatura eletrônica no contrato ${fileName}. É bem simples, basta seguir o link da Clicksign!`;
+
+    for (const info of addedSignersInfo) {
+        await ClickSignService.sendNotification(envelopeId, info.id, signatureMessage);
+    }
+
+    return { envelopeId, documentId, signersCount: signersToProcess.length };
+};
+
+/**
  * Helper genérico para processar a submissão de contratos.
  * Realiza validação Zod, automação no Google Drive/Docs e persistência no banco.
  */
@@ -253,209 +443,9 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 await GoogleDocsService.replaceVariables(newFile.id, replacements);
                 console.log(`[DOCS] Variáveis substituídas! Tempo: ${Date.now() - docsStartTime}ms`);
 
-                // === AUTOMAÇÃO CLICKSIGN (NOVO) ===
-                const clicksignStartTime = Date.now();
-                try {
-                    console.log(`[CLICKSIGN] Iniciando exportação PDF e upload para Clicksign...`);
-                    if (trackingId) {
-                        progressTracker.emitProgress(trackingId, {
-                            status: 'processing',
-                            progress: 60,
-                            step: 'Clicksign: Exportando PDF...',
-                            log: 'Convertendo Google Doc para PDF'
-                        });
-                    }
-
-                    // 1. Exporta Doc para PDF (Base64)
-                    const pdfBase64 = await GoogleDriveService.exportFileToPDF(newFile.id);
-
-                    console.log('[CLICKSIGN] Iniciando fluxo v3 (Envelopes)...');
-
-                    // 1. Criar Envelope (v3)
-                    const envelopeName = fileName;
-                    const envelope = await ClickSignService.createEnvelope(envelopeName);
-                    const envelopeId = envelope.id;
-                    envelopeIdToSave = envelopeId;
-                    console.log(`[CLICKSIGN v3] Envelope criado: ${envelopeId}`);
-                    if (trackingId) {
-                        progressTracker.emitProgress(trackingId, {
-                            status: 'processing',
-                            progress: 75,
-                            step: 'Clicksign: Criando envelope v3...',
-                            log: `ID: ${envelopeId}`
-                        });
-                    }
-
-                    const document = await ClickSignService.addDocumentToEnvelope(envelopeId, fileName, pdfBase64);
-                    const documentId = document.id;
-                    envelopeIdForDb = documentId; // Mantendo document_id para compatibilidade ou uso específico
-                    console.log(`[CLICKSIGN v3] Documento adicionado: ${documentId}`);
-
-                    // 3. Preparar Signatários (v3)
-
-                    // 3a. Signatário Contratante (Cliente)
-                    if (data['EMAIL DO REPRESENTANTE'] && data['NOME DO REPRESENTANTE']) {
-                        signersToProcess.push({
-                            email: data['EMAIL DO REPRESENTANTE'],
-                            name: data['NOME DO REPRESENTANTE'],
-                            cpf: data['CPF DO REPRESENTANTE'],
-                            role: 'contractor'
-                        });
-                    }
-
-                    // 3b. Signatário Contratada (BU)
-                    const BU_SIGNERS_MAP: Record<string, { name: string, email: string, cpf: string }> = {
-                        'BOMMA': { name: 'Natália Selister Piccoli', email: 'natalia@bommamkt.com.br', cpf: '013.266.710-06' },
-                        'SEED': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@seedagromarketing.com.br', cpf: '023.275.400-46' },
-                        'IMPULSE': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@3fventure.com.br', cpf: '023.275.400-46' }
-                    };
-
-                    const buKey = Object.keys(BU_SIGNERS_MAP).find(k => finalBuName.toUpperCase().includes(k));
-                    if (buKey) {
-                        const signerData = { ...BU_SIGNERS_MAP[buKey] };
-                        
-                        // Aplicar sufixo +test em modo debug para e-mails específicos
-                        if (isDebug) {
-                            const targetEmails = [
-                                'luisfernando@3fventure.com.br',
-                                'natalia@bommamkt.com.br',
-                                'leticia@bommamkt.com.br',
-                                'erika@seedagromarketing.com.br',
-                                'luisfernando@seedagromarketing.com.br'
-                            ];
-                            if (targetEmails.includes(signerData.email.toLowerCase())) {
-                                signerData.email = signerData.email.replace('@', '+test@');
-                            }
-                        }
-
-                        signersToProcess.push({
-                            ...signerData,
-                            role: 'contractee' // Luis/Nati/Mateus como representante da Contratada no v3
-                        });
-                    }
-
-                    // 3c. Testemunhas e Vendedor
-                    const addedEmails = new Set(signersToProcess.map(s => s.email.toLowerCase()));
-
-                    // Vendedor
-                    if (data['EMAIL VENDEDOR'] && data['NOME VENDEDOR'] && !addedEmails.has(data['EMAIL VENDEDOR'].toLowerCase())) {
-                        signersToProcess.push({
-                            email: data['EMAIL VENDEDOR'],
-                            name: data['NOME VENDEDOR'],
-                            cpf: data['CPF VENDEDOR'],
-                            role: 'witness'
-                        });
-                        addedEmails.add(data['EMAIL VENDEDOR'].toLowerCase());
-                    }
-
-                    // Testemunhas Fixas e Adicionais
-                    const formData = data as any;
-                    const possibleWitnesses = [
-                        ...Array.from({ length: 3 }, (_, i) => i + 1).map(i => ({ name: `NOME TESTEMUNHA FIXA ${i}`, email: `EMAIL TESTEMUNHA FIXA ${i}`, cpf: `CPF TESTEMUNHA FIXA ${i}` })),
-                        ...Array.from({ length: 6 }, (_, i) => i + 1).map(i => ({ name: `NOME TESTEMUNHA ${i}`, email: `EMAIL TESTEMUNHA ${i}`, cpf: `CPF TESTEMUNHA ${i}` }))
-                    ];
-
-                    for (const w of possibleWitnesses) {
-                            const name = formData[w.name];
-                            const email = formData[w.email];
-                            const cpf = formData[w.cpf];
-                            if (name && email && !addedEmails.has(email.toLowerCase())) {
-                                signersToProcess.push({ email, name, cpf, role: 'witness' });
-                                addedEmails.add(email.toLowerCase());
-                            }
-                        }
-                    // Loop para criar Signatários e Gerar Lista de Operações para Bulk Requirements
-                    const bulkOps: any[] = [];
-                    const addedSignersInfo: { id: string, name: string }[] = [];
-
-                    for (const s of signersToProcess) {
-                        if (trackingId) {
-                            progressTracker.emitProgress(trackingId, {
-                                status: 'processing',
-                                progress: 85,
-                                step: 'Clicksign: Adicionando signatários...',
-                                log: `Adicionando: ${s.name} (${s.role})`
-                            });
-                        }
-                        try {
-                            console.log(`[CLICKSIGN v3] Criando signatário: ${s.name} (${s.email})`);
-                            const signer = await ClickSignService.addSignerToEnvelope(envelopeId, s);
-                            const signerId = signer.id;
-                            addedSignersInfo.push({ id: signerId, name: s.name });
-
-                            // REQUISITO 1: Evidência (Autenticação por E-mail) - Essencial para ativação v3
-                            bulkOps.push({
-                                op: 'add',
-                                ref: { type: 'requirements', id: envelopeId },
-                                data: {
-                                    type: 'requirements',
-                                    attributes: {
-                                        action: 'provide_evidence',
-                                        auth: 'email'
-                                    },
-                                    relationships: {
-                                        document: { data: { type: 'documents', id: documentId } },
-                                        signer: { data: { type: 'signers', id: signerId } }
-                                    }
-                                }
-                            });
-
-                            // REQUISITO 2: Concordância (Papel: contractor ou witness)
-                            bulkOps.push({
-                                op: 'add',
-                                ref: { type: 'requirements', id: envelopeId },
-                                data: {
-                                    type: 'requirements',
-                                    attributes: {
-                                        action: 'agree',
-                                        role: s.role
-                                    },
-                                    relationships: {
-                                        document: { data: { type: 'documents', id: documentId } },
-                                        signer: { data: { type: 'signers', id: signerId } }
-                                    }
-                                }
-                            });
-                        } catch (err: any) {
-                            console.error(`[CLICKSIGN v3] Erro ao criar signatário ${s.name}:`, err.message);
-                        }
-                    }
-
-                    // 4. Vincular Signatários (Bulk Requirements)
-                    if (bulkOps.length > 0) {
-                        console.log(`[CLICKSIGN v3] Vinculando ${bulkOps.length} relações...`);
-                        await ClickSignService.addBulkRequirements(envelopeId, bulkOps);
-                    }
-
-                    // 5. Ativar Envelope
-                    await ClickSignService.finalizeEnvelope(envelopeId);
-                    console.log(`[CLICKSIGN v3] Envelope ativado!`);
-
-                    // 6. Notificações Individuais
-                    const signatureMessage = `Olá!
-
-Preciso da sua assinatura eletrônica.
-
-Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicksign. É bem simples!`;
-
-                    for (const info of addedSignersInfo) {
-                        try {
-                            console.log(`[CLICKSIGN v3] Notificando ${info.name}...`);
-                            await ClickSignService.sendNotification(envelopeId, info.id, signatureMessage);
-                        } catch (notifyErr: any) {
-                            console.error(`[CLICKSIGN v3] Erro ao notificar ${info.name}:`, notifyErr.message);
-                        }
-                    }
-
-                    console.log(`[CLICKSIGN v3] Fluxo finalizado com sucesso em ${Date.now() - clicksignStartTime}ms`);
-
-                    console.log(`[CLICKSIGN v3] Fluxo finalizado com sucesso em ${Date.now() - clicksignStartTime}ms`);
-                    generatedFileLink = `https://docs.google.com/document/d/${newFile.id}/edit`; // Link do Doc continua útil
-                    // Opcional: registrar document_key para uso futuro
-                } catch (csError: any) {
-                    console.error(`[CLICKSIGN] Erro na automação:`, csError.response?.data || csError.message);
-                    // Não trava o fluxo principal, mas avisa
-                }
+                // === AUTOMAÇÃO CLICKSIGN (REMOVIDO DO FLUXO PRINCIPAL) ===
+                // O envio para o Clicksign agora é feito via endpoint separado ou bypass
+                generatedFileLink = `https://docs.google.com/document/d/${newFile.id}/edit`;
             }
         }
 
@@ -472,18 +462,16 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
 
         const isGrowth = sheetName.toLowerCase().includes('growth');
 
-        // Conversão de valores para o banco
+        // Conversão de valores para o banco (reutilizando funções locais se existissem, mas estão dentro do escopo)
         const parseDecimal = (val: any) => {
             if (val === undefined || val === null || val === '') return null;
-            const cleaned = String(String(val)).replace(/\./g, '').replace(',', '.');
+            const cleaned = String(String(val)).replace(/\./g, '').replace(',', '.').replace('R$ ', '');
             const parsed = parseFloat(cleaned);
             return isNaN(parsed) ? null : parsed;
         };
 
         const parseDate = (val: any) => {
             if (val === undefined || val === null || val === '') return null;
-
-            // Tenta converter DD/MM/YYYY
             if (typeof val === 'string' && val.includes('/')) {
                 const parts = val.split('/');
                 if (parts.length === 3) {
@@ -492,8 +480,6 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                     return isNaN(date.getTime()) ? null : date;
                 }
             }
-
-            // Fallback para conversão direta (ISO strings, etc)
             const date = new Date(val);
             return isNaN(date.getTime()) ? null : date;
         };
@@ -518,15 +504,17 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
                 legal_repre_email: data['EMAIL DO REPRESENTANTE'],
                 first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
                 first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
-                document_id: envelopeIdForDb,
-                envelope_id: envelopeIdToSave,
+                document_id: providedEnvelopeId ? providedEnvelopeId : null,
+                envelope_id: providedEnvelopeId ? (envelopeIdToSave || providedEnvelopeId) : null,
                 type_contract: sheetName,
                 signed: isAlreadySigned,
                 signed_date: isAlreadySigned ? new Date() : null,
                 signed_count: isAlreadySigned ? signersToProcess.length : 0,
                 total_signers: signersToProcess.length,
                 change_status: null,
-                link: generatedFileLink
+                link: generatedFileLink,
+                approved: !!providedEnvelopeId, // Se for bypass, já nasce aprovado
+                approved_at: providedEnvelopeId ? new Date() : null
             }
         });
 
@@ -588,31 +576,14 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
 
         res.json({
             success: true,
-            message: `Dados processados com sucesso. Contrato gerado.`,
+            message: `Dados processados com sucesso. Rascunho gerado.`,
             link: generatedFileLink,
-            processingTime: totalTime
+            processingTime: totalTime,
+            contractId: newContract.id.toString()
         });
     } catch (error: any) {
         console.error(`[ERRO] Falha ao processar contrato ${sheetName}:`, error);
-
-        const prismaError = error as any;
-        const errorCode = prismaError?.cause?.code || prismaError?.code || "";
-
-        if (errorCode === "P2002" || prismaError.message?.includes("Unique constraint failed")) {
-            const isDoc = prismaError.message?.includes("document_id");
-            const isEnv = prismaError.message?.includes("envelope_id");
-            
-            if (isDoc || isEnv) {
-                return res.status(409).json({
-                    error: "Documento já cadastrado",
-                    field: isDoc ? "ID DO DOCUMENTO CLICKSIGN" : "envelope_id",
-                    details: isDoc 
-                        ? "Este ID de Documento já está vinculado a outro contrato."
-                        : "Este ID de Envelope já está vinculado a outro contrato."
-                });
-            }
-        }
-
+        
         if (trackingId) {
             progressTracker.emitProgress(trackingId, {
                 status: 'error',
@@ -623,6 +594,118 @@ Para assinar, basta clicar no botão abaixo e seguir o passo-a-passo pela Clicks
             progressTracker.clearHistory(trackingId);
         }
         res.status(500).json({ error: 'Falha ao processar contrato', details: error.message });
+    }
+};
+
+/**
+ * Handler para aprovação e envio manual para o Clicksign
+ */
+export const sendContractToClickSign = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { trackingId } = req.body;
+    const startTime = Date.now();
+
+    console.log(`[MANUAL] Iniciando envio do contrato ${id} para o Clicksign...`);
+    
+    if (trackingId) {
+        progressTracker.emitProgress(trackingId, {
+            status: 'processing',
+            progress: 10,
+            step: 'Buscando dados do contrato...',
+            log: `ID: ${id}`
+        });
+    }
+
+    try {
+        const contract = await prisma.contracts.findUnique({
+            where: { id: BigInt(id) },
+            include: {
+                witnesses_email: true,
+                sellers: true,
+                business: true
+            }
+        });
+
+        if (!contract) {
+            return res.status(404).json({ error: 'Contrato não encontrado' });
+        }
+
+        if (contract.approved) {
+            return res.status(400).json({ error: 'Este contrato já foi aprovado e enviado' });
+        }
+
+        if (!contract.link) {
+            return res.status(400).json({ error: 'O contrato ainda não possui um documento gerado' });
+        }
+
+        // Extrair ID do arquivo do link do Google Drive
+        const fileIdMatch = contract.link.match(/\/d\/(.*)\//);
+        const fileId = fileIdMatch ? fileIdMatch[1] : null;
+
+        if (!fileId) {
+            return res.status(400).json({ error: 'Não foi possível extrair o ID do arquivo do link do Drive' });
+        }
+
+        // Executar o fluxo do Clicksign
+        const witnessEmails = contract.witnesses_email.map(w => w.email);
+        
+        const result = await executeClickSignv3Flow({
+            contractId: contract.id,
+            fileId: fileId,
+            fileName: contract.title || 'Contrato',
+            buName: contract.business.name || '',
+            signerName: contract.title?.split(' & ')[0] || '', 
+            signerEmail: contract.legal_repre_email || '',
+            signerCpf: '', 
+            witnessEmails: witnessEmails,
+            trackingId: trackingId,
+            isDebug: false, 
+            sellerName: contract.sellers.name || '',
+            sellerEmail: contract.sellers.email || '',
+            sellerCpf: contract.sellers.cpf
+        });
+
+        // Atualizar o Banco
+        await prisma.contracts.update({
+            where: { id: contract.id },
+            data: {
+                approved: true,
+                approved_at: new Date(),
+                envelope_id: result.envelopeId,
+                document_id: result.documentId,
+                total_signers: result.signersCount
+            }
+        });
+
+        if (trackingId) {
+            progressTracker.emitProgress(trackingId, {
+                status: 'completed',
+                progress: 100,
+                step: 'Contrato enviado com sucesso!',
+                log: `Envelope: ${result.envelopeId}`
+            });
+            progressTracker.clearHistory(trackingId);
+        }
+
+        res.json({
+            success: true,
+            message: 'Contrato enviado para assinatura com sucesso',
+            envelopeId: result.envelopeId,
+            totalSigners: result.signersCount
+        });
+
+    } catch (error: any) {
+        console.error(`[ERRO MANUAL] Falha ao enviar contrato ${id}:`, error);
+        if (trackingId) {
+            progressTracker.emitProgress(trackingId, {
+                status: 'error',
+                progress: 0,
+                step: 'Erro no envio manual',
+                error: error.message
+            });
+            progressTracker.clearHistory(trackingId);
+        }
+        res.status(500).json({ error: 'Falha ao enviar contrato para assinatura', details: error.message });
     }
 };
 

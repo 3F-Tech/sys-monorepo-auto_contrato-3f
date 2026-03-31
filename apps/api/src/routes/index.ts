@@ -16,7 +16,8 @@ import {
     submitBommaAssessoriaSocialDeterminada,
     submitBommaAssessoriaSocialVideos,
     submitBommaSocialIlimitado,
-    submitBommaSocialDeterminada
+    submitBommaSocialDeterminada,
+    sendContractToClickSign
 } from '../controllers/contractAutomationController';
 import { handleClicksignWebhook } from '../controllers/webhookController';
 import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBusiness } from '../controllers/sellerBussinessController';
@@ -120,6 +121,7 @@ router.post('/contracts', createContract);
 router.put('/contracts/:id', updateContract);
 router.post('/contracts/:id/cancel', cancelContract);
 router.post('/contracts/:id/sync', syncContractStatus);
+router.post('/contracts/:id/send-to-signature', sendContractToClickSign);
 router.get('/contracts/:id/signers', getContractSigners);
 router.delete('/contracts/:id', deleteContract);
 

@@ -110,4 +110,12 @@ export type Contracts = {
    * @type string, date-time
    */
   canceled_at?: string | null;
+  /**
+   * @type boolean
+   */
+  approved?: boolean | null;
+  /**
+   * @type string, date-time
+   */
+  approved_at?: string | null;
 };

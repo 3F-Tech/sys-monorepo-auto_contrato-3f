@@ -31,4 +31,6 @@ export const contractsSchema = z.object({
   signed_count: z.number().int().nullish(),
   total_signers: z.number().int().nullish(),
   canceled_at: z.string().datetime().nullish(),
+  approved: z.boolean().nullish(),
+  approved_at: z.string().datetime().nullish(),
 });

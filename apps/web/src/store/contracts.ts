@@ -116,6 +116,31 @@ export const useContractStore = defineStore('contract', () => {
     }
   }
 
+  async function sendToSignature(id: string | number, trackingId?: string) {
+    loading.value = true;
+    try {
+      const response = await client.post(`/contracts/${id}/send-to-signature`, { trackingId });
+      
+      const index = myContracts.value.findIndex(c => c.id?.toString() === id.toString());
+      if (index !== -1 && response.data.envelopeId) {
+        myContracts.value[index] = { 
+          ...myContracts.value[index], 
+          approved: true,
+          approved_at: new Date().toISOString(),
+          envelope_id: response.data.envelopeId,
+          total_signers: response.data.totalSigners
+        };
+      }
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao enviar para assinatura:', error);
+      return { success: false, error };
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     myContracts,
     loading,
@@ -125,6 +150,7 @@ export const useContractStore = defineStore('contract', () => {
     fetchBUContracts,
     fetchMultipleBUContracts,
     updateContract,
-    deleteContract
+    deleteContract,
+    sendToSignature
   };
 });

@@ -48,3 +48,4 @@ Antes de escrever qualquer linha de código, siga SEMPRE esta sequência:
 
 9. **Nome Completo de Usuários:** O nome de todos os usuários deve conter pelo menos duas palavras (nome e sobrenome).
 10. **CPF e WhatsApp Obrigatórios:** Todos os usuários devem ter CPF (11 dígitos) e WhatsApp (DDD + número) preenchidos.
+11. **Aprovação Manual Clicksign:** Por padrão, contratos são criados como rascunhos (`approved: false`). O envio para assinatura no Clicksign deve ser disparado manualmente pelo vendedor via Dashboard, após aprovação do cliente.

@@ -75,6 +75,8 @@ const options: swaggerJsdoc.Options = {
                         signed_count: { type: 'integer', nullable: true },
                         total_signers: { type: 'integer', nullable: true },
                         canceled_at: { type: 'string', format: 'date-time', nullable: true },
+                        approved: { type: 'boolean', nullable: true },
+                        approved_at: { type: 'string', format: 'date-time', nullable: true },
                     },
                 },
                 ContractData: {

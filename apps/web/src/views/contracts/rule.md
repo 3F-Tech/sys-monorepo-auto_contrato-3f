@@ -63,7 +63,8 @@ Siga estritamente o `apps/web/design-system.md`:
 ## 🔄 Dashboard e Status de Contratos
 
 - **Filtros de Visibilidade:** A interface de contratos não possui mais a opção de visão geral "Todas". Os contratos são filtrados em 3 estados principais mutuamente exclusivos:
-  - **Pendentes (Padrão):** Contratos criados mas ainda não assinados nem cancelados.
+  - **Pendentes (Padrão):** Contratos criados mas ainda não assinados nem cancelados. 
+    - **Rascunho:** Sub-status de Pendentes onde `approved: false`. Indica que o documento foi gerado mas ainda não enviado ao Clicksign.
   - **Assinados:** Contratos que concluíram o fluxo de assinatura.
   - **Cancelados:** Contratos sinalizados via `canceled_at`.
 
