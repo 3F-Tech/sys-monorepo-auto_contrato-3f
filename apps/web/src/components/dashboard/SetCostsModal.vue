@@ -86,7 +86,7 @@
                     <input
                       v-model="commForm.media_investment"
                       type="text"
-                      v-maska:[maskOptions]
+                      v-maska="maskOptions"
                       @keypress="onlyNumbers"
                       inputmode="numeric"
                       class="cost-input-pro"
@@ -108,7 +108,7 @@
                     <input
                       v-model="commForm.commercial_tools"
                       type="text"
-                      v-maska:[maskOptions]
+                      v-maska="maskOptions"
                       @keypress="onlyNumbers"
                       inputmode="numeric"
                       class="cost-input-pro"
@@ -130,7 +130,7 @@
                     <input
                       v-model="commForm.referral_commission"
                       type="text"
-                      v-maska:[maskOptions]
+                      v-maska="maskOptions"
                       @keypress="onlyNumbers"
                       inputmode="numeric"
                       class="cost-input-pro"
@@ -164,7 +164,7 @@
                       <input
                         v-model="commForm.remuneration_pre_sales_1"
                         type="text"
-                        v-maska:[maskOptions]
+                        v-maska="maskOptions"
                         @keypress="onlyNumbers"
                         inputmode="numeric"
                         class="cost-input-pro pl-8"
@@ -185,7 +185,7 @@
                       <input
                         v-model="commForm.remuneration_pre_sales_2"
                         type="text"
-                        v-maska:[maskOptions]
+                        v-maska="maskOptions"
                         @keypress="onlyNumbers"
                         inputmode="numeric"
                         class="cost-input-pro pl-8"
@@ -209,7 +209,7 @@
                       <input
                         v-model="commForm.remuneration_closer_1"
                         type="text"
-                        v-maska:[maskOptions]
+                        v-maska="maskOptions"
                         @keypress="onlyNumbers"
                         inputmode="numeric"
                         class="cost-input-pro pl-8"
@@ -230,7 +230,7 @@
                       <input
                         v-model="commForm.remuneration_closer_2"
                         type="text"
-                        v-maska:[maskOptions]
+                        v-maska="maskOptions"
                         @keypress="onlyNumbers"
                         inputmode="numeric"
                         class="cost-input-pro pl-8"
@@ -253,7 +253,7 @@
                     <input
                       v-model="commForm.remuneration_coord"
                       type="text"
-                      v-maska:[maskOptions]
+                      v-maska="maskOptions"
                       @keypress="onlyNumbers"
                       inputmode="numeric"
                       class="cost-input-pro"
@@ -418,6 +418,7 @@ watch(
   () => props.isOpen,
   async (val) => {
     if (val) {
+      document.body.style.overflow = "hidden";
       await costsStore.fetchCosts(props.month, props.year);
 
       // Load Commercial Costs data
@@ -449,9 +450,15 @@ watch(
           ),
         };
       }
+    } else {
+      document.body.style.overflow = "";
     }
   },
 );
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = "";
+});
 
 const close = () => emit("close");
 

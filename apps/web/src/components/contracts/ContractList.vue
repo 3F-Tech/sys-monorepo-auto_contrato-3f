@@ -576,7 +576,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import type { Contracts } from '../../gen/types/Contracts';
 import type { Business } from '../../gen/types/Business';
 import type { Sellers } from '../../gen/types/Sellers';
@@ -646,6 +646,25 @@ const showCancelContractModal = ref(false);
 const contractToCancel = ref<Contracts | null>(null);
 const isCanceling = ref(false);
 const isSyncing = ref<string | null>(null);
+
+// Bloqueio de scroll para modais internos
+const anyModalOpen = computed(() => 
+  changeRequestModalOpen.value || 
+  reviewModalOpen.value || 
+  showCancelContractModal.value
+);
+
+watch(anyModalOpen, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+});
+
+onUnmounted(() => {
+  document.body.style.overflow = '';
+});
 
 // Estados para Envio Manual ao Clicksign
 const showSendToClicksignModal = ref(false);

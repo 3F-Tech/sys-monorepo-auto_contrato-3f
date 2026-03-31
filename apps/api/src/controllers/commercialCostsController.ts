@@ -76,8 +76,8 @@ export const getCommercialCosts = async (req: any, res: Response) => {
 export const upsertCommercialCosts = async (req: any, res: Response) => {
     try {
         const requester = req.user;
-        if (requester.type !== 'admin') {
-            return res.status(403).json({ error: "Apenas administradores podem definir os custos" });
+        if (!['admin', 'head', 'coord'].includes(requester.type)) {
+            return res.status(403).json({ error: "Você não tem permissão para definir os custos" });
         }
 
         const {

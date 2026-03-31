@@ -89,8 +89,8 @@ export const getCac = async (req: any, res: Response) => {
 export const upsertCac = async (req: any, res: Response) => {
     try {
         const requester = req.user;
-        if (requester.type !== 'admin') {
-            return res.status(403).json({ error: "Apenas administradores podem definir o CAC" });
+        if (!['admin', 'head', 'coord'].includes(requester.type)) {
+            return res.status(403).json({ error: "Você não tem permissão para definir o CAC" });
         }
 
         const { bu_id, amount, month, year } = req.body;
