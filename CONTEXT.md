@@ -2,7 +2,7 @@
 
 ## 📝 Visão Geral
 
-Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1 é permitir que vendedores vinculados a diferentes empresas possam preencher formulários de contrato de forma rápida, disparando um fluxo de automação externo no **Make.com**.
+Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1 é permitir que vendedores vinculados a diferentes empresas possam preencher formulários de contrato de forma rápida, disparando um fluxo de automação.
 
 ## 👥 Perfis de Usuário (Roles)
 
@@ -38,7 +38,7 @@ Este projeto é uma plataforma de **"Trigger de Automação"**. O objetivo da V1
 4. **Preenchimento:** Formulário com validação Zod no front e back (testemunhas adicionais são opcionais).
 5. **Registro e Trigger:**
    - Back-end salva o log da operação no Prisma.
-   - Back-end dispara webhook para o Make.com processar o restante.
+   - A automação Clicksign assume a geração do envelope.
 
 ## 🛑 Escopo V1 vs Futuro
 

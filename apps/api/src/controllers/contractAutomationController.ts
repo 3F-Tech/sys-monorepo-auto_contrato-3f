@@ -65,12 +65,15 @@ const executeClickSignv3Flow = async (params: {
     signerCpf: string,
     witnessEmails: string[],
     trackingId?: string,
-    isDebug?: boolean,
+    debugMode?: any,
     sellerName?: string,
     sellerEmail?: string,
-    sellerCpf?: string
+    sellerCpf?: string,
+    coordName?: string,
+    coordEmail?: string,
+    coordCpf?: string
 }) => {
-    const { contractId, fileId, fileName, buName, signerName, signerEmail, signerCpf, witnessEmails, trackingId, isDebug, sellerName, sellerEmail, sellerCpf } = params;
+    const { contractId, fileId, fileName, buName, signerName, signerEmail, signerCpf, witnessEmails, trackingId, debugMode, sellerName, sellerEmail, sellerCpf, coordName, coordEmail, coordCpf } = params;
     const clicksignStartTime = Date.now();
 
     console.log(`[CLICKSIGN] Iniciando exportação PDF e upload para Clicksign para contrato ${contractId}...`);
@@ -106,70 +109,108 @@ const executeClickSignv3Flow = async (params: {
     const documentId = document.id;
     console.log(`[CLICKSIGN v3] Documento adicionado: ${documentId}`);
 
+    // === REGRA DE SISTEMA: DEBUG PREENCHER (IMPULSE PLANO 1) ===
+    const isImpulseP1 = fileName.toLowerCase().includes('plano 1 - impulse');
+    const isPreencherDebug = isImpulseP1 && (debugMode === 'preencher' || signerEmail?.toLowerCase() === 'mateus@3fventure.com.br');
+
     // 3. Preparar Signatários (v3)
     const signersToProcess: any[] = [];
 
-    // 3a. Signatário Contratante (Cliente)
-    if (signerEmail && signerName) {
+    if (isPreencherDebug) {
+        console.log('[DEBUG] Ativando regra "preencher" para Impulse Plano 1. Ignorando signatários padrão...');
+        // O contratante (Cliente) é o Mateus
         signersToProcess.push({
-            email: signerEmail,
-            name: signerName,
-            cpf: signerCpf,
+            email: 'mateus@3fventure.com.br',
+            name: 'Mateus (Contratante)',
             role: 'contractor'
         });
-    }
-
-    // 3b. Signatário Contratada (BU)
-    const buKey = Object.keys(BU_SIGNERS_MAP).find(k => buName.toUpperCase().includes(k));
-    if (buKey) {
-        const signerData = { ...BU_SIGNERS_MAP[buKey] };
-        
-        if (isDebug) {
-            const targetEmails = [
-                'luisfernando@3fventure.com.br',
-                'natalia@bommamkt.com.br',
-                'leticia@bommamkt.com.br',
-                'erika@seedagromarketing.com.br',
-                'luisfernando@seedagromarketing.com.br'
-            ];
-            if (targetEmails.includes(signerData.email.toLowerCase())) {
-                signerData.email = signerData.email.replace('@', '+test@');
-            }
-        }
-
+        // O vendedor representa a Contratada (BU) - Maysson
         signersToProcess.push({
-            ...signerData,
+            email: 'maysson@3fventure.com.br',
+            name: 'Maysson (Vendedor/Contratada)',
             role: 'contractee'
         });
-    }
-
-    // 3c. Vendedor e Testemunhas
-    const addedEmails = new Set(signersToProcess.map(s => s.email.toLowerCase()));
-
-    // Vendedor (se houver dados suficientes)
-    if (sellerEmail && sellerName && !addedEmails.has(sellerEmail.toLowerCase())) {
-        signersToProcess.push({
-            email: sellerEmail,
-            name: sellerName,
-            cpf: sellerCpf,
-            role: 'witness'
-        });
-        addedEmails.add(sellerEmail.toLowerCase());
-    }
-
-    // Testemunhas Adicionais
-    for (const email of witnessEmails) {
-        if (email && !addedEmails.has(email.toLowerCase())) {
-            // Nota: Como só temos o e-mail no witnesses_email, o Clicksign pedirá o preenchimento do nome/CPF se necessário 
-            // ou podemos tentar inferir. Por segurança, enviamos apenas o e-mail se não tivermos os outros dados.
-            // Mas o ClickSignService.addSignerToEnvelope espera um objeto com name.
-            // No fluxo atual, as testemunhas são enviadas com nome "Testemunha" se não houver.
+    } else {
+        // 3a. Signatário Contratante (Cliente)
+        if (signerEmail && signerName) {
             signersToProcess.push({
-                email: email,
-                name: 'Testemunha Adicional',
+                email: signerEmail,
+                name: signerName,
+                cpf: signerCpf,
+                role: 'contractor'
+            });
+        }
+
+        // 3b. Signatário Contratada (BU)
+        const buKey = Object.keys(BU_SIGNERS_MAP).find(k => buName.toUpperCase().includes(k));
+        if (buKey) {
+            const signerData = { ...BU_SIGNERS_MAP[buKey] };
+            
+            if (debugMode === true || debugMode === 'true') {
+                const targetEmails = [
+                    'luisfernando@3fventure.com.br',
+                    'natalia@bommamkt.com.br',
+                    'leticia@bommamkt.com.br',
+                    'erika@seedagromarketing.com.br',
+                    'luisfernando@seedagromarketing.com.br'
+                ];
+                if (targetEmails.includes(signerData.email.toLowerCase())) {
+                    signerData.email = signerData.email.replace('@', '+test@');
+                }
+            }
+
+            signersToProcess.push({
+                ...signerData,
+                role: 'contractee'
+            });
+        }
+
+        // 3c. Vendedor e Testemunhas
+        const addedEmails = new Set(signersToProcess.map(s => s.email.toLowerCase()));
+
+        // Vendedor (se houver dados suficientes)
+        if (sellerEmail && sellerName && !addedEmails.has(sellerEmail.toLowerCase())) {
+            signersToProcess.push({
+                email: sellerEmail,
+                name: sellerName,
+                cpf: sellerCpf,
                 role: 'witness'
             });
-            addedEmails.add(email.toLowerCase());
+            addedEmails.add(sellerEmail.toLowerCase());
+        }
+
+        // Coordenador da BU
+        if (coordEmail && coordName && !addedEmails.has(coordEmail.toLowerCase())) {
+            signersToProcess.push({
+                email: coordEmail,
+                name: `${coordName} (Coordenador)`,
+                cpf: coordCpf,
+                role: 'witness'
+            });
+            addedEmails.add(coordEmail.toLowerCase());
+        }
+
+        // Testemunhas Adicionais
+        const KNOWN_WITNESSES: Record<string, string> = {
+            'natalia@bommamkt.com.br': 'Natália Selister Piccoli',
+            'leticia@bommamkt.com.br': 'Letícia Viviane Scariot',
+            'erika@seedagromarketing.com.br': 'Erika Christina Lara',
+            'luisfernando@3fventure.com.br': 'Luís Fernando Mauri Menti',
+            'luisfernando@seedagromarketing.com.br': 'Luís Fernando Mauri Menti'
+        };
+
+        for (const email of witnessEmails) {
+            if (email && !addedEmails.has(email.toLowerCase())) {
+                const rawEmail = email.toLowerCase().replace(/\+test/g, '');
+                const witnessName = KNOWN_WITNESSES[rawEmail] || 'Testemunha Adicional';
+                
+                signersToProcess.push({
+                    email: email,
+                    name: witnessName,
+                    role: 'witness'
+                });
+                addedEmails.add(email.toLowerCase());
+            }
         }
     }
 
@@ -602,7 +643,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
  */
 export const sendContractToClickSign = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { trackingId } = req.body;
+    const { trackingId, isDebug } = req.body;
     const startTime = Date.now();
 
     console.log(`[MANUAL] Iniciando envio do contrato ${id} para o Clicksign...`);
@@ -646,6 +687,16 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Não foi possível extrair o ID do arquivo do link do Drive' });
         }
 
+        // Buscar Coordenador da BU
+        const coordinator = await prisma.sellers.findFirst({
+            where: {
+                type: 'coord',
+                seller_business: {
+                    some: { business_id: contract.bu_id }
+                }
+            }
+        });
+
         // Executar o fluxo do Clicksign
         const witnessEmails = contract.witnesses_email.map(w => w.email);
         
@@ -653,16 +704,19 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
             contractId: contract.id,
             fileId: fileId,
             fileName: contract.title || 'Contrato',
-            buName: contract.business.name || '',
+            buName: contract.business?.name || '',
             signerName: contract.title?.split(' & ')[0] || '', 
             signerEmail: contract.legal_repre_email || '',
             signerCpf: '', 
             witnessEmails: witnessEmails,
             trackingId: trackingId,
-            isDebug: false, 
-            sellerName: contract.sellers.name || '',
-            sellerEmail: contract.sellers.email || '',
-            sellerCpf: contract.sellers.cpf
+            debugMode: isDebug, 
+            sellerName: contract.sellers?.name || '',
+            sellerEmail: contract.sellers?.email || '',
+            sellerCpf: contract.sellers?.cpf || '',
+            coordName: coordinator?.name || '',
+            coordEmail: coordinator?.email || '',
+            coordCpf: coordinator?.cpf || ''
         });
 
         // Atualizar o Banco

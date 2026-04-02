@@ -21,8 +21,8 @@ Responsável pelos contratos visíveis ao usuário no dashboard.
 - **Estado**: `myContracts` (lista de contratos), `loading`.
 - **Ações**:
   - `fetchMyContracts(sellerId)` → Para `seller`.
-  - `fetchTeamContracts(headId)` → Para `head`.
-  - `fetchAllContracts()` → Para `admin` ou `coord`.
+  - `fetchTeamContracts(headId)` → Para `coord`.
+  - `fetchAllContracts()` → Para `admin` ou `head`.
   - `updateContract(id, data)` → Atualiza `signed`, `signed_date`, `created_at`, `link`, `change_status`, `change_description`.
   - `sendToSignature(id, trackingId)` → Dispara o envio manual ao Clicksign e atualiza `approved: true`.
 
@@ -30,8 +30,8 @@ Responsável pelos contratos visíveis ao usuário no dashboard.
 Responsável pela listagem de vendedores para gestão da equipe.
 - **Estado**: `teamSellers` (equipe do head), `allSellers` (todos os sellers), `loading`.
 - **Ações**:
-  - `fetchTeamSellers(headId)` → Busca por `head_id`.
-  - `fetchAllSellers()` → Busca todos com `type === 'seller'`.
+  - `fetchTeamSellers(headId)` → Busca por `head_id` para coordenadores de equipe.
+  - `fetchAllSellers()` → Busca todos os sellers.
   - `updateSeller(id, data)` → Atualiza dados de um vendedor.
 
 ## 🔄 Qual Store/Método Usar por Cargo
@@ -39,8 +39,8 @@ Responsável pela listagem de vendedores para gestão da equipe.
 | Cargo | Contratos | Vendedores |
 |---|---|---|
 | `seller` | `fetchMyContracts(user.id)` | N/A |
-| `head` | `fetchTeamContracts(user.id)` | `fetchTeamSellers(user.id)` |
-| `coord` | `fetchAllContracts()` | `fetchAllSellers()` (filtrado por BU) |
+| `coord` | `fetchTeamContracts(user.id)` | `fetchTeamSellers(user.id)` |
+| `head` | `fetchAllContracts()` (filtrado localmente) | `fetchAllSellers()` (filtrado localmente) |
 | `admin` | `fetchAllContracts()` | `fetchAllSellers()` |
 
 ## 🔐 Sessão e Persistência

@@ -18,7 +18,7 @@ Este guia descreve os passos necessários para adicionar um novo modelo de contr
    - Utilize o componente `<WitnessSection :form="form" :errors="errors" />` para a seção de testemunhas.
    - Use o composable `useCep` para auto-preenchimento de endereços.
 4. **Layout e Design**:
-   - Utilize ícones da biblioteca `lucide-vue-next`.
+   - Utilize ícones da biblioteca `@lucide/vue`.
    - Agrupe campos em seções (`DADOS DA EMPRESA`, `REPRESENTANTE LEGAL`, `VALORES E PAGAMENTO`, etc.) com bordas e títulos em uppercase.
 5. **Validação Visual**: 
    - Adicione o prop `errors: { type: Object, default: () => ({}) }`.
@@ -53,4 +53,4 @@ No arquivo `apps/api/src/controllers/contractAutomationController.ts`:
 ### 6. Verificação
 1. Execute `powershell -ExecutionPolicy Bypass -Command "npx prisma generate --schema=apps/api/prisma/schema.prisma"` para atualizar os tipos.
 2. Verifique se o e-mail do representante é salvo no banco mas não aparece no documento gerado.
-
+

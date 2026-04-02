@@ -108,6 +108,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@lucide/vue':
+        specifier: ^1.7.0
+        version: 1.7.0(vue@3.5.30)
       '@meu-projeto/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
@@ -123,9 +126,6 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
-      lucide-vue-next:
-        specifier: ^0.330.0
-        version: 0.330.0(vue@3.5.30)
       maska:
         specifier: ^3.2.0
         version: 3.2.0
@@ -995,6 +995,14 @@ packages:
       - bufferutil
       - utf-8-validate
     dev: true
+
+  /@lucide/vue@1.7.0(vue@3.5.30):
+    resolution: {integrity: sha512-X3gTarOkNh2ThNK7IaDa4gdjFAtZyoKH/eoScklvmtNTWE5uxkycBQOuchGExY5swCqh1WptEIAWrmbuQcy2fA==}
+    peerDependencies:
+      vue: '>=3.0.1'
+    dependencies:
+      vue: 3.5.30(typescript@5.9.3)
+    dev: false
 
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3359,14 +3367,6 @@ packages:
     dependencies:
       es5-ext: 0.10.64
     dev: true
-
-  /lucide-vue-next@0.330.0(vue@3.5.30):
-    resolution: {integrity: sha512-/rfVjXHSTLzhYhRYxkZlazBpE2Xp0p9rfCg9rgvsJQvNU0JCB6z6q8+TVG6j8WREi6daxGT6DbAFh0F65tyJzw==}
-    peerDependencies:
-      vue: '>=3.0.1'
-    dependencies:
-      vue: 3.5.30(typescript@5.9.3)
-    dev: false
 
   /magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}

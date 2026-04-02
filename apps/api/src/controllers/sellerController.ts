@@ -122,25 +122,31 @@ export const getSellers = async (req: any, res: Response) => {
 
     // Se não for admin, impõe filtros de visibilidade
     if (requester && requester.type !== "admin") {
-      if (requester.type === "head") {
-        // Head vê apenas sua própria equipe
+      if (requester.type === "coord") {
+        // Coordenador vê apenas sua própria equipe
         where.head_id = BigInt(requester.id);
-      } else if (requester.type === "coord") {
-        // Coordenador vê todos vinculados à BU dele
-        // 1. Descobrir a BU do coordenador
-        const coordBusiness = await prisma.seller_business.findFirst({
+      } else if (requester.type === "head") {
+        // Head vê todos vinculados à BU dele
+        // 1. Descobrir a BU do Head
+        const headBusiness = await prisma.seller_business.findFirst({
           where: { seller_id: Number(requester.id) },
         });
 
-        if (coordBusiness) {
+        if (headBusiness) {
           where.seller_business = {
             some: {
-              business_id: coordBusiness.business_id,
+              business_id: headBusiness.business_id,
             },
           };
         } else {
-          // Se o coordenador não tem BU, não vê ninguém (ou erro)
+          // Se o head não tem BU, não vê ninguém (ou erro)
           return res.json([]);
+        }
+      } else {
+        // Seller / SDR: a princípio só enxergam a si mesmos
+        // EXCEÇÃO: Podem consultar Heads de BU e Coordenadores para UI de contratos
+        if (type !== 'head' && type !== 'coord') {
+          where.id = BigInt(requester.id);
         }
       }
     } else {
@@ -391,10 +397,10 @@ export const createSeller = async (req: any, res: Response) => {
       }
     }
 
-    // Restrições específicas para Head (Coordenador agora é livre para usuários)
-    if (requester.type === "head") {
-      if (data.type !== "sdr") data.type = "seller"; // Head só cria seller ou sdr
-      data.head_id = BigInt(requester.id); // Vendedor vinculado ao head
+    // Restrições específicas para Coordenador de Equipe (Head agora é livre para usuários da BU)
+    if (requester.type === "coord") {
+      if (data.type !== "sdr") data.type = "seller"; // Coord só cria seller ou sdr
+      data.head_id = BigInt(requester.id); // Vendedor vinculado ao coord
     }
 
     const seller = await prisma.sellers.create({
@@ -465,16 +471,16 @@ export const updateSeller = async (req: any, res: Response) => {
       }
     }
 
-    // Validação de escopo para Head
-    if (requester.type === "head") {
+    // Validação de escopo para Coordenador
+    if (requester.type === "coord") {
       const target = await prisma.sellers.findUnique({
         where: { id: targetId },
       });
 
-      // Head pode editar ele mesmo
+      // Coordenador pode editar ele mesmo
       const isSelfEdit = targetId.toString() === requester.id.toString();
 
-      // Verifica se o vendedor pertence à equipe do Head (ou se é ele mesmo)
+      // Verifica se o vendedor pertence à equipe do Coordenador (ou se é ele mesmo)
       if (
         !target ||
         (!isSelfEdit && target.head_id?.toString() !== requester.id.toString())
@@ -486,17 +492,17 @@ export const updateSeller = async (req: any, res: Response) => {
 
       // Se for auto-edição, não aplicar as restrições de cargo/vínculo
       if (!isSelfEdit) {
-        // Head não pode mudar cargo nesse fluxo, a menos que seja seller <-> sdr?
+        // Coord não pode mudar cargo nesse fluxo, a menos que seja seller <-> sdr?
         // Para simplificar, vamos manter a trava mas permitir sdr se o alvo for da equipe.
         // Atualmente o head_id trava o escopo.
-        delete data.type; // Segurança: Head não pode mudar cargo nesse fluxo
+        delete data.type; // Segurança: Coord não pode mudar cargo nesse fluxo
 
         // Lógica de Vínculo:
         // 1. Se head_id for enviado como null ou "null" -> Desassociar
         if (data.head_id === null || data.head_id === "null") {
           data.head_id = null;
         }
-        // 2. Se head_id for enviado com valor (tentativa de reatribuição) -> Força o próprio Head
+        // 2. Se head_id for enviado com valor (tentativa de reatribuição) -> Força o próprio Coord
         else if (data.head_id !== undefined) {
           data.head_id = BigInt(requester.id);
         }
@@ -504,7 +510,7 @@ export const updateSeller = async (req: any, res: Response) => {
       }
     }
 
-    // Coordenador (coord) não tem travas de re-atribuição de cargo ou vínculo para os usuários que vê
+    // Head de BU (head) não tem travas de re-atribuição de cargo ou vínculo para os usuários que vê
 
     // Validação de Nome completo
     if (data.name !== undefined) {
@@ -584,8 +590,8 @@ export const deleteSeller = async (req: any, res: Response) => {
       return res.status(403).json({ error: "Acesso negado" });
     }
 
-    // Validação de escopo para Head
-    if (requester.type === "head") {
+    // Validação de escopo para Coordenador
+    if (requester.type === "coord") {
       const target = await prisma.sellers.findUnique({
         where: { id: targetId },
       });

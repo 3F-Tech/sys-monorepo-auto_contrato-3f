@@ -22,4 +22,4 @@ Os componentes em `src/components/admin` são peças reutilizáveis (formulário
 ## 🎨 Design system
 
 - Use os tokens de cor da `tailwind.config.cjs`.
-- Ícones devem vir de `lucide-vue-next`.
+- Ícones devem vir de `@lucide/vue`.

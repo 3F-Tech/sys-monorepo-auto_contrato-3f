@@ -26,20 +26,21 @@ Antes de escrever qualquer linha de código, siga SEMPRE esta sequência:
 
 1. **Multi-tenancy:** Um vendedor só pode ver as empresas vinculadas a ele.
 2. **Role-based Access (RBAC):** Bloqueie rotas de admin para sellers. Os cargos são: `admin`, `head`, `coord`, `seller`.
-3. **Trigger de Automação:** Registro obrigatório no banco de dados + disparo para Make.com a cada contrato enviado.
+3. **Trigger de Automação:** Registro obrigatório no banco de dados a cada contrato enviado.
    3a. **Automação Google Drive:** Novos contratos devem ser copiados de modelos específicos para a pasta de destino `1KF4W-RQ3CAJj4KFAAX9K9cxdRW9u6phg`.
-4. **Coordenador de BU:** Usuários com o cargo `coord` **só podem estar vinculados a uma única BU** por vez.
-5. **Automação de Formulários:** Ao iniciar a criação de um contrato, os campos "Vendedor" e "Coordenador de BU" devem ser pré-preenchidos automaticamente. Para "Testemunha 1", oferecer botões de atalho para Luís e Natália (opcionais, campos editáveis). **Testemunhas ADICIONAIS não são obrigatórias.**
+4. **Head de BU**: Usuários com o cargo `head` **só podem estar vinculados a uma única BU** por vez.
+5. **Automação de Formulários:** Ao iniciar a criação de um contrato, os campos "Vendedor" devem ser pré-preenchidos automaticamente. Para "Testemunha", oferecer botões de atalho para Luís e Natália (opcionais, campos editáveis). **Testemunhas ADICIONAIS não são obrigatórias.**
    5a. **Respeito a CPFs:** NUNCA use CPFs de signatários fixos (Luís, Natália, Letícia, Erika) em campos de testes de testemunhas adicionais. Use apenas CPFs extras fornecidos para este fim.
 6. **Visibilidade no Dashboard:**
-   - **Head de Equipe:** Visualiza apenas os **Vendedores** vinculados a ele (filtrados por `head_id`).
-   - **Coordenador de BU:** Visualiza **todos** os usuários vinculados à mesma BU que ele coordena.
+   - **Coordenador de Equipe:** Visualiza apenas os **Vendedores** vinculados a sua equipe (filtrados pela sua identificação em `head_id`).
+   - **Head de BU:** Visualiza **todos** os usuários vinculados à sua BU e contratos gerais.
    - **Filtros de Contrato:** Os contratos são filtrados em 3 estados mutuamente exclusivos: **Pendentes** (padrão), **Assinados** e **Cancelados**. Não existe a opção "Todas".
-7. **Fluxo de Status de Contratos (`change_status`):** O campo é do tipo `String` e possui 4 estados:
+7. **Assinatura do Head:** O **Head da BU** deve obrigatoriamente ser adicionado como **Testemunha** em TODOS os contratos gerados dentro da sua respectiva Unidade de Negócio.
+8. **Fluxo de Status de Contratos (`change_status`):** O campo é do tipo `String` e possui 4 estados:
    - `null` → Padrão. Nenhuma alteração pendente.
    - `alert` → Solicitado pelo Seller. Aguarda aprovação da liderança.
-   - `approved` → Aprovado por `head`, `coord` ou `admin`.
-   - `reject` → Recusado por `head`, `coord` ou `admin`.
+   - `approved` → Aprovado por `coord`, `head` ou `admin`.
+   - `reject` → Recusado por `coord`, `head` ou `admin`.
 
 8. **Formatação de Contratos:**
    - **Moeda:** Valores monetários devem SEMPRE ser precedidos por "R$ " (ex: R$ 1.000,00) nos documentos gerados.
@@ -48,4 +49,6 @@ Antes de escrever qualquer linha de código, siga SEMPRE esta sequência:
 
 9. **Nome Completo de Usuários:** O nome de todos os usuários deve conter pelo menos duas palavras (nome e sobrenome).
 10. **CPF e WhatsApp Obrigatórios:** Todos os usuários devem ter CPF (11 dígitos) e WhatsApp (DDD + número) preenchidos.
-11. **Aprovação Manual Clicksign:** Por padrão, contratos são criados como rascunhos (`approved: false`). O envio para assinatura no Clicksign deve ser disparado manualmente pelo vendedor via Dashboard, após aprovação do cliente.
+11. **Aprovação Manual Clicksign:** Por padrão, contratos são criados como rascunhos (`approved: false`). O envio para assinatura no Clicksign deve ser disparado manualmente pelo vendedor via Dashboard, após aprovação do cliente.
+12. **Regra de Debug (Impulse Plano 1):** Quando o contrato "Plano 1 - Impulse" é enviado com a flag `isDebug: "preencher"`, o sistema deve ignorar os signatários padrão e enviar apenas para o vendedor (`maysson@3fventure.com.br`) e o contratante (`mateus@3fventure.com.br`).
+

@@ -6,7 +6,7 @@ Contém todos os componentes visuais focados no fluxo de autenticação do usuá
 
 ## Dependências
 
-- **Lucide Icons**: Utiliza os ícones do pacote `lucide-vue-next` (ex: `Eye`, `EyeOff`).
+- **Lucide Icons**: Utiliza os ícones do pacote `@lucide/vue` (ex: `Eye`, `EyeOff`).
 - **TailwindCSS**: Utilitários para formatação responsiva e estilização visual (ex: inputs, botões, modais).
 
 ## Fluxo

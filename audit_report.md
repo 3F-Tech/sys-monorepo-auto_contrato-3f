@@ -10,7 +10,7 @@
 
 1.  **Seletor ID Ausente (Bomma):** O componente `BommaTemplate.vue` não possui o atributo `id` no campo "Razão Social", divergindo do padrão encontrado em `ImpulsePlano1.vue`. Isso quebra automações e dificulta a manutenção do QA.
 2.  **Rotas Localizadas vs Hardcoded:** A navegação direta para `/contracts/new` (Inglês) falha com erro do Vue Router. O sistema aceita apenas `/contratos/novo`. Recomenda-se adicionar aliases para evitar erros de navegação manual ou via script.
-3.  **Resolução de Componente (Ícones):** Alerta detectado no console: `Failed to resolve component: Check` em `ProfileModal`. Indica importação ausente da biblioteca Lucide-Vue-Next.
+3.  **Resolução de Componente (Ícones):** Alerta detectado no console: `Failed to resolve component: Check` em `ProfileModal`. Indica importação ausente da biblioteca @lucide/vue.
 4.  **Habilidade de Testemunhas Adicionais:** O botão "Adicionar Testemunha do Cliente" às vezes requer múltiplos cliques ou tem delay de renderização no script de automação, sugerindo uma inconsistência na detecção de estado do DOM durante a animação do Vue.
 
 ---

@@ -106,7 +106,7 @@ A API estará disponível em: **`http://localhost:3007`**
 | `PUT`    | `/contracts/:id`              | Atualizar status do contrato   |
 | `DELETE` | `/contracts/:id`              | Remover contrato               |
 
-### Submissão de Contratos (Make.com)
+### Submissão de Contratos
 
 | Método | Rota                               | Descrição                  |
 | ------ | ---------------------------------- | -------------------------- |

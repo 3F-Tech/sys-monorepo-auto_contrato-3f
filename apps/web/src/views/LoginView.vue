@@ -11,13 +11,20 @@
       <!-- Center: Main brand block -->
       <div class="absolute top-[3vh] left-[3vh] z-10 flex flex-col">
         <h1 class="text-white text-[3.3rem] leading-[1.1] font-black tracking-tight">
-          Métricas e<br />controle dos<br /><span style="color: #00d4ff">seus contratos.</span>
+          Métricas e
+          <br />
+          controle dos
+          <br />
+          <span style="color: #00d4ff">seus contratos.</span>
         </h1>
       </div>
       <div class="w-full h-[45vh]">
-        <img class="absolute bottom-0 left-0 w-full h-[110vh] object-cover"
-          src="../assets/Blog-Assinei_Assinatura-digital-de-contratos_Creditos-Shutterstock-scaled.webp" alt=""
-          srcset="" />
+        <img
+          class="absolute bottom-0 left-0 w-full h-[110vh] object-cover"
+          src="../assets/Blog-Assinei_Assinatura-digital-de-contratos_Creditos-Shutterstock-scaled.webp"
+          alt=""
+          srcset=""
+        />
       </div>
     </div>
 
@@ -29,36 +36,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAuthStore } from "../store/auth";
-import LoginForm from "../components/auth/LoginForm.vue";
+  import { ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '../store/auth'
+  import LoginForm from '../components/auth/LoginForm.vue'
 
-const router = useRouter();
-const authStore = useAuthStore();
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-const loading = ref(false);
-const localError = ref("");
+  const loading = ref(false)
+  const localError = ref('')
 
-const handleLogin = async ({ email, password }: any) => {
-  if (loading.value) return;
+  const handleLogin = async ({ email, password }: any) => {
+    if (loading.value) return
 
-  loading.value = true;
-  localError.value = "";
+    loading.value = true
+    localError.value = ''
 
-  const startTime = Date.now();
-  const result = await authStore.login(email, password);
-  const elapsed = Date.now() - startTime;
+    const startTime = Date.now()
+    const result = await authStore.login(email, password)
+    const elapsed = Date.now() - startTime
 
-  const remaining = Math.max(0, 600 - elapsed);
+    const remaining = Math.max(0, 600 - elapsed)
 
-  setTimeout(() => {
-    if (result.success) {
-      router.push("/");
-    } else {
-      localError.value = result.error || "Erro ao realizar login";
-      loading.value = false;
-    }
-  }, remaining);
-};
+    setTimeout(() => {
+      if (result.success) {
+        router.push('/')
+      } else {
+        localError.value = result.error || 'Erro ao realizar login'
+        loading.value = false
+      }
+    }, remaining)
+  }
 </script>

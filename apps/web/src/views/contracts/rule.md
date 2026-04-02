@@ -36,8 +36,8 @@ Siga estritamente o `apps/web/design-system.md`:
 - **initialData:** O campo `'ID DO DOCUMENTO CLICKSIGN': ''` deve estar presente no objeto `initialData` de `ContractFlow.vue`.
 - **Hierarquia de Acesso:**
   - **Admin:** Vê todas as BUs.
-  - **Head:** Vê BUs vinculadas e vendedores da sua equipe.
-  - **Coord:** Vê exclusivamente a **única BU** que coordena.
+  - **Head:** Vê exclusivamente a(s) BU(s) que gerencia e todos os usuários vinculados a ela(s).
+  - **Coord:** Vê BUs vinculadas e vendedores da sua respectiva equipe (`head_id`).
   - **Seller:** Vê BUs vinculadas.
 - **Auto-preenchimento Inteligente:**
   - Carregue o `NOME DO VENDEDOR` e `CPF DO VENDEDOR` do perfil do usuário logado.
@@ -61,6 +61,8 @@ Siga estritamente o `apps/web/design-system.md`:
 - **Redirecionamento**: Após 5 segundos de sucesso, o usuário é levado de volta ao Dashboard.
 
 ## 🔄 Dashboard e Status de Contratos
+
+- **Desempenho e Metas (Dashboard):** Contratos com status **Cancelado** (`canceled_at`) NÃO são contabilizados nos cálculos numéricos e financeiros (P1, TCV, NMRR, Média de Assinaturas, Total de Contratos). Eles são isolados via `filteredP1Contracts` e `filteredGeneralContracts` na Home.
 
 - **Filtros de Visibilidade:** A interface de contratos não possui mais a opção de visão geral "Todas". Os contratos são filtrados em 3 estados principais mutuamente exclusivos:
   - **Pendentes (Padrão):** Contratos criados mas ainda não assinados nem cancelados. 

@@ -1,6 +1,6 @@
 # 📑 Automação de Contratos - V1
 
-Sistema monorepo para gestão de vendedores e automação de disparos de contratos via Make.com. Este projeto utiliza uma arquitetura orientada a contexto para máxima eficiência com IA.
+Sistema monorepo para gestão de vendedores e automação de disparos de contratos. Este projeto utiliza uma arquitetura orientada a contexto para máxima eficiência com IA.
 
 ---
 

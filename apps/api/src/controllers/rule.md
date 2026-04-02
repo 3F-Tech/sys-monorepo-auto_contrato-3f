@@ -15,8 +15,8 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **Proteção**: Todas as rotas (exceto `/login` e `/health`) devem utilizar o `authMiddleware`.
 - **RBAC (Controle de Acesso em Sellers)**:
   - `admin`: Ver e gerenciar todos os usuários e BUs.
-  - `head`: Vê apenas sua equipe direta (`head_id`). Só pode criar/editar vendedores para sua própria equipe. Não pode mudar o próprio cargo de um alvo.
-  - `coord`: Vê todos os usuários vinculados à sua BU. Pode criar qualquer cargo, facilitando a gestão descentralizada da unidade. Não pode gerenciar BUs.
+  - `head`: Vê todos os usuários vinculados à sua BU. Pode criar qualquer cargo, facilitando a gestão descentralizada da unidade. Não pode gerenciar BUs.
+  - `coord`: Vê apenas sua equipe direta (`head_id`). Só pode criar/editar vendedores para sua própria equipe. Não pode mudar o próprio cargo de um alvo.
   - `vendedor`: Acesso apenas aos próprios dados.
 
 ## 📝 Documentação (Swagger)
@@ -58,6 +58,7 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 - **Funcionamento**: O controlador gera um `trackingId` (UUID) e emite eventos de progresso (`start`, `drive`, `docs`, `clicksign`, `completed`, `error`) durante o fluxo de automação.
 - **Endpoint**: `/api/contracts/progress/:trackingId` (Público, deve estar ANTES do `authMiddleware`).
 - **Headers**: Deve incluir `X-Accel-Buffering: no` para evitar buffer de proxy (Nginx).
+- **Modo Debug "preencher"**: Exclusivo para o contrato **Plano 1 - Impulse**. Quando o corpo da requisição de envio (`/send-to-signature`) contém `isDebug: "preencher"`, o sistema substitui todos os signatários (BU, testemunhas, etc) por dois emails fixos de teste: `mateus@3fventure.com.br` (contratante) e `maysson@3fventure.com.br` (vendedor).
 
 ## 🪝 Webhooks e Gatilhos Pós-Assinatura
 - **Clicksign**: O `webhookController.ts` processa eventos de assinatura.

@@ -2,13 +2,13 @@
   <Teleport to="body">
     <div class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm pointer-events-none">
       <TransitionGroup name="toast">
-        <div 
-          v-for="toast in toasts" 
+        <div
+          v-for="toast in toasts"
           :key="toast.id"
           :class="[
             'pointer-events-auto flex items-start gap-4 p-4 rounded-2xl shadow-2xl backdrop-blur-xl border transform transition-all',
             'w-80 font-sans',
-            getTypeClasses(toast.type)
+            getTypeClasses(toast.type),
           ]"
         >
           <!-- Ícone Contextual -->
@@ -23,14 +23,13 @@
           </div>
 
           <!-- Botão Fechar -->
-          <button 
+          <button
             @click="removeToast(toast.id)"
             class="flex-shrink-0 -mr-2 -mt-1 p-1 text-white/20 hover:text-white/60 transition-all active:scale-90"
             title="Dispensar"
           >
             <X class="h-4 w-4" />
           </button>
-
         </div>
       </TransitionGroup>
     </div>
@@ -38,76 +37,90 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from '../../composables/useToast';
-import { 
-  CheckCircle2, 
-  AlertCircle, 
-  Info, 
-  AlertTriangle,
-  X 
-} from 'lucide-vue-next';
+  import { useToast } from '../../composables/useToast'
+  import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from '@lucide/vue'
 
-const { toasts, removeToast } = useToast();
+  const { toasts, removeToast } = useToast()
 
-const getTypeClasses = (type: string = 'info') => {
-  switch (type) {
-    case 'success': return 'bg-[#0A0F1C] border border-green-500/20 shadow-lg shadow-green-500/10';
-    case 'error': return 'bg-[#0A0F1C] border border-red-500/20 shadow-lg shadow-red-500/10';
-    case 'warning': return 'bg-[#0A0F1C] border border-red-500/30 shadow-lg shadow-red-500/15';
-    default: return 'bg-[#0A0F1C] border border-brand-cyan/20 shadow-lg shadow-brand-cyan/10';
+  const getTypeClasses = (type: string = 'info') => {
+    switch (type) {
+      case 'success':
+        return 'bg-[#0A0F1C] border border-green-500/20 shadow-lg shadow-green-500/10'
+      case 'error':
+        return 'bg-[#0A0F1C] border border-red-500/20 shadow-lg shadow-red-500/10'
+      case 'warning':
+        return 'bg-[#0A0F1C] border border-red-500/30 shadow-lg shadow-red-500/15'
+      default:
+        return 'bg-[#0A0F1C] border border-brand-cyan/20 shadow-lg shadow-brand-cyan/10'
+    }
   }
-};
 
-const getTitleColor = (type: string = 'info') => {
-  switch (type) {
-    case 'success': return 'text-green-400';
-    case 'error': return 'text-red-400';
-    case 'warning': return 'text-red-500';
-    default: return 'text-brand-cyan';
+  const getTitleColor = (type: string = 'info') => {
+    switch (type) {
+      case 'success':
+        return 'text-green-400'
+      case 'error':
+        return 'text-red-400'
+      case 'warning':
+        return 'text-red-500'
+      default:
+        return 'text-brand-cyan'
+    }
   }
-};
 
-const getIconColor = (type: string = 'info') => {
-  switch (type) {
-    case 'success': return 'text-green-400';
-    case 'error': return 'text-red-400';
-    case 'warning': return 'text-red-500';
-    default: return 'text-brand-cyan';
+  const getIconColor = (type: string = 'info') => {
+    switch (type) {
+      case 'success':
+        return 'text-green-400'
+      case 'error':
+        return 'text-red-400'
+      case 'warning':
+        return 'text-red-500'
+      default:
+        return 'text-brand-cyan'
+    }
   }
-};
 
-const getTitle = (type: string = 'info') => {
-  switch (type) {
-    case 'success': return 'Sucesso';
-    case 'error': return 'Atenção';
-    case 'warning': return 'Aviso';
-    default: return 'Informação';
+  const getTitle = (type: string = 'info') => {
+    switch (type) {
+      case 'success':
+        return 'Sucesso'
+      case 'error':
+        return 'Atenção'
+      case 'warning':
+        return 'Aviso'
+      default:
+        return 'Informação'
+    }
   }
-};
 
-const getIcon = (type: string = 'info') => {
-  switch (type) {
-    case 'success': return CheckCircle2;
-    case 'error': return AlertCircle;
-    case 'warning': return AlertTriangle;
-    default: return Info;
+  const getIcon = (type: string = 'info') => {
+    switch (type) {
+      case 'success':
+        return CheckCircle2
+      case 'error':
+        return AlertCircle
+      case 'warning':
+        return AlertTriangle
+      default:
+        return Info
+    }
   }
-};
 </script>
 
 <style scoped>
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .toast-enter-active,
+  .toast-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%) scale(0.9);
-}
+  .toast-enter-from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
 
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%) scale(0.9);
-}
+  .toast-leave-to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
 </style>

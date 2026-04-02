@@ -1,13 +1,7 @@
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-[101] flex items-center justify-center p-4"
-  >
+  <div v-if="isOpen" class="fixed inset-0 z-[101] flex items-center justify-center p-4">
     <!-- Backdrop -->
-    <div
-      class="absolute inset-0 bg-brand-deep/80 backdrop-blur-sm"
-      @click="close"
-    ></div>
+    <div class="absolute inset-0 bg-brand-deep/80 backdrop-blur-sm" @click="close"></div>
 
     <!-- Modal Content -->
     <div
@@ -23,25 +17,16 @@
           <User class="h-5 w-5 text-brand-cyan" />
           Meu Perfil
         </h3>
-        <button
-          @click="close"
-          class="p-2 rounded-lg hover:bg-white/5 transition-colors"
-        >
+        <button @click="close" class="p-2 rounded-lg hover:bg-white/5 transition-colors">
           <X class="h-5 w-5 text-white/40" />
         </button>
       </div>
 
-      <form
-        @submit.prevent="handleSubmit"
-        class="relative z-10 space-y-6 overflow-y-auto pr-2 custom-scrollbar"
-      >
+      <form @submit.prevent="handleSubmit" class="relative z-10 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
         <!-- Seção: Informações Básicas -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-              >Meu Nome</label
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">Meu Nome</label>
             <input
               v-model="form.name"
               type="text"
@@ -51,10 +36,7 @@
           </div>
 
           <div class="space-y-1.5">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-              >E-mail</label
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">E-mail</label>
             <input
               v-model="form.email"
               type="text"
@@ -64,10 +46,7 @@
           </div>
 
           <div class="space-y-1.5">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-              >CPF</label
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">CPF</label>
             <input
               v-model="form.cpf"
               type="text"
@@ -78,10 +57,9 @@
           </div>
 
           <div class="space-y-1.5">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-              >Telefone / WhatsApp</label
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">
+              Telefone / WhatsApp
+            </label>
             <input
               v-model="form.phone"
               type="text"
@@ -94,10 +72,9 @@
 
         <!-- Seção: Senha -->
         <div class="space-y-1.5">
-          <label
-            class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-            >Alterar Senha (Opcional)</label
-          >
+          <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">
+            Alterar Senha (Opcional)
+          </label>
           <input
             v-model="form.password"
             type="password"
@@ -106,15 +83,11 @@
           />
         </div>
 
-        <div
-          v-if="canEditHierarchy"
-          class="space-y-6 pt-4 border-t border-white/5"
-        >
+        <div v-if="canEditHierarchy" class="space-y-6 pt-4 border-t border-white/5">
           <div class="space-y-1.5">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest"
-              >Coordenador Responsável</label
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest">
+              Coordenador Responsável
+            </label>
             <CustomSelect
               v-model="form.head_id"
               :options="headsOptions"
@@ -125,9 +98,7 @@
           </div>
 
           <div class="space-y-3">
-            <label
-              class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest flex items-center gap-2"
-            >
+            <label class="text-[10px] font-semibold text-brand-cyan uppercase tracking-widest flex items-center gap-2">
               <Building2 class="h-3 w-3" />
               Unidades de Negócio (BUs) Vinculadas
             </label>
@@ -137,9 +108,7 @@
                 :key="bu.id"
                 class="flex items-center gap-3 p-2.5 rounded-xl bg-brand-surface border border-brand-glass-border hover:border-brand-cyan/30 cursor-pointer transition-all group/item select-none"
                 :class="{
-                  'border-brand-cyan/50 bg-brand-cyan/5': selectedBUs.includes(
-                    bu.id!,
-                  ),
+                  'border-brand-cyan/50 bg-brand-cyan/5': selectedBUs.includes(bu.id!),
                 }"
               >
                 <div class="relative flex items-center justify-center shrink-0">
@@ -159,38 +128,26 @@
                   v-if="bu.img_base64"
                   class="h-6 w-6 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-brand-offset"
                 >
-                  <img
-                    :src="bu.img_base64"
-                    class="h-full w-full object-cover"
-                  />
+                  <img :src="bu.img_base64" class="h-full w-full object-cover" />
                 </div>
-                <div
-                  v-else
-                  class="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0"
-                >
-                  <Building2
-                    class="h-3 w-3 text-white/20"
-                    :style="{ color: (bu.color as string) || undefined }"
-                  />
+                <div v-else class="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                  <Building2 class="h-3 w-3 text-white/20" :style="{ color: (bu.color as string) || undefined }" />
                 </div>
 
                 <span
                   class="text-[11px] font-bold text-white/70 group-hover/item:text-brand-cyan transition-colors truncate"
-                  >{{ bu.name }}</span
                 >
+                  {{ bu.name }}
+                </span>
               </label>
             </div>
           </div>
         </div>
 
         <!-- Mensagem Informativa para Sellers -->
-        <div
-          v-else
-          class="p-4 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10"
-        >
+        <div v-else class="p-4 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10">
           <p class="text-[11px] text-white/40 leading-relaxed italic">
-            Sua vinculação com Unidades de Negócio e Gestores é configurada pela
-            administração.
+            Sua vinculação com Unidades de Negócio e Gestores é configurada pela administração.
           </p>
         </div>
 
@@ -209,7 +166,7 @@
           >
             <Loader2 v-if="loading" class="h-4 w-4 animate-spin" />
             <Save v-else class="h-4 w-4" />
-            {{ loading ? "Salvando..." : "Salvar Alterações" }}
+            {{ loading ? 'Salvando...' : 'Salvar Alterações' }}
           </button>
         </div>
       </form>
@@ -218,229 +175,216 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import { User, X, Loader2, Building2, Save, Check as CheckIcon } from "lucide-vue-next";
-import CustomSelect from "../ui/CustomSelect.vue";
-import { useAuthStore } from "../../store/auth";
-import type { Sellers } from "../../gen/types/Sellers";
-import type { Business } from "../../gen/types/Business";
-import { putSellersId } from "../../gen/hooks/putSellersId";
-import { getSellers } from "../../gen/hooks/getSellers";
-import { getBusiness } from "../../gen/hooks/getBusiness";
-import { putSellerBusiness } from "../../gen/hooks/putSellerBusiness";
-import { useToast } from "../../composables/useToast";
-import client from "../../api/client";
-import crypto from "crypto-js";
+  import { ref, computed, watch } from 'vue'
+  import { User, X, Loader2, Building2, Save, Check as CheckIcon } from '@lucide/vue'
+  import CustomSelect from '../ui/CustomSelect.vue'
+  import { useAuthStore } from '../../store/auth'
+  import type { Sellers } from '../../gen/types/Sellers'
+  import type { Business } from '../../gen/types/Business'
+  import { putSellersId } from '../../gen/hooks/putSellersId'
+  import { getSellers } from '../../gen/hooks/getSellers'
+  import { getBusiness } from '../../gen/hooks/getBusiness'
+  import { putSellerBusiness } from '../../gen/hooks/putSellerBusiness'
+  import { useToast } from '../../composables/useToast'
+  import client from '../../api/client'
+  import crypto from 'crypto-js'
 
-type SellerWithRelations = Sellers & {
-  seller_business?: {
-    business_id: number;
-    business?: Business;
-  }[];
-};
-
-const props = defineProps<{
-  isOpen: boolean;
-}>();
-
-const emit = defineEmits(["close", "updated"]);
-
-const authStore = useAuthStore();
-const loading = ref(false);
-const allBusiness = ref<Business[]>([]);
-const heads = ref<Sellers[]>([]);
-const selectedBUs = ref<number[]>([]);
-const toast = useToast();
-
-const form = ref({
-  name: "",
-  email: "",
-  password: "",
-  cpf: "",
-  phone: "",
-  head_id: null as any,
-});
-
-const user = computed(() => authStore.user as SellerWithRelations | null);
-const canEditHierarchy = computed(
-  () => user.value?.type === "head" || user.value?.type === "admin",
-);
-
-const headsOptions = computed(() => {
-  return [
-    { value: null, label: "Nenhum (Gestor Independente)" },
-    ...heads.value.map((h) => ({
-      value: h.id,
-      label: h.name || "Sem nome",
-    })),
-  ];
-});
-
-const loadInitialData = async () => {
-  if (!canEditHierarchy.value) return;
-  try {
-    const [busData, sellersData] = await Promise.all([
-      getBusiness({ client }),
-      getSellers({}, { client }),
-    ]);
-    allBusiness.value = busData as Business[];
-    heads.value = (sellersData as Sellers[]).filter(
-      (s) => s.type === "head" && s.id !== user.value?.id,
-    );
-  } catch (error) {
-    console.error("Erro ao carregar dados auxiliares:", error);
+  type SellerWithRelations = Sellers & {
+    seller_business?: {
+      business_id: number
+      business?: Business
+    }[]
   }
-};
 
-watch(
-  () => props.isOpen,
-  async (newVal) => {
-    if (newVal && user.value) {
-      await loadInitialData();
-      form.value = {
-        name: user.value.name || "",
-        email: user.value.email || "",
-        password: "",
-        cpf: user.value.cpf || "",
-        phone: user.value.phone || "",
-        head_id: user.value.head_id ? user.value.head_id : null,
-      };
-      selectedBUs.value =
-        user.value.seller_business?.map((sb: any) => sb.business_id) || [];
+  const props = defineProps<{
+    isOpen: boolean
+  }>()
+
+  const emit = defineEmits(['close', 'updated'])
+
+  const authStore = useAuthStore()
+  const loading = ref(false)
+  const allBusiness = ref<Business[]>([])
+  const heads = ref<Sellers[]>([])
+  const selectedBUs = ref<number[]>([])
+  const toast = useToast()
+
+  const form = ref({
+    name: '',
+    email: '',
+    password: '',
+    cpf: '',
+    phone: '',
+    head_id: null as any,
+  })
+
+  const user = computed(() => authStore.user as SellerWithRelations | null)
+  const canEditHierarchy = computed(() => user.value?.type === 'head' || user.value?.type === 'admin')
+
+  const headsOptions = computed(() => {
+    return [
+      { value: null, label: 'Nenhum (Gestor Independente)' },
+      ...heads.value.map((h) => ({
+        value: h.id,
+        label: h.name || 'Sem nome',
+      })),
+    ]
+  })
+
+  const loadInitialData = async () => {
+    if (!canEditHierarchy.value) return
+    try {
+      const [busData, sellersData] = await Promise.all([getBusiness({ client }), getSellers({}, { client })])
+      allBusiness.value = busData as Business[]
+      heads.value = (sellersData as Sellers[]).filter((s) => s.type === 'head' && s.id !== user.value?.id)
+    } catch (error) {
+      console.error('Erro ao carregar dados auxiliares:', error)
     }
-  },
-);
+  }
 
-// Disable body scroll when modal opens, enable when closes
-watch(
-  () => props.isOpen,
-  (isOpen) => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+  watch(
+    () => props.isOpen,
+    async (newVal) => {
+      if (newVal && user.value) {
+        await loadInitialData()
+        form.value = {
+          name: user.value.name || '',
+          email: user.value.email || '',
+          password: '',
+          cpf: user.value.cpf || '',
+          phone: user.value.phone || '',
+          head_id: user.value.head_id ? user.value.head_id : null,
+        }
+        selectedBUs.value = user.value.seller_business?.map((sb: any) => sb.business_id) || []
+      }
+    },
+  )
+
+  // Disable body scroll when modal opens, enable when closes
+  watch(
+    () => props.isOpen,
+    (isOpen) => {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    },
+  )
+
+  const close = () => emit('close')
+
+  const handleSubmit = async () => {
+    if (!user.value?.id) return
+
+    // Validação de campos obrigatórios
+    if (!form.value.name?.trim()) {
+      toast.error('Por favor, insira seu nome.')
+      return
     }
-  },
-);
-
-const close = () => emit("close");
-
-const handleSubmit = async () => {
-  if (!user.value?.id) return;
-
-  // Validação de campos obrigatórios
-  if (!form.value.name?.trim()) {
-    toast.error("Por favor, insira seu nome.");
-    return;
-  }
-  const nameParts = form.value.name.trim().split(/\s+/);
-  if (nameParts.length < 2) {
-    toast.error("Por favor, informe o nome completo (nome e sobrenome).");
-    return;
-  }
-  if (!form.value.email?.trim()) {
-    toast.error("Por favor, insira seu e-mail.");
-    return;
-  }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(form.value.email)) {
-    toast.error("E-mail inválido. Verifique e tente novamente.");
-    return;
-  }
-  const cpfClean = (form.value.cpf || "").replace(/\D/g, "");
-  if (!cpfClean) {
-    toast.error("Por favor, insira o CPF.");
-    return;
-  }
-  if (cpfClean.length !== 11) {
-    toast.error("CPF incompleto. O CPF deve ter 11 dígitos.");
-    return;
-  }
-  const phoneClean = (form.value.phone || "").replace(/\D/g, "");
-  if (!phoneClean) {
-    toast.error("Por favor, insira o WhatsApp.");
-    return;
-  }
-  if (phoneClean.length < 11) {
-    toast.error("WhatsApp incompleto. Informe DDD + número.");
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const sellerPayload: any = {
-      name: form.value.name,
-      email: form.value.email,
-      cpf: form.value.cpf,
-      phone: form.value.phone,
-    };
-
-    if (canEditHierarchy.value) {
-      sellerPayload.head_id = form.value.head_id
-        ? form.value.head_id.toString()
-        : null;
+    const nameParts = form.value.name.trim().split(/\s+/)
+    if (nameParts.length < 2) {
+      toast.error('Por favor, informe o nome completo (nome e sobrenome).')
+      return
+    }
+    if (!form.value.email?.trim()) {
+      toast.error('Por favor, insira seu e-mail.')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.value.email)) {
+      toast.error('E-mail inválido. Verifique e tente novamente.')
+      return
+    }
+    const cpfClean = (form.value.cpf || '').replace(/\D/g, '')
+    if (!cpfClean) {
+      toast.error('Por favor, insira o CPF.')
+      return
+    }
+    if (cpfClean.length !== 11) {
+      toast.error('CPF incompleto. O CPF deve ter 11 dígitos.')
+      return
+    }
+    const phoneClean = (form.value.phone || '').replace(/\D/g, '')
+    if (!phoneClean) {
+      toast.error('Por favor, insira o WhatsApp.')
+      return
+    }
+    if (phoneClean.length < 11) {
+      toast.error('WhatsApp incompleto. Informe DDD + número.')
+      return
     }
 
-    if (form.value.password) {
-      sellerPayload.password = form.value.password;
-    }
+    loading.value = true
+    try {
+      const sellerPayload: any = {
+        name: form.value.name,
+        email: form.value.email,
+        cpf: form.value.cpf,
+        phone: form.value.phone,
+      }
 
-    // Update Seller
-    await putSellersId(
-      user.value.id as any,
-      { data: sellerPayload },
-      { client },
-    );
+      if (canEditHierarchy.value) {
+        sellerPayload.head_id = form.value.head_id ? form.value.head_id.toString() : null
+      }
 
-    // Update Business Associations if permitted
-    if (canEditHierarchy.value) {
-      await putSellerBusiness(
-        {
-          data: {
-            seller_id: user.value.id as any,
-            business_ids: selectedBUs.value,
+      if (form.value.password) {
+        sellerPayload.password = form.value.password
+      }
+
+      // Update Seller
+      await putSellersId(user.value.id as any, { data: sellerPayload }, { client })
+
+      // Update Business Associations if permitted
+      if (canEditHierarchy.value) {
+        await putSellerBusiness(
+          {
+            data: {
+              seller_id: user.value.id as any,
+              business_ids: selectedBUs.value,
+            },
           },
-        },
-        { client },
-      );
+          { client },
+        )
+      }
+
+      // Update user in store to reflect changes immediately
+      const updatedSellerBusiness = selectedBUs.value.map((id) => ({
+        business_id: id,
+      }))
+      authStore.updateUser({
+        ...sellerPayload,
+        seller_business: updatedSellerBusiness as any,
+      })
+
+      toast.success('Perfil atualizado com sucesso.')
+      emit('updated')
+      close()
+    } catch (error: any) {
+      console.error('Falha ao atualizar perfil:', error)
+      const msg = error.response?.data?.error || 'Erro ao atualizar perfil. Verifique seus dados.'
+      toast.error(msg)
+    } finally {
+      loading.value = false
     }
-
-    // Update user in store to reflect changes immediately
-    const updatedSellerBusiness = selectedBUs.value.map((id) => ({
-      business_id: id,
-    }));
-    authStore.updateUser({
-      ...sellerPayload,
-      seller_business: updatedSellerBusiness as any,
-    });
-
-    toast.success("Perfil atualizado com sucesso.");
-    emit("updated");
-    close();
-  } catch (error: any) {
-    console.error("Falha ao atualizar perfil:", error);
-    const msg =
-      error.response?.data?.error ||
-      "Erro ao atualizar perfil. Verifique seus dados.";
-    toast.error(msg);
-  } finally {
-    loading.value = false;
   }
-};
 </script>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 255, 0.1);
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 212, 255, 0.3);
-}
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.3);
+  }
 </style>

@@ -9,5 +9,5 @@
 </template>
 
 <script setup lang="ts">
-import { InfoIcon } from 'lucide-vue-next';
+  import { InfoIcon } from '@lucide/vue'
 </script>

@@ -11,11 +11,13 @@
         <div class="flex flex-col">
           <h3
             class="text-2xl font-black text-white tracking-tighter leading-tight group-hover/title:text-brand-cyan transition-colors">
-            Metas de Performance</h3>
+            Metas de Performance
+          </h3>
           <div class="flex items-center gap-2">
             <div class="h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse"></div>
-            <span class="text-[10px] text-white/30 font-black uppercase tracking-[0.25em]">{{ currentPeriodLabel
-            }}</span>
+            <span class="text-[10px] text-white/30 font-black uppercase tracking-[0.25em]">
+              {{ currentPeriodLabel }}
+            </span>
           </div>
         </div>
       </div>
@@ -23,7 +25,6 @@
       <!-- Premium Dashboard Status Bar (Countdown) -->
       <div v-if="hasGoal"
         class="flex items-center gap-8 px-8 py-5 rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10 relative group/timer shadow-2xl shadow-black/40 hover:bg-white/[0.04] hover:border-brand-cyan/20 transition-all duration-500 overflow-hidden">
-
         <!-- Subtle Animated Reflection Layer -->
         <div
           class="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover/timer:animate-[shimmer_3s_infinite] pointer-events-none">
@@ -33,40 +34,44 @@
           <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-[0.4em] mb-3">Tempo Restante</span>
           <div class="flex items-center gap-4 sm:gap-5">
             <div class="flex flex-col items-center min-w-[32px]">
-              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{ countdown.days
-              }}</span>
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">
+                {{ countdown.days }}
+              </span>
               <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">dias</span>
             </div>
             <div class="h-6 w-px bg-white/5 self-center mb-4"></div>
             <div class="flex flex-col items-center min-w-[32px]">
-              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{ countdown.hours
-              }}</span>
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">
+                {{ countdown.hours }}
+              </span>
               <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">horas</span>
             </div>
             <div class="h-6 w-px bg-white/5 self-center mb-4"></div>
             <div class="flex flex-col items-center min-w-[32px]">
-              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">{{
-                countdown.minutes }}</span>
+              <span class="text-3xl font-black text-white tabular-nums leading-none tracking-tighter">
+                {{ countdown.minutes }}
+              </span>
               <span class="text-[7px] font-black text-white/30 uppercase tracking-[0.15em] mt-2">min</span>
             </div>
             <div class="h-6 w-px bg-white/5 self-center mb-4 text-brand-cyan"></div>
             <div class="flex flex-col items-center min-w-[32px]">
               <span
-                class="text-3xl font-black text-brand-cyan animate-pulse tabular-nums leading-none tracking-tighter">{{
-                  countdown.seconds }}</span>
+                class="text-3xl font-black text-brand-cyan animate-pulse tabular-nums leading-none tracking-tighter">
+                {{ countdown.seconds }}
+              </span>
               <span class="text-[7px] font-black text-brand-cyan/40 uppercase tracking-[0.15em] mt-2">seg</span>
             </div>
           </div>
         </div>
-
 
         <div class="hidden sm:flex flex-col items-start relative z-10 pl-6 border-l border-white/5 py-0.5">
           <div class="flex items-center gap-2.5 mb-2 group/label">
             <div class="p-1.5 rounded-lg bg-brand-cyan/10 border border-brand-cyan/20">
               <Clock class="h-3 w-3 text-brand-cyan shadow-[0_0_8px_rgba(45,212,191,0.3)]" />
             </div>
-            <span
-              class="text-[10px] font-black text-white uppercase tracking-[0.2em] transition-colors">Fechamento</span>
+            <span class="text-[10px] font-black text-white uppercase tracking-[0.2em] transition-colors">
+              Fechamento
+            </span>
           </div>
           <p class="text-[9px] font-bold text-white/40 leading-relaxed max-w-[150px] uppercase tracking-tight">
             Vigente até o último momento do mês atual
@@ -141,27 +146,24 @@
               <apexchart type="radialBar" height="100%" :options="radialOptions" :series="[radialMetric.percent]" />
               <div class="absolute inset-0 flex flex-col items-center justify-center -translate-y-2">
                 <span class="text-4xl font-black text-white tracking-tighter">
-                  {{ radialMetric.percent.toFixed(0)
-                  }}<span class="text-xl ml-1" :class="radialMetric.percentColor">%</span>
+                  {{ radialMetric.percent.toFixed(0) }}
+                  <span class="text-xl ml-1" :class="radialMetric.percentColor">%</span>
                 </span>
-                <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-1">{{
-                  radialMetric.key.toUpperCase() }} Atingido</span>
+                <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest mt-1">
+                  {{ radialMetric.key.toUpperCase() }} Atingido
+                </span>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-8 w-full pt-4 border-t border-brand-cyan/10">
               <div class="text-center">
-                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">
-                  Realizado
-                </p>
+                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">Realizado</p>
                 <p class="text-sm font-bold text-brand-cyan">
                   {{ formatCurrency(radialMetric.actual) }}
                 </p>
               </div>
               <div class="text-center border-l border-brand-cyan/10">
-                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">
-                  Meta Total
-                </p>
+                <p class="text-[9px] font-black text-white/20 uppercase tracking-tighter mb-1">Meta Total</p>
                 <p class="text-sm font-bold text-white/60">
                   {{ formatCurrency(radialMetric.target) }}
                 </p>
@@ -174,8 +176,9 @@
         <div
           class="lg:col-span-8 p-8 rounded-[2.5rem] bg-brand-cyan/[0.03] border border-brand-cyan/10 relative overflow-hidden">
           <div class="flex items-center justify-between mb-8">
-            <span class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]">Evolução P1 (Meta vs
-              Realizado)</span>
+            <span class="text-[10px] font-black text-brand-cyan/40 uppercase tracking-[0.2em]">
+              Evolução P1 (Meta vs Realizado)
+            </span>
             <div class="flex items-center gap-6">
               <div class="flex gap-4">
                 <div class="flex items-center gap-2">
@@ -215,12 +218,8 @@
               <DollarSign class="h-3.5 w-3.5 text-white/40 group-hover:text-brand-cyan transition-colors" />
             </div>
             <div class="text-right">
-              <p class="text-[10px] font-black" :class="metric.percentColor">
-                {{ metric.percent.toFixed(0) }}%
-              </p>
-              <p class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
-                atingido
-              </p>
+              <p class="text-[10px] font-black" :class="metric.percentColor">{{ metric.percent.toFixed(0) }}%</p>
+              <p class="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">atingido</p>
             </div>
           </div>
 
@@ -245,13 +244,15 @@
                 </div>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[9px] font-medium text-white/50 uppercase">Realizado: {{ formatCurrency(metric.actual)
-                  }}</span>
+                <span class="text-[9px] font-medium text-white/50 uppercase">
+                  Realizado: {{ formatCurrency(metric.actual) }}
+                </span>
                 <span class="text-[9px] font-black text-white/40" v-if="metric.remaining > 0">
                   Falta {{ formatCurrency(metric.remaining) }}
                 </span>
-                <span v-else class="text-[9px] font-black text-brand-cyan uppercase tracking-tighter animate-pulse">Meta
-                  Batida!</span>
+                <span v-else class="text-[9px] font-black text-brand-cyan uppercase tracking-tighter animate-pulse">
+                  Meta Batida!
+                </span>
               </div>
             </div>
           </div>
@@ -263,12 +264,10 @@
     <div v-else
       class="py-24 px-6 rounded-[3rem] border border-dashed border-white/10 bg-brand-surface/20 flex flex-col items-center justify-center text-center space-y-6 animate-pulse">
       <div class="p-6 rounded-3xl bg-white/5 border border-white/10 ring-8 ring-white/[0.02]">
-        <Target class="h-12 w-12 text-white/10" />
+        <ChartArea class="h-12 w-12 text-white/10" />
       </div>
       <div class="max-w-xs space-y-2">
-        <h4 class="text-lg font-black text-white/60 tracking-tight uppercase">
-          Dashboard Inativo
-        </h4>
+        <h4 class="text-lg font-black text-white/60 tracking-tight uppercase">Dashboard Inativo</h4>
         <p class="text-xs font-medium text-white/20 leading-relaxed uppercase tracking-widest">
           Nenhuma meta definida para {{ currentPeriodLabel }}.
           <span v-if="canSetGoals" class="text-brand-cyan/60 block mt-2">Toque em \"Configurar\" para iniciar.</span>
@@ -280,277 +279,256 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
-import { Target, Settings2, DollarSign, Clock, ArrowRight } from "lucide-vue-next";
-import VueApexCharts from "vue3-apexcharts";
-import { useAuthStore } from "../../store/auth";
-import type { Goal } from "../../api/goalService";
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { ChartArea, Settings2, DollarSign, Clock, ArrowRight, Target } from '@lucide/vue'
+import VueApexCharts from 'vue3-apexcharts'
+import { useAuthStore } from '../../store/auth'
+import type { Goal } from '../../api/goalService'
 
-const apexchart = VueApexCharts;
+const apexchart = VueApexCharts
 
 const props = defineProps<{
-  goal: Goal | null;
+  goal: Goal | null
   actuals: {
-    p1: number;
-    tcv: number;
-    nmrr: number;
-    implementation: number;
-    monthly: number;
-  };
-  contracts: any[];
-}>();
+    p1: number
+    tcv: number
+    nmrr: number
+    implementation: number
+    monthly: number
+  }
+  contracts: any[]
+}>()
 
-defineEmits(["open-settings", "open-periods", "open-costs"]);
+defineEmits(['open-settings', 'open-periods', 'open-costs'])
 
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 const canSetGoals = computed(() => {
-  const type = authStore.user?.type;
-  return type === "admin" || type === "head" || type === "coord";
-});
+  const type = authStore.user?.type
+  return type === 'admin' || type === 'head' || type === 'coord'
+})
 
-const hasGoal = computed(() => !!props.goal);
+const hasGoal = computed(() => !!props.goal)
 const currentPeriodLabel = computed(() => {
-  const now = new Date();
-  return now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-});
+  const now = new Date()
+  return now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+})
 
 // Helper Functions
 const formatCurrency = (val: number) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
     maximumFractionDigits: 0,
-  }).format(val);
-};
+  }).format(val)
+}
 
 const formatCompactCurrency = (val: number) => {
-  if (Math.abs(val) >= 1000000)
-    return `R$ ${(val / 1000000).toFixed(1).replace(".0", "").replace(".", ",")}M`;
-  if (Math.abs(val) >= 1000)
-    return `R$ ${(val / 1000).toFixed(1).replace(".0", "").replace(".", ",")}k`;
-  return `R$ ${Math.round(val)}`;
-};
+  if (Math.abs(val) >= 1000000) return `R$ ${(val / 1000000).toFixed(1).replace('.0', '').replace('.', ',')}M`
+  if (Math.abs(val) >= 1000) return `R$ ${(val / 1000).toFixed(1).replace('.0', '').replace('.', ',')}k`
+  return `R$ ${Math.round(val)}`
+}
 
 // Countdown Logic
 const countdown = ref({
-  days: "00",
-  hours: "00",
-  minutes: "00",
-  seconds: "00",
-});
-let timerInterval: any = null;
+  days: '00',
+  hours: '00',
+  minutes: '00',
+  seconds: '00',
+})
+let timerInterval: any = null
 
 const updateCountdown = () => {
-  const now = new Date();
-  const lastDay = new Date(
-    now.getFullYear(),
-    now.getMonth() + 1,
-    0,
-    23,
-    59,
-    59,
-  );
-  const diff = lastDay.getTime() - now.getTime();
+  const now = new Date()
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+  const diff = lastDay.getTime() - now.getTime()
 
   if (diff <= 0) {
-    countdown.value = { days: "00", hours: "00", minutes: "00", seconds: "00" };
-    return;
+    countdown.value = { days: '00', hours: '00', minutes: '00', seconds: '00' }
+    return
   }
 
   countdown.value = {
     days: Math.floor(diff / (1000 * 60 * 60 * 24))
       .toString()
-      .padStart(2, "0"),
+      .padStart(2, '0'),
     hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       .toString()
-      .padStart(2, "0"),
+      .padStart(2, '0'),
     minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       .toString()
-      .padStart(2, "0"),
+      .padStart(2, '0'),
     seconds: Math.floor((diff % (1000 * 60)) / 1000)
       .toString()
-      .padStart(2, "0"),
-  };
-};
+      .padStart(2, '0'),
+  }
+}
 
 onMounted(() => {
-  updateCountdown();
-  timerInterval = setInterval(updateCountdown, 1000);
-});
+  updateCountdown()
+  timerInterval = setInterval(updateCountdown, 1000)
+})
 
 onUnmounted(() => {
-  if (timerInterval) clearInterval(timerInterval);
-});
+  if (timerInterval) clearInterval(timerInterval)
+})
 
 // Component State
-const lineChartKey = ref(0);
+const lineChartKey = ref(0)
 watch(
   () => props.goal,
   () => lineChartKey.value++,
   { deep: true },
-);
+)
 
 const displayMetrics = computed(() => {
-  if (!props.goal) return [];
+  if (!props.goal) return []
   const metrics = [
     {
-      key: "p1",
-      label: "Meta P1",
+      key: 'p1',
+      label: 'Meta P1',
       target: Number(props.goal.p1 || 0),
       actual: props.actuals.p1,
     },
     {
-      key: "tcv",
-      label: "Meta TCV",
+      key: 'tcv',
+      label: 'Meta TCV',
       target: Number(props.goal.tcv || 0),
       actual: props.actuals.tcv,
     },
     {
-      key: "nmrr",
-      label: "Meta NMRR",
+      key: 'nmrr',
+      label: 'Meta NMRR',
       target: Number(props.goal.nmrr || 0),
       actual: props.actuals.nmrr,
     },
-  ];
+  ]
 
   return metrics.map((m) => {
-    const percent =
-      m.target > 0 ? (m.actual / m.target) * 100 : m.actual > 0 ? 100 : 0;
-    const remaining = Math.max(0, m.target - m.actual);
-    let barColor = "";
-    let percentColor = "";
+    const percent = m.target > 0 ? (m.actual / m.target) * 100 : m.actual > 0 ? 100 : 0
+    const remaining = Math.max(0, m.target - m.actual)
+    let barColor = ''
+    let percentColor = ''
 
     if (percent < 80) {
       // Vermelho: 0 até 79%
-      barColor = "bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]";
-      percentColor = "text-rose-400";
+      barColor = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
+      percentColor = 'text-rose-400'
     } else if (percent < 100) {
       // Amarelo: 80 até 99%
-      barColor = "bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)]";
-      percentColor = "text-amber-400";
+      barColor = 'bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+      percentColor = 'text-amber-400'
     } else if (percent <= 110) {
       // Verde: 100 até 110%
-      barColor = "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
-      percentColor = "text-emerald-400";
+      barColor = 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+      percentColor = 'text-emerald-400'
     } else {
       // Azul: Acima de 110%
-      barColor = "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]";
-      percentColor = "text-blue-400";
+      barColor = 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]'
+      percentColor = 'text-blue-400'
     }
-    return { ...m, percent, remaining, barColor, percentColor };
-  });
-});
+    return { ...m, percent, remaining, barColor, percentColor }
+  })
+})
 
-const radialTab = ref<"p1" | "tcv">("p1");
+const radialTab = ref<'p1' | 'tcv'>('p1')
 const radialMetric = computed(() => {
   return (
     displayMetrics.value.find((m) => m.key === radialTab.value) || {
       key: radialTab.value,
-      label: "",
+      label: '',
       target: 0,
       actual: 0,
       percent: 0,
       remaining: 0,
-      barColor: "",
-      percentColor: "",
+      barColor: '',
+      percentColor: '',
     }
-  );
-});
+  )
+})
 
 const getHexColor = (barColor: string) => {
-  if (barColor.includes("rose")) return "#f43f5e";
-  if (barColor.includes("amber")) return "#fbbf24";
-  if (barColor.includes("emerald")) return "#10b981";
-  if (barColor.includes("blue")) return "#3b82f6";
-  return "#00d4ff";
-};
+  if (barColor.includes('rose')) return '#f43f5e'
+  if (barColor.includes('amber')) return '#fbbf24'
+  if (barColor.includes('emerald')) return '#10b981'
+  if (barColor.includes('blue')) return '#3b82f6'
+  return '#00d4ff'
+}
 
 const radialOptions = computed(() => ({
-  chart: { id: "goal-radial-bar", sparkline: { enabled: true } },
+  chart: { id: 'goal-radial-bar', sparkline: { enabled: true } },
   colors: [getHexColor(radialMetric.value.barColor)],
   plotOptions: {
     radialBar: {
-      hollow: { size: "75%" },
-      track: { background: "rgba(255,255,255,0.05)" },
+      hollow: { size: '75%' },
+      track: { background: 'rgba(255,255,255,0.05)' },
       dataLabels: { show: false },
     },
   },
-  stroke: { lineCap: "round" as const },
-}));
+  stroke: { lineCap: 'round' as const },
+}))
 
 // Data Logic
 const p1ActualByPeriod = computed(() => {
-  if (!props.contracts.length || !props.goal) return [0, 0, 0, 0];
-  const startDate = new Date(props.goal.year, props.goal.month - 1, 6);
-  const periods = [0, 0, 0, 0];
+  if (!props.contracts.length || !props.goal) return [0, 0, 0, 0]
+  const startDate = new Date(props.goal.year, props.goal.month - 1, 6)
+  const periods = [0, 0, 0, 0]
 
   props.contracts.forEach((c) => {
-    if (!c.signed) return;
-    const date = new Date(c.first_payment_date || c.created_at || "");
-    const diffDays = Math.floor(
-      (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    if (diffDays < 0) return;
-    if (diffDays < 7) periods[0] += parseFloat(c.first_payment_amount) || 0;
-    else if (diffDays < 13)
-      periods[1] += parseFloat(c.first_payment_amount) || 0;
-    else if (diffDays < 21)
-      periods[2] += parseFloat(c.first_payment_amount) || 0;
-    else periods[3] += parseFloat(c.first_payment_amount) || 0;
-  });
+    if (!c.signed) return
+    const date = new Date(c.first_payment_date || c.created_at || '')
+    const diffDays = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    if (diffDays < 0) return
+    if (diffDays < 7) periods[0] += parseFloat(c.first_payment_amount) || 0
+    else if (diffDays < 13) periods[1] += parseFloat(c.first_payment_amount) || 0
+    else if (diffDays < 21) periods[2] += parseFloat(c.first_payment_amount) || 0
+    else periods[3] += parseFloat(c.first_payment_amount) || 0
+  })
 
   periods.reduce((acc, val, i, arr) => {
-    arr[i] = acc + val;
-    return arr[i];
-  }, 0);
-  return periods;
-});
+    arr[i] = acc + val
+    return arr[i]
+  }, 0)
+  return periods
+})
 
 const p1TargetByPeriod = computed(() => {
-  if (!props.goal) return [0, 0, 0, 0];
-  const totalGoal = Number(props.goal.p1 || 0);
-  const m = [
-    props.goal.p1_period_1,
-    props.goal.p1_period_2,
-    props.goal.p1_period_3,
-    props.goal.p1_period_4,
-  ];
+  if (!props.goal) return [0, 0, 0, 0]
+  const totalGoal = Number(props.goal.p1 || 0)
+  const m = [props.goal.p1_period_1, props.goal.p1_period_2, props.goal.p1_period_3, props.goal.p1_period_4]
 
   if (m.every((v) => v === null)) {
-    return [totalGoal / 4, (totalGoal / 4) * 2, (totalGoal / 4) * 3, totalGoal];
+    return [totalGoal / 4, (totalGoal / 4) * 2, (totalGoal / 4) * 3, totalGoal]
   }
 
-  return m.map((val, i) =>
-    val !== null ? Number(val) : (totalGoal / 4) * (i + 1),
-  );
-});
+  return m.map((val, i) => (val !== null ? Number(val) : (totalGoal / 4) * (i + 1)))
+})
 
 const lineOptions = computed(() => ({
   chart: {
-    id: "p1-evolution-line",
+    id: 'p1-evolution-line',
     toolbar: { show: false },
-    fontFamily: "Outfit, sans-serif",
+    fontFamily: 'Outfit, sans-serif',
     dropShadow: {
       enabled: true,
       top: 10,
       left: 0,
       blur: 15,
       opacity: 0.2,
-      color: "#00d4ff",
+      color: '#00d4ff',
     },
   },
-  stroke: { curve: "smooth" as const, width: [4, 2], dashArray: [0, 5] },
-  colors: ["#00d4ff", "rgba(255,255,255,0.2)"],
+  stroke: { curve: 'smooth' as const, width: [4, 2], dashArray: [0, 5] },
+  colors: ['#00d4ff', 'rgba(255,255,255,0.2)'],
   grid: {
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: 'rgba(255,255,255,0.05)',
     padding: { left: 10, right: 10 },
   },
   xaxis: {
-    categories: ["D1-7", "D8-13", "D14-21", "D22-EOF"],
+    categories: ['D1-7', 'D8-13', 'D14-21', 'D22-EOF'],
     labels: {
       style: {
-        colors: "rgba(255,255,255,0.3)",
-        fontSize: "10px",
+        colors: 'rgba(255,255,255,0.3)',
+        fontSize: '10px',
         fontWeight: 900,
       },
     },
@@ -559,29 +537,29 @@ const lineOptions = computed(() => ({
   },
   yaxis: {
     labels: {
-      style: { colors: "rgba(255,255,255,0.2)", fontSize: "9px" },
+      style: { colors: 'rgba(255,255,255,0.2)', fontSize: '9px' },
       formatter: (val: number) => formatCompactCurrency(val),
     },
   },
   markers: {
     size: 4,
-    strokeColors: "#00d4ff",
+    strokeColors: '#00d4ff',
     strokeWidth: 2,
-    colors: ["#0b0f1a"],
+    colors: ['#0b0f1a'],
   },
   tooltip: {
-    theme: "dark",
+    theme: 'dark',
     shared: true,
     intersect: false,
     y: { formatter: (val: number) => formatCurrency(val) },
   },
   legend: { show: false },
-}));
+}))
 
 const lineSeries = computed(() => [
-  { name: "Realizado", data: p1ActualByPeriod.value },
-  { name: "Planejado", data: p1TargetByPeriod.value },
-]);
+  { name: 'Realizado', data: p1ActualByPeriod.value },
+  { name: 'Planejado', data: p1TargetByPeriod.value },
+])
 </script>
 
 <style scoped>

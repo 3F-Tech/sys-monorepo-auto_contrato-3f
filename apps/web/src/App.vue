@@ -6,8 +6,8 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import ToastProvider from './components/ui/ToastProvider.vue'
+  import { useRoute } from 'vue-router'
+  import ToastProvider from './components/ui/ToastProvider.vue'
 
-const route = useRoute()
+  const route = useRoute()
 </script>

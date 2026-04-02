@@ -62,6 +62,7 @@ Este projeto utiliza um sistema de documentação distribuída. O `GEMINI.md` é
    - **Assets/Design:** `apps/web/design-system.md`
    - **Backend Controllers:** `apps/api/src/controllers/rule.md`
    - **Backend Drive Service:** `apps/api/src/services/google-drive.rule.md`
+   - **Backend Asaas Service:** `apps/api/src/services/asaas.rule.md`
    - **Arquitetura do projeto:** `ARCHITECTURE.md`
    - **Contexto e negócio:** `CONTEXT.md`
 
