@@ -150,8 +150,6 @@ const executeClickSignv3Flow = async (params: {
                 const targetEmails = [
                     'luisfernando@3fventure.com.br',
                     'natalia@bommamkt.com.br',
-                    'leticia@bommamkt.com.br',
-                    'erika@seedagromarketing.com.br',
                     'luisfernando@seedagromarketing.com.br'
                 ];
                 if (targetEmails.includes(signerData.email.toLowerCase())) {
@@ -193,8 +191,6 @@ const executeClickSignv3Flow = async (params: {
         // Testemunhas Adicionais
         const KNOWN_WITNESSES: Record<string, string> = {
             'natalia@bommamkt.com.br': 'Natália Selister Piccoli',
-            'leticia@bommamkt.com.br': 'Letícia Viviane Scariot',
-            'erika@seedagromarketing.com.br': 'Erika Christina Lara',
             'luisfernando@3fventure.com.br': 'Luís Fernando Mauri Menti',
             'luisfernando@seedagromarketing.com.br': 'Luís Fernando Mauri Menti'
         };
@@ -202,7 +198,18 @@ const executeClickSignv3Flow = async (params: {
         for (const email of witnessEmails) {
             if (email && !addedEmails.has(email.toLowerCase())) {
                 const rawEmail = email.toLowerCase().replace(/\+test/g, '');
-                const witnessName = KNOWN_WITNESSES[rawEmail] || 'Testemunha Adicional';
+                
+                let witnessName = KNOWN_WITNESSES[rawEmail];
+                if (!witnessName) {
+                    // Busca nome de Head/Sellers no banco de dados para evitar "Testemunha Adicional"
+                    const sellerInfo = await prisma.sellers.findUnique({
+                        where: { email: rawEmail }
+                    });
+                    if (sellerInfo && sellerInfo.name) {
+                        witnessName = sellerInfo.name;
+                    }
+                }
+                witnessName = witnessName || 'Testemunha Adicional';
                 
                 signersToProcess.push({
                     email: email,

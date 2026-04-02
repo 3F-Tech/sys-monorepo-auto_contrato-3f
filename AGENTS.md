@@ -28,7 +28,7 @@ Antes de escrever qualquer linha de código, siga SEMPRE esta sequência:
 2. **Role-based Access (RBAC):** Bloqueie rotas de admin para sellers. Os cargos são: `admin`, `head`, `coord`, `seller`.
 3. **Trigger de Automação:** Registro obrigatório no banco de dados a cada contrato enviado.
    3a. **Automação Google Drive:** Novos contratos devem ser copiados de modelos específicos para a pasta de destino `1KF4W-RQ3CAJj4KFAAX9K9cxdRW9u6phg`.
-4. **Head de BU**: Usuários com o cargo `head` **só podem estar vinculados a uma única BU** por vez.
+4. **Head de BU (Relacionamento 1:1)**: Usuários com o cargo `head` **só podem estar vinculados a uma única BU** por vez, e simultaneamente, **cada BU pode ter APENAS UM usuário como seu HEAD**.
 5. **Automação de Formulários:** Ao iniciar a criação de um contrato, os campos "Vendedor" devem ser pré-preenchidos automaticamente. Para "Testemunha", oferecer botões de atalho para Luís e Natália (opcionais, campos editáveis). **Testemunhas ADICIONAIS não são obrigatórias.**
    5a. **Respeito a CPFs:** NUNCA use CPFs de signatários fixos (Luís, Natália, Letícia, Erika) em campos de testes de testemunhas adicionais. Use apenas CPFs extras fornecidos para este fim.
 6. **Visibilidade no Dashboard:**
