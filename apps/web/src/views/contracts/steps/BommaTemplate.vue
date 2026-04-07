@@ -696,6 +696,7 @@
 
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
+  import { useAuthStore } from '../../../store/auth'
   import { useCep } from '../../../composables/useCep'
   import WitnessSection from '../../../components/contracts/WitnessSection.vue'
   import CustomSelect from '../../../components/ui/CustomSelect.vue'
@@ -741,11 +742,24 @@
 
   const selectedSDRId = ref<string | null>(null)
 
+  const authStore = useAuthStore()
+
   const sdrOptions = computed(() => {
     return (props.sellers as any[])
-      .filter((s) => s.type === 'sdr')
+      .filter((s) => s.type === 'sdr' && (s.head_id === authStore.user?.head_id || s.head_id === authStore.user?.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map((s) => ({ value: s.id.toString(), label: s.name }))
   })
+
+  watch(
+    sdrOptions,
+    (options) => {
+      if (options.length > 0 && !selectedSDRId.value) {
+        selectedSDRId.value = options[0].value
+      }
+    },
+    { immediate: true },
+  )
 
   watch(selectedSDRId, (newId) => {
     emit('update-sdr-id', newId)

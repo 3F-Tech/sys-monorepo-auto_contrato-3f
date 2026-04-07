@@ -145,8 +145,19 @@ export const getSellers = async (req: any, res: Response) => {
       } else {
         // Seller / SDR: a princípio só enxergam a si mesmos
         // EXCEÇÃO: Podem consultar Heads de BU e Coordenadores para UI de contratos
-        if (type !== 'head' && type !== 'coord') {
+        // EXCEÇÃO 2: Podem consultar SDRs que pertencem à mesma equipe (mesmo head_id)
+        if (type !== 'head' && type !== 'coord' && type !== 'sdr') {
           where.id = BigInt(requester.id);
+        } else if (type === 'sdr') {
+          // Se estiver buscando SDRs, filtra para ver apenas os da sua equipe
+          const me = await prisma.sellers.findUnique({ where: { id: BigInt(requester.id) } });
+          if (me && me.head_id) {
+            // Caso 1: Eu tenho um líder (sou closer/sdr) e busco quem tem o mesmo líder que eu
+            where.head_id = me.head_id;
+          } else {
+            // Caso 2: Eu sou o líder (head) de alguém (caso raro para o tipo seller)
+            where.head_id = BigInt(requester.id);
+          }
         }
       }
     } else {

@@ -357,9 +357,15 @@
 
   onMounted(async () => {
     try {
-      const [resBus, resSellers] = await Promise.all([getBusiness({ client }), getSellers({}, { client })])
+      const [resBus, resSellers, resSdrs] = await Promise.all([
+        getBusiness({ client }),
+        getSellers({}, { client }),
+        getSellers({ type: 'sdr' }, { client }),
+      ])
       allBusiness.value = resBus as Business[]
-      allSellers.value = resSellers as Sellers[]
+      // Merge unique sellers from both calls
+      const combined = [...(resSellers as Sellers[]), ...(resSdrs as Sellers[])]
+      allSellers.value = Array.from(new Map(combined.map((s) => [s.id, s])).values())
     } catch (error) {
       console.error('Falha ao carregar dados auxiliares:', error)
     } finally {
