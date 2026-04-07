@@ -85,8 +85,11 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 - **Descrição:** Consulta em tempo real a API v3 da Clicksign, mapeando os requisitos para determinar quem já assinou. Retorna `[{name, email, signed}]`.
 - **Frontend:** Utilizado pelo `SignersModal.vue` para exibir detalhe de progresso de assinaturas.
 
-## 🗑️ Exclusão Completa (DELETE /contracts/:id)
-A exclusão de contratos é **atômica e multi-serviço**. A ordem é:
+## 🗑️ Exclusão Completa (DELETE /contracts/:id) 
+A exclusão de contratos é **atômica e multi-serviço** e possui as seguintes regras de permissão:
+1. **Admin:** Pode excluir qualquer contrato a qualquer momento (inclusive assinados).
+2. **Outros Cargos:** Só podem excluir se o contrato estiver cancelado (`canceled_at`) ou se for rascunho (`approved: false`).
+A ordem é:
 1. Lê o `envelope_id` e `document_id` do contrato.
 2. Cancela o envelope no **Clicksign** (`ClickSignService.cancelDocument`).
 3. Deleta o arquivo no **Google Drive** (`GoogleDriveService.deleteFile`).
@@ -116,6 +119,22 @@ Falhas nas etapas 2 e 3 são logadas mas não bloqueiam as etapas seguintes.
 - **Obrigatórios**: Razão Social, CNPJ, CEP, endereço completo, representante (nome/email/CPF), valores (taxa, mensalidade, primeiro pagamento, data, dia vencimento), data assinatura, vendedor (nome/email/CPF).
 - **Opcionais**: Testemunhas adicionais 1–6 (nome/email/cpf), testemunhas fixas 1–3, telefone/email financeiro, Instagram, QTD ARTES, QTD VIDEOS.
 - **Bypass Clicksign**: Campo `'ID DO DOCUMENTO CLICKSIGN'` — quando preenchido, ativa o modo bypass (veja seção Bypass Mode).
+
+## 📂 Mapa de Controllers
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `contractAutomationController.ts` | Criação de contratos (Google Drive + Docs + Clicksign). Handler principal: `handleContractSubmit`. |
+| `contractController.ts` | CRUD de contratos existentes: `GET /contracts`, `PUT /contracts/:id`, `DELETE /contracts/:id`, `GET /contracts/:id/signers`. |
+| `sellerController.ts` | CRUD de vendedores: `GET /sellers`, `POST /sellers`, `PUT /sellers/:id`. |
+| `businessController.ts` | CRUD de BUs: `GET /business`, `POST /business`, `PUT /business/:id`. |
+| `goalController.ts` | CRUD de metas: `GET /goals`, `POST /goals` (upsert), `DELETE /goals/:id`. Filtra por `month` e `year` via query params. |
+| `commercialCostsController.ts` | CRUD de custos comerciais mensais: `GET /commercial-costs`, `POST /commercial-costs`. |
+| `cacController.ts` | CRUD de CAC por BU: `GET /cac`, `POST /cac`. |
+| `teamController.ts` | CRUD de equipes + membros: `GET /teams`, `POST /teams`, `PUT /teams/:id`, `DELETE /teams/:id`, `POST /teams/:id/members`, `DELETE /teams/:id/members/:sellerId`. |
+| `sellerBussinessController.ts` | Associação seller ↔ BU: `PUT /seller-business` com `{ seller_id, business_ids[] }`. |
+| `webhookController.ts` | Processamento de webhooks do Clicksign (evento `closed` → `signed: true`). |
+| `healthController.ts` | `GET /health` — endpoint público de health check. |
 
 ## 🛠️ Build e Configuração TypeScript
 - **Módulo**: A API compila com `"module": "Node16"` e `"moduleResolution": "Node16"` no `tsconfig.json`, gerando output **CommonJS**.

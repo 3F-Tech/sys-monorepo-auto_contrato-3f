@@ -492,36 +492,36 @@
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">
             VALOR DO PRIMEIRO PAGAMENTO (P1)
           </label>
-          <div class="relative">
-            <span
-              class="absolute left-4 h-full flex items-center text-brand-cyan/40 text-xs font-bold pointer-events-none"
-            >
-              R$
-            </span>
-            <input
-              type="text"
-              id="VALOR DO PRIMEIRO PAGAMENTO"
-              v-model="form['VALOR DO PRIMEIRO PAGAMENTO']"
-              v-maska="{
-                mask: '###.###.###,##',
-                tokens: { '#': { pattern: /[0-9]/, repeated: true } },
-                reversed: true,
-              }"
-              class="input-glass w-full !pl-10"
-              placeholder="0,00"
-              :class="[
-                errors && errors['VALOR DO PRIMEIRO PAGAMENTO']
-                  ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
-                  : '',
-              ]"
-            />
+            <div class="relative">
+              <span
+                class="absolute left-4 h-full flex items-center text-brand-cyan/40 text-xs font-bold pointer-events-none"
+              >
+                R$
+              </span>
+              <input
+                type="text"
+                id="VALOR DO PRIMEIRO PAGAMENTO"
+                v-model="form['VALOR DO PRIMEIRO PAGAMENTO']"
+                v-maska="{
+                  mask: '###.###.###,##',
+                  tokens: { '#': { pattern: /[0-9]/, repeated: true } },
+                  reversed: true,
+                }"
+                class="input-glass w-full !pl-10"
+                placeholder="0,00"
+                :class="[
+                  errors && errors['VALOR DO PRIMEIRO PAGAMENTO']
+                    ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
+                    : '',
+                ]"
+              />
+            </div>
             <span
               v-if="errors && errors['VALOR DO PRIMEIRO PAGAMENTO']"
               class="text-[9px] text-red-500 font-bold mt-1 block"
             >
               {{ errors['VALOR DO PRIMEIRO PAGAMENTO'] }}
             </span>
-          </div>
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DATA PRIMEIRO PAGAMENTO</label>

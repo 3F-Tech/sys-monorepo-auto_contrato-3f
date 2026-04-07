@@ -10,7 +10,7 @@
 │       └── src/
 │           ├── router/     # Configuração de rotas do VueRouter
 │           ├── store/      # Estados globais (Pinia)
-│           ├── views/      # Páginas (onde cada uma terá seu rules.md)
+│           ├── views/      # Páginas (onde cada uma terá seu rule.md)
 │           │   └── contracts/ # Fluxo de Automação de Contratos
 │           │       ├── steps/   # Componentes de cada etapa do form
 │           │       └── rule.md  # Regras para criação de novos forms

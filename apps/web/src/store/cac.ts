@@ -21,13 +21,9 @@ export const useCacStore = defineStore('cac', {
 
   getters: {
     totalCac: (state) => {
-      const validCacs = state.cacValues.filter(m => {
-        const name = m.bu_name?.toLowerCase() || '';
-        return !(name.includes('3f') || name.includes('group') || name.includes('venture'));
-      });
-      if (validCacs.length === 0) return 0;
-      const sum = validCacs.reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
-      return sum / validCacs.length;
+      if (state.cacValues.length === 0) return 0;
+      const sum = state.cacValues.reduce((acc, m) => acc + (Number(m.amount) || 0), 0);
+      return sum / state.cacValues.length;
     },
     getBuCac: (state) => (buId: number) => {
       // @ts-ignore

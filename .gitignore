@@ -97,6 +97,7 @@ debug/
 reports/
 guide-test/
 .opencode/
+.claude/
 apps/api/tmp/
 
 # --- Scripts de Teste e Verificação Local ---

@@ -136,12 +136,7 @@
     return months[props.month - 1]
   })
 
-  const filteredBusinesses = computed(() => {
-    return buStore.businesses.filter((bu) => {
-      const name = bu.name?.toLowerCase() || ''
-      return !(name.includes('3f') || name.includes('group') || name.includes('venture'))
-    })
-  })
+  const filteredBusinesses = computed(() => buStore.businesses)
 
   watch(
     () => props.isOpen,

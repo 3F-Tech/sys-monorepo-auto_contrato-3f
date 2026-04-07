@@ -84,7 +84,10 @@ Siga estritamente o `apps/web/design-system.md`:
 - **Regras de Interface por Status:**
   - **Cancelado:** Botões originais (Assinado, Aviso, Cancelar) são removidos; resta apenas o botão "**Excluir**".
   - **Assinado:** Botões permanecem visíveis para histórico, mas ficam **desabilitados** (pointer-events-none) e opacos.
-  - **Exclusão Completa:** Um contrato **SÓ PODE** ser excluído permanentemente se ele tiver sido previamente cancelado. A exclusão agora é **atômica e completa**:
+  - **Exclusão Completa:** Regras de permissão para exclusão permanente:
+    - **Admin:** Pode excluir QUALQUER contrato (Pendente, Assinado ou Cancelado) a qualquer momento.
+    - **Outros Cargos:** SÓ PODE excluir se o contrato tiver sido previamente **Cancelado** ou se for um **Rascunho** (!approved). 
+    - A exclusão agora é **atômica e completa**:
     - Remove o registro do Banco de Dados (Prisma).
     - Cancela o envelope no Clicksign (API v3/v1).
     - Deleta o arquivo físico no Google Drive (File ID).

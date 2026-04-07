@@ -38,3 +38,14 @@ Use as classes CSS estabelecidas em `src/style.css`:
 - [ ] Sem cores genéricas (Vermelho, Verde, Azul) — use os equivalentes da marca ou variações refinadas.
 - [ ] Manter espaço negativo generoso.
 - [ ] As interações devem ter transições suaves (200ms).
+
+## 6. Estados de Performance (Metas)
+Para indicadores de progresso e atingimento, use a seguinte semântica de cores:
+
+| Estado | Cor Tailwind | Hex (Charts) | Descrição |
+| :--- | :--- | :--- | :--- |
+| **Neutral (Sem Meta)** | `white/10` | `#475569` | Meta não definida ou R$ 0. Exibe `--` no valor. |
+| **Crítico (< 80%)** | `rose-500` | `#f43f5e` | Desempenho muito abaixo do esperado. |
+| **Alerta (80-99%)** | `amber-400` | `#fbbf24` | Próximo de atingir o objetivo. |
+| **Sucesso (100-110%)** | `emerald-500`| `#10b981` | Meta atingida com sucesso. |
+| **Superação (> 110%)** | `blue-500` | `#3b82f6` | Meta superada significativamente. |

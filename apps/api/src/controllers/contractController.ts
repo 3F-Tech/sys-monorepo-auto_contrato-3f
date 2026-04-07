@@ -301,25 +301,41 @@ export const updateContract = async (req: Request, res: Response) => {
  *       200:
  *         description: Contrato deletado
  */
-export const deleteContract = async (req: Request, res: Response) => {
+export const deleteContract = async (req: any, res: Response) => {
     try {
         const { id } = req.params;
         const targetId = BigInt(id);
+        const requester = req.user;
 
-        console.log(`[DELETE] Iniciando exclusão do contrato ID: ${targetId}`);
+        console.log(`[DELETE] Iniciando exclusão do contrato ID: ${targetId} por ${requester?.email} (${requester?.type})`);
 
-        // 1. Buscar detalhes do contrato para limpeza externa
+        // 1. Buscar detalhes do contrato para limpeza externa e validação de permissão
         const contract = await (prisma.contracts as any).findUnique({
             where: { id: targetId },
             select: { 
                 document_id: true, 
                 envelope_id: true,
-                title: true
+                title: true,
+                canceled_at: true,
+                approved: true
             }
         });
 
         if (!contract) {
             return res.status(404).json({ error: 'Contrato não encontrado para exclusão.' });
+        }
+
+        // Validação de RBAC: 
+        // - Admin pode excluir qualquer coisa.
+        // - Outros cargos só podem excluir se estiver cancelado ou se for um rascunho (approved: false).
+        const isAdmin = requester?.type === 'admin';
+        const isCanceled = !!(contract as any).canceled_at;
+        const isDraft = (contract as any).approved === false;
+
+        if (!isAdmin && !isCanceled && !isDraft) {
+            return res.status(403).json({ 
+                error: 'Você não tem permissão para excluir este contrato. Ele deve ser cancelado primeiro.' 
+            });
         }
 
         const clicksignId = (contract as any).envelope_id || contract.document_id;

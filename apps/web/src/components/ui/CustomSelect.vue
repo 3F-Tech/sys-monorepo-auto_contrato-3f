@@ -59,7 +59,6 @@
       />
     </div>
 
-    <!-- Lista Dropdown -->
     <transition
       enter-active-class="transition duration-200 ease-out"
       enter-from-class="transform scale-95 opacity-0 -translate-y-2"
@@ -70,7 +69,10 @@
     >
       <div
         v-if="isOpen"
-        class="absolute top-full left-0 right-0 mt-2 py-2 bg-brand-offset/95 backdrop-blur-2xl border border-brand-glass-border rounded-2xl shadow-2xl z-[100] max-h-64 overflow-y-auto custom-scrollbar"
+        :class="[
+          'absolute left-0 right-0 py-2 bg-brand-offset/95 backdrop-blur-2xl border border-brand-glass-border rounded-2xl shadow-2xl z-[100] max-h-64 overflow-y-auto custom-scrollbar overscroll-contain',
+          (forceUp || (shouldOpenUp && !forceDown)) ? 'bottom-full mb-2' : 'top-full mt-2'
+        ]"
       >
         <div
           v-for="option in filteredOptions"
@@ -118,6 +120,8 @@
     disabled?: boolean
     allowClear?: boolean
     variant?: 'default' | 'form'
+    forceUp?: boolean
+    forceDown?: boolean
   }>()
 
   const emit = defineEmits(['update:modelValue', 'change'])
@@ -125,10 +129,22 @@
   const container = ref<HTMLElement | null>(null)
   const isOpen = ref(false)
   const searchQuery = ref('')
+  const shouldOpenUp = ref(false)
 
   const toggleDropdown = () => {
     if (props.disabled) return
+    if (!isOpen.value) {
+      checkDirection()
+    }
     isOpen.value = !isOpen.value
+  }
+
+  const checkDirection = () => {
+    if (!container.value) return
+    const rect = container.value.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const hasSpaceBelow = spaceBelow > 300 // aprox dropdown height
+    shouldOpenUp.value = !hasSpaceBelow
   }
 
   const selectOption = (option: Option) => {

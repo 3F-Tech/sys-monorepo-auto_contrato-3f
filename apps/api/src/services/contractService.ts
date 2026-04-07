@@ -124,8 +124,8 @@ export class ContractService {
                         signedCount = totalSigners;
                     }
                 } catch (v1Error: any) {
-                    console.error(`[SYNC] Erro em ambas APIs para ${clicksignId}:`, v3Error.message, v1Error.message);
-                    throw new Error(`Falha ao sincronizar com Clicksign: ${v3Error.message}`);
+                    console.warn(`[SYNC] Contrato "${contract.title}" (${clicksignId}): indisponível na v3 (${v3Error.message}) e v1 (${v1Error.message}). Retornando sem alteração.`);
+                    return contract;
                 }
             }
 

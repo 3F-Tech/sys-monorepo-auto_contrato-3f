@@ -34,6 +34,59 @@ Responsável pela listagem de vendedores para gestão da equipe.
   - `fetchAllSellers()` → Busca todos os sellers.
   - `updateSeller(id, data)` → Atualiza dados de um vendedor.
 
+### `useGoalStore` (`goals.ts`)
+Responsável pelas metas de performance (P1, TCV, NMRR) por entidade e período.
+- **Paradigma:** Options API (exceção ao padrão Setup Store — não migrar sem necessidade).
+- **Estado**: `goals: Goal[]`, `isLoading`, `error`.
+- **Getters**: `getGoalByTarget(type, id)` → retorna meta específica por entidade.
+- **Ações**:
+  - `fetchGoals(month?, year?)` → Busca metas do período. Sem parâmetros = todas.
+  - `saveGoal(goalInput: GoalInput)` → Upsert: atualiza no array se existir, insere se não. Retorna a meta salva.
+  - `deleteGoal(id)` → Remove da store e do banco.
+- **Fonte de dados**: `goalService` em `src/api/goalService.ts` (não usa hooks Kubb — serviço manual com Axios).
+
+### `useBuStore` (`bu.ts`)
+Responsável pela lista de BUs (Business Units) do banco.
+- **Paradigma:** Setup Store.
+- **Estado**: `businesses: Business[]`, `loading`.
+- **Ações**: `fetchBusinesses()` → Usa hook Kubb `getBusiness`.
+- **⚠️ Importante:** A entidade "3F" (visão agregada) é **hardcoded no código**, não vem do banco. Nunca inserir BU de ID especial para representar a empresa-mãe.
+
+### `useTeamStore` (`team.ts`)
+Responsável pela gestão de equipes de vendas.
+- **Paradigma:** Setup Store.
+- **Estado**: `teams: Team[]`, `loading`.
+- **Interface `Team`**: `{ id, name, photo_url?, description?, head_id, sellers_sellers_team_idToteams? }`.
+- **Ações** (todas recarregam `fetchTeams()` após mutação):
+  - `fetchTeams()` → `GET /teams`.
+  - `createTeam(data)` → `POST /teams`.
+  - `updateTeam(id, data)` → `PUT /teams/:id`.
+  - `deleteTeam(id)` → `DELETE /teams/:id`.
+  - `addMember(teamId, sellerId)` → `POST /teams/:teamId/members`.
+  - `removeMember(teamId, sellerId)` → `DELETE /teams/:teamId/members/:sellerId`.
+
+### `useCostsStore` (`costs.ts`)
+Responsável pelos custos comerciais mensais (usados no cálculo de CAC e ROI).
+- **Paradigma:** Options API.
+- **Estado**: `currentCosts: CommercialCosts | null`, `loading`, `error`.
+- **Interface `CommercialCosts`**: `{ id?, month, year, media_investment?, commercial_tools?, remuneration_pre_sales_1/2?, remuneration_closer_1/2?, remuneration_coord?, referral_commission? }`.
+- **Getter**: `totalCommercialCosts` → soma todos os campos de custo do `currentCosts`.
+- **Ações**:
+  - `fetchCosts(month, year)` → Usa hook Kubb `getCommercialCosts`.
+  - `saveCosts(costs)` → Usa hook Kubb `postCommercialCosts`, recarrega após salvar.
+
+### `useCacStore` (`cac.ts`)
+Responsável pelo CAC (Custo de Aquisição de Clientes) por BU e período.
+- **Paradigma:** Options API.
+- **Estado**: `cacValues: BuCac[]`, `loading`, `error`.
+- **Interface `BuCac`**: `{ bu_id, bu_name, amount, is_inherited, month, year }`.
+- **Getters**:
+  - `totalCac` → Média do CAC entre todas as BUs do banco.
+  - `getBuCac(buId)` → Retorna o CAC de uma BU específica.
+- **Ações**:
+  - `fetchCac(month, year)` → Usa hook Kubb `getCac`.
+  - `saveCac(buId, amount, month, year)` → Usa hook Kubb `postCac`, recarrega após salvar.
+
 ## 🔄 Qual Store/Método Usar por Cargo
 
 | Cargo | Contratos | Vendedores |

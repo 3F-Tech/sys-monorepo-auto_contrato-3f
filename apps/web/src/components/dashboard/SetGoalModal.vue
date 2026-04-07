@@ -266,6 +266,8 @@
     showPeriodsOnly?: boolean
     initialView?: 'list' | 'form'
     initialTarget?: { type: string; id: string } | null
+    month?: number
+    year?: number
   }>()
 
   const emit = defineEmits(['close', 'saved'])
@@ -323,12 +325,16 @@
   const targetTypeOptions = computed(() => {
     const types: { value: string; label: string; icon: any }[] = []
     const utype = authStore.user?.type
+
     if (utype === 'admin') {
       types.push({ value: 'bu', label: 'BU', icon: Building2 })
       types.push({ value: 'seller', label: 'Vendedor', icon: User })
-    } else if (utype === 'coord') {
-      types.push({ value: 'bu', label: 'BU', icon: Building2 })
     } else if (utype === 'head') {
+      // Head de BU define metas da BU ou dos vendedores em geral
+      types.push({ value: 'bu', label: 'BU', icon: Building2 })
+      types.push({ value: 'seller', label: 'Vendedor', icon: User })
+    } else if (utype === 'coord') {
+      // Coordenador de Equipe define metas focadas nos seus vendedores
       types.push({ value: 'seller', label: 'Vendedor', icon: User })
     }
     return types
@@ -391,17 +397,10 @@
 
   const targetIdOptions = computed(() => {
     if (form.value.target_type === 'bu') {
-      let options = allBusiness.value.map((b) => ({
+      const options = allBusiness.value.map((b) => ({
         value: b.id?.toString() || '',
         label: b.name || '',
       }))
-      if (authStore.user?.type === 'admin') {
-        options = options.filter((o) => {
-          const name = o.label.toLowerCase()
-          return !(name.includes('3f') || name.includes('group') || name.includes('venture'))
-        })
-        options.unshift({ value: '99', label: '3F Venture' })
-      }
       return options
     } else if (form.value.target_type === 'team') {
       return teamStore.teams.map((t) => ({
@@ -413,8 +412,10 @@
         .filter((s) => s.type === 'head')
         .map((s) => ({ value: s.id?.toString() || '', label: s.name || '' }))
     } else {
-      // Para tipo Seller
-      const sellers = authStore.user?.type === 'head' ? sellerStore.teamSellers : sellerStore.allSellers
+      // Para tipo Seller: Admins veem todos, Líderes veem apenas sua equipe
+      const utype = authStore.user?.type
+      const isLeader = utype === 'head' || utype === 'coord'
+      const sellers = isLeader ? sellerStore.teamSellers : sellerStore.allSellers
       return sellers
         .filter((s) => s.type === 'seller' || s.type === 'sdr')
         .map((s) => ({ value: s.id?.toString() || '', label: s.name || '' }))
@@ -430,11 +431,11 @@
         await teamStore.fetchTeams()
       }
 
-      if (utype === 'admin' || utype === 'coord') {
+      if (utype === 'admin') {
         await sellerStore.fetchAllSellers()
-      } else if (utype === 'head' && authStore.user?.id) {
+      } else if ((utype === 'coord' || utype === 'head') && authStore.user?.id) {
         await sellerStore.fetchTeamSellers(authStore.user.id.toString())
-        await sellerStore.fetchAllSellers() // Também busca todos para nomes no histórico
+        await sellerStore.fetchAllSellers() // Garante nomes no histórico se necessário
       }
     } catch (err) {
       console.error('Erro ao carregar dados do modal de metas:', err)
@@ -476,8 +477,10 @@
 
   const addNew = () => {
     editingGoal.value = null
+    const utype = authStore.user?.type
+
     form.value = {
-      target_type: authStore.user?.type === 'coord' ? 'bu' : 'seller',
+      target_type: utype === 'admin' || utype === 'head' ? 'bu' : 'seller',
       target_id: '',
       p1: null,
       p1_period_1: null,
@@ -489,8 +492,8 @@
       implementation: null,
       monthly: null,
 
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
+      month: props.month || new Date().getMonth() + 1,
+      year: props.year || new Date().getFullYear(),
     }
     view.value = 'form'
   }
