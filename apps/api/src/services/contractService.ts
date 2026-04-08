@@ -130,18 +130,22 @@ export class ContractService {
             }
 
             // 3. Atualiza o Banco de Dados (Contrato)
+            // Se o contador local bater ou se o status do envelope no Clicksign for 'closed'
+            const markAsSigned = isFullySigned || (totalSigners > 0 && signedCount >= totalSigners);
+            
             const updated = await prisma.contracts.update({
                 where: { id: contractId },
                 data: {
                     signed_count: signedCount,
                     total_signers: totalSigners > 0 ? totalSigners : undefined,
-                    signed: isFullySigned,
-                    signed_date: (isFullySigned && !contract.signed_date) ? new Date() : undefined,
+                    signed: markAsSigned,
+                    // Define signed_date se acabou de ser assinado ou se está assinado mas não tinha data
+                    signed_date: (markAsSigned && !contract.signed_date) ? new Date() : undefined,
                     ...(foundEnvelopeId && foundEnvelopeId !== (contract as any).envelope_id ? { envelope_id: foundEnvelopeId } : {})
                 }
             });
 
-            console.log(`[SYNC] Contrato "${contract.title}" sincronizado: ${signedCount}/${totalSigners} (Assinado: ${isFullySigned})`);
+            console.log(`[SYNC] Contrato "${contract.title}" sincronizado: ${signedCount}/${totalSigners} (Assinado: ${markAsSigned})`);
             return updated;
 
         } catch (error: any) {

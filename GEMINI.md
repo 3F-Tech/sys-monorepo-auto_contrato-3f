@@ -76,6 +76,7 @@ Plataforma de **Automacao de Contratos** para uma agencia de marketing (3F Ventu
 11. **Calculo de P1:** Valor derivado de `first_payment_amount` (fallback: `monthly_fee`). Contrato assinado no Mes A so conta se pago ate **dia 06** do Mes B. Pagamento apos dia 06 = desconsiderado para fins de meta.
 13. **Regra de competencia:** A `signed_date` define o mes do contrato para **todas** as metricas (P1, TCV, NMRR, CAC, stats operacionais). Contrato gerado em marco e assinado em abril = contrato de abril em tudo.
 12. **Debug (Impulse Plano 1):** Flag `isDebug: "preencher"` substitui signatarios por emails de teste.
+14. **Semanas do Calendário (Gráficos):** As divisões semanais (Week 1, Week 2...) usadas nos gráficos (ex: Evolução P1) não adotam intervalos fixos de 7 dias ou de dia 6 ao dia 5. Elas espelham o calendário real (de Domingo a Sábado). Assim, se o mês começar, por exemplo, numa quinta-feira, a "Semana 1" irá apenas do dia 01 ao dia 03 (sábado), e assim por diante. Pode gerar de 4 a 6 divisões dependendo das semanas abrangidas pelo mês.
 
 ---
 

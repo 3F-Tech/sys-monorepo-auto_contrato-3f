@@ -285,21 +285,43 @@
                     </div>
                   </div>
 
-                  <!-- Seção: Editar Datas (Nova) -->
-                  <div class="pt-4 border-t border-white/5 space-y-4">
+                  <!-- Seção: Datas -->
+                  <div class="pt-4 border-t border-white/5 space-y-3">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <Calendar class="h-3 w-3 text-brand-cyan/60" />
-                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">
-                          Datas do Sistema
-                        </span>
+                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Datas</span>
                       </div>
                       <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)"
                         class="text-[9px] font-bold text-brand-cyan hover:underline uppercase tracking-widest transition-all">
-                        Editar Datas
+                        Editar
                       </button>
                     </div>
 
+                    <!-- Exibição sempre visível -->
+                    <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div class="space-y-0.5">
+                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Criação</p>
+                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.created_at) }}</p>
+                      </div>
+                      <div class="space-y-0.5">
+                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Aprovação</p>
+                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.approved_at) }}</p>
+                      </div>
+                      <div class="space-y-0.5">
+                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Assinatura</p>
+                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.signed_date) }}</p>
+                      </div>
+                      <div class="space-y-0.5">
+                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Pgto. P1</p>
+                        <p class="text-[11px] font-bold"
+                          :class="contract.first_payment_date ? 'text-brand-cyan' : 'text-white/30'">
+                          {{ formatDate(contract.first_payment_date) }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Painel de edição -->
                     <div v-if="isEditingDates === contract.id?.toString()"
                       class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
                       <div class="space-y-1">
@@ -820,11 +842,24 @@ const openSignersModal = async (contract: Contracts) => {
   currentSigners.value = []
 
   try {
+    // 1. Sincroniza primeiro no banco de dados para garantir persistência
+    const syncResponse = await client.post(`/contracts/${contract.id}/sync`)
+    if (syncResponse.data.success) {
+      const updatedContract = syncResponse.data.contract
+      const idx = contractStore.myContracts.findIndex((c) => c.id === contract.id)
+      if (idx !== -1) {
+        contractStore.myContracts[idx] = {
+          ...contractStore.myContracts[idx],
+          ...updatedContract,
+        }
+      }
+    }
+
+    // 2. Busca o detalhamento dos signatários
     const response = await client.get(`/contracts/${contract.id}/signers`)
     if (response.data.success) {
       currentSigners.value = response.data.signers
 
-      // Atualiza o signed_count local com base nos dados ao vivo do Clicksign
       const signedCount = currentSigners.value.filter((s: any) => s.signed).length
       const totalSigners = currentSigners.value.length
 
@@ -887,8 +922,8 @@ const backgroundSyncPending = async (contractsToSync: Contracts[]) => {
 
   if (!candidates.length) return
 
-  // Limita a 5 (mais seguro para rate limit)
-  const limited = candidates.slice(0, 5)
+  // Limita a 15 (aumentado para ser mais abrangente, mas mantendo segurança)
+  const limited = candidates.slice(0, 15)
 
   for (const contract of limited) {
     if (!contract.id) continue

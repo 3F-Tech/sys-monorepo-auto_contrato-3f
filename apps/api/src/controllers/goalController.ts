@@ -143,8 +143,8 @@ export const getGoals = async (req: any, res: Response) => {
                 where: { seller_id: BigInt(requester.id) },
                 select: { business_id: true }
             });
-            const buIds = myBUs.map(sb => sb.business_id);
-            
+            const buIds = myBUs.map(sb => BigInt(sb.business_id));
+
             where.OR = [
                 { target_type: 'head', target_id: BigInt(requester.id) },
                 { target_type: 'team', target_id: BigInt(requester.id) },
@@ -175,7 +175,7 @@ export const getGoals = async (req: any, res: Response) => {
                 include: { seller_business: true }
             });
 
-            const buIds = me?.seller_business.map(sb => sb.business_id) || [];
+            const buIds = me?.seller_business.map(sb => BigInt(sb.business_id)) || [];
             const orConditions: any[] = [
                 { target_type: 'seller', target_id: BigInt(requester.id) },
                 { target_type: 'bu', target_id: { in: buIds } }

@@ -25,6 +25,12 @@ Dashboard principal de metas e performance. Recebe dados agregados do `Home.vue`
   - Um banner de aviso (âmbar) é exibido **apenas na visão mensal** (`periodType === 'month'`), com botão para configurar metas (visível apenas para `admin`, `head`, `coord`).
 - **Checkpoints da linha planejada (`dailyData`):** Os valores `p1_period_1...4` do `goal` podem vir como `undefined` (quando `activeGoal` é um agregado de múltiplas metas sem esses campos). A verificação **deve** usar `== null` (loose equality) para tratar `null` e `undefined` da mesma forma — nunca `=== null`.
 - **Parsing de datas (`first_payment_date` e `created_at`):** Esses campos chegam como ISO timestamp completo do Prisma (ex: `"2026-05-10T00:00:00.000Z"`). Para comparação correta com datas locais (ex: `startP1`, `endP1`), extrair apenas a parte da data com `.split('T')[0]` e parsear como `new Date(dateStr + 'T12:00:00')`.
+- **Janela do Gráfico de Evolução P1 (`dailyData`):**
+  - **Eixo X:** Dia 01 ao último dia do mês (não vai até o dia 06 do mês seguinte).
+  - **Contagem P1:** Contrato é contado se `signed_date` está no mês E `first_payment_date ≤ dia 06 do mês seguinte`. Threshold é verificado separadamente da janela do gráfico.
+  - **Posição no gráfico:** Contratos são plotados na posição do `signed_date` (quando o P1 é realizado), nunca na posição do `first_payment_date`.
+  - **Semanas do calendário:** As semanas seguem o calendário real (Domingo→Sábado). Se o mês não começa num domingo, a primeira semana é parcial (do dia 1 até o sábado). O número de semanas é dinâmico (4 a 6 por mês). Usar `computeCalendarWeeks(year, month)` para calcular.
+  - **Semanas com âncora:** Nas views semanais (week2+), o primeiro ponto da série é o último dia da semana anterior. Isso garante continuidade visual e evita que o gráfico fique vazio no primeiro dia de uma nova semana. **Não aplicar entre meses.**
 - **Granularidade do Gráfico:**
   - **Mês:** Seletor por Semanas (1-4) + Mês Inteiro.
   - **Trimestre/Ano:** Seletor por Meses individuais + Período Inteiro.
@@ -67,6 +73,12 @@ Modal para visualizar e configurar o CAC (Custo de Aquisição de Clientes).
 
 ### `TeamManager.vue`
 Componente de gestão de equipe (associação/dissociação de vendedores).
+
+**Regras de Comportamento:**
+- **Permissão:** `admin`, `head` e `coord` podem criar equipes e gerenciar membros.
+- **Coord:** Só vê equipes onde `head_id === coord.id`. Só pode adicionar vendedores que tenham `head_id === coord.id`.
+- **Erro 403:** Tratado com `toast.error` exibindo a mensagem retornada pelo backend.
+- **Exclusão:** Usa `ConfirmModal` (nunca `confirm()` nativo).
 
 ## 🔗 Dependências Compartilhadas
 - **ApexCharts** (`vue3-apexcharts`): Gráficos de linha e radial.

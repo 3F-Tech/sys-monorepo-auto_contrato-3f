@@ -15,7 +15,8 @@ export const useTeamStore = defineStore('team', () => {
   const teams = ref<Team[]>([]);
   const loading = ref(false);
 
-  async function fetchTeams() {
+  async function fetchTeams(force = false) {
+    if (!force && teams.value.length > 0) return;
     loading.value = true;
     try {
       const response = await client.get('/teams');

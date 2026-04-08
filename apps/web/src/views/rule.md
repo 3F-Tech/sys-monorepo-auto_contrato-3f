@@ -44,9 +44,9 @@ O `Home.vue` é o **orquestrador central** do dashboard. Ele gerencia:
 
 - **`parseLocalDate(raw)`**: Helper que parseia datas ISO do Prisma como data local (extrai parte da data com `.split('T')[0]` e parseia como `T12:00:00` local). Evita offset UTC em comparações de range. **Usar em toda comparação de data de contrato.**
 - **`currentDateRange`**: Calcula intervalos de datas para o período selecionado:
-  - `gen`: dia 01 ao último dia do mês — usado para todos os cálculos.
-  - `p1`: dia 06 ao dia 05 — janela de competência P1.
+  - `gen`: dia 01 ao último dia do mês — usado para todos os cálculos (inclusive P1).
   - `months[]`: lista de meses no período.
+- **Regra de P1**: Contrato assinado entre dia 01 e último dia do mês (range `gen` por `signed_date`) cujo `first_payment_date` ≤ dia 06 do mês seguinte. Se não atender, o P1 é perdido. P1 é contabilizado no momento da assinatura, não no pagamento.
 - **`filteredP1Contracts`**: Contratos assinados dentro do `gen` range (por `signed_date`) que atendem à janela de pagamento (first_payment_date ≤ dia 06 do mês seguinte à assinatura). Contratos sem `first_payment_date` são **incluídos**.
 - **`currentPerformance`**: Calcula `{ p1, tcv, nmrr, implementation, monthly }`. Todas as métricas usam `signed_date` para definir o mês. P1 usa `filteredP1Contracts` + `first_payment_amount` (fallback `monthly_fee`). Passado como prop `:actuals` para o `GoalsDashboard`.
 - **`activeGoalsList`**: Filtra as metas da store por entidade (BU/Equipe/Vendedor) e por meses do período.

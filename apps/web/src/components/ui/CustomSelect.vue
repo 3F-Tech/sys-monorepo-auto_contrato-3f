@@ -1,14 +1,21 @@
 <template>
   <div class="relative group/custom-select w-full" ref="container">
-    <!-- Icone de prefixo opcional -->
     <div
-      v-if="icon"
-      class="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-hover/custom-select:text-brand-cyan transition-colors z-20"
+      v-if="icon || selectedOptionImage"
+      class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center z-20 pointer-events-none"
     >
-      <component :is="icon" class="h-3.5 w-3.5" />
+      <img
+        v-if="selectedOptionImage"
+        :src="selectedOptionImage"
+        class="h-5 w-5 rounded-md object-cover border border-white/10"
+      />
+      <component
+        v-else
+        :is="icon"
+        class="h-3.5 w-3.5 text-white/20 group-hover/custom-select:text-brand-cyan transition-colors"
+      />
     </div>
 
-    <!-- Gatilho (Botão ou Input se pesquisável) -->
     <div
       v-if="!searchable"
       @click="toggleDropdown"
@@ -17,7 +24,7 @@
         variant === 'form'
           ? 'bg-brand-surface py-3 px-4 rounded-xl hover:border-brand-cyan/40 text-sm font-medium'
           : 'bg-brand-offset/40 py-2.5 px-4 rounded-2xl hover:border-brand-cyan/30 text-[10px] font-black uppercase tracking-widest',
-        icon ? 'pl-10' : '',
+        (icon || selectedOptionImage) ? 'pl-11' : '',
         disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10',
       ]"
     >
@@ -37,7 +44,7 @@
         variant === 'form'
           ? 'bg-brand-surface py-3 px-4 rounded-xl focus:border-brand-cyan/40 placeholder:text-white/20 text-sm font-medium'
           : 'bg-brand-offset/40 py-2.5 px-4 rounded-2xl focus:text-brand-cyan focus:border-brand-cyan/50 placeholder:text-white/60 text-[10px] font-black uppercase tracking-widest',
-        icon ? 'pl-10' : '',
+        (icon || selectedOptionImage) ? 'pl-11' : '',
         disabled ? 'opacity-50 cursor-not-allowed' : 'pr-10',
       ]"
     />
@@ -86,8 +93,13 @@
               : 'text-white/60 hover:text-white hover:bg-white/5',
           ]"
         >
-          <span class="flex items-center gap-2">
-            <component :is="option.icon" v-if="option.icon" class="h-3 w-3" />
+          <span class="flex items-center gap-2.5">
+            <img
+              v-if="option.image"
+              :src="option.image"
+              class="h-5 w-5 rounded-md object-cover border border-white/5"
+            />
+            <component :is="option.icon" v-else-if="option.icon" class="h-3 w-3" />
             {{ option.label }}
           </span>
           <Check v-if="modelValue === option.value" class="h-3 w-3" />
@@ -109,6 +121,7 @@
     label: string
     value: any
     icon?: any
+    image?: string
   }
 
   const props = defineProps<{
@@ -163,8 +176,13 @@
   const selectedOptionLabel = computed(() => {
     const option = props.options.find((o) => o.value === props.modelValue)
     // Se for a opção de "todas" (value: ''), não mostramos o label no input, forçando o placeholder
-    if (!option || option.value === '') return ''
+    if (!option || (option.value === '' && props.searchable)) return ''
     return option.label
+  })
+
+  const selectedOptionImage = computed(() => {
+    const option = props.options.find((o) => o.value === props.modelValue)
+    return option?.image || null
   })
 
   const filteredOptions = computed(() => {

@@ -16,7 +16,7 @@ Os controladores em `apps/api/src/controllers` são responsáveis por orquestrar
 - **RBAC (Controle de Acesso em Sellers)**:
   - `admin`: Ver e gerenciar todos os usuários e BUs.
   - `head`: Vê todos os usuários vinculados à sua BU. Pode criar qualquer cargo, facilitando a gestão descentralizada da unidade. Não pode gerenciar BUs.
-  - `coord`: Vê apenas sua equipe direta (`head_id`). Só pode criar/editar vendedores para sua própria equipe. Não pode mudar o próprio cargo de um alvo.
+  - `coord`: Vê apenas sua equipe direta (`head_id`). Só pode criar/editar vendedores para sua própria equipe. Pode criar e gerenciar equipes (mesmas regras de posse do `head`). Não pode mudar o cargo de um alvo.
   - `vendedor`: Acesso apenas aos próprios dados.
 
 ## 📝 Documentação (Swagger)

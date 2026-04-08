@@ -113,9 +113,7 @@ export const getSellerByEmail = async (req: Request, res: Response) => {
  *                 $ref: '#/components/schemas/Sellers'
  */
 export const getSellers = async (req: any, res: Response) => {
-  console.log('[DEBUG] getSellers endpoint reached');
   try {
-    console.log('[DEBUG] Parsing requester:', req.user);
     const { head_id, type } = req.query;
     const requester = req.user;
     const where: any = {};
@@ -129,7 +127,7 @@ export const getSellers = async (req: any, res: Response) => {
         // Head vê todos vinculados à BU dele
         // 1. Descobrir a BU do Head
         const headBusiness = await prisma.seller_business.findFirst({
-          where: { seller_id: Number(requester.id) },
+          where: { seller_id: BigInt(requester.id) },
         });
 
         if (headBusiness) {
@@ -190,9 +188,9 @@ export const getSellers = async (req: any, res: Response) => {
     );
 
     res.json(serializedSellers);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao listar vendedores:", error);
-    res.status(500).json({ error: "Falha ao buscar vendedores" });
+    res.status(500).json({ error: "Falha ao buscar vendedores", details: error?.message });
   }
 };
 

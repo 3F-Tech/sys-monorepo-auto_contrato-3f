@@ -479,13 +479,13 @@ onUnmounted(() => {
 
 const granularityOptions = computed(() => {
   if (props.periodType === 'month') {
-    return [
-      { value: 'all', label: 'Mês Inteiro' },
-      { value: 'week1', label: 'Semana 1' },
-      { value: 'week2', label: 'Semana 2' },
-      { value: 'week3', label: 'Semana 3' },
-      { value: 'week4', label: 'Semana 4' },
-    ]
+    const m = props.currentRange?.months?.[0]
+    const weeks = m ? computeCalendarWeeks(m.y, m.m) : []
+    const options = [{ value: 'all', label: 'Mês Inteiro' }]
+    weeks.forEach((_: any, i: number) => {
+      options.push({ value: `week${i + 1}`, label: `Semana ${i + 1}` })
+    })
+    return options
   }
 
   if (props.periodType === 'all') {
@@ -516,19 +516,19 @@ const granularityOptions = computed(() => {
 const getDefaultGranularity = () => {
   // Para mês, tenta pegar a semana atual
   if (props.periodType === 'month') {
-    const goalMonth = props.goal?.month || new Date().getMonth() + 1
-    const goalYear = props.goal?.year || new Date().getFullYear()
-    const startDate = new Date(goalYear, goalMonth - 1, 6)
-    const endDate = new Date(goalYear, goalMonth, 5, 23, 59, 59)
+    const m = props.currentRange?.months?.[0]
+    const goalMonth = m?.m || props.goal?.month || new Date().getMonth() + 1
+    const goalYear = m?.y || props.goal?.year || new Date().getFullYear()
+    const startDate = new Date(goalYear, goalMonth - 1, 1)
+    const endDate = new Date(goalYear, goalMonth, 0, 23, 59, 59)
     const today = new Date()
 
     if (today < startDate || today > endDate) return 'all'
 
     const diffDays = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    if (diffDays >= 0 && diffDays < 7) return 'week1'
-    if (diffDays >= 7 && diffDays < 13) return 'week2'
-    if (diffDays >= 13 && diffDays < 21) return 'week3'
-    if (diffDays >= 21) return 'week4'
+    const weeks = computeCalendarWeeks(goalYear, goalMonth)
+    const weekNum = weeks.findIndex((w) => diffDays >= w.start && diffDays <= w.end)
+    return weekNum >= 0 ? `week${weekNum + 1}` : 'all'
   }
 
   if (props.periodType === 'all') {
@@ -671,8 +671,28 @@ const radialOptions = computed(() => ({
   stroke: { lineCap: 'round' as const },
 }))
 
+// Helper: calcula semanas do calendário (Domingo→Sábado) para um mês
+function computeCalendarWeeks(year: number, month: number) {
+  const startDate = new Date(year, month - 1, 1)
+  const totalDays = new Date(year, month, 0).getDate()
+  const firstDayOfWeek = startDate.getDay() // 0=Dom, 6=Sáb
+  const weeks: { start: number; end: number }[] = []
+  let dayIdx = 0
+  // Primeira semana parcial (se o mês não começa no domingo)
+  if (firstDayOfWeek !== 0) {
+    const daysUntilSat = 6 - firstDayOfWeek
+    weeks.push({ start: 0, end: Math.min(daysUntilSat, totalDays - 1) })
+    dayIdx = daysUntilSat + 1
+  }
+  // Semanas completas (Dom→Sáb) + última parcial
+  while (dayIdx < totalDays) {
+    weeks.push({ start: dayIdx, end: Math.min(dayIdx + 6, totalDays - 1) })
+    dayIdx += 7
+  }
+  return weeks
+}
+
 const dailyData = computed(() => {
-  console.log("displayMetrics: ", displayMetrics.value)
   // Se estivermos em uma granularidade de Mês Individual (mesmo dentro de trimestre/ano)
   const isIndividualMonth = selectedGranularity.value.startsWith('month_')
   const isMonthMode = props.periodType === 'month' || isIndividualMonth
@@ -689,18 +709,32 @@ const dailyData = computed(() => {
       }
     }
 
-    const startDate = new Date(goalParams.year, goalParams.month - 1, 6)
-    const endDate = new Date(goalParams.year, goalParams.month, 5)
-    const totalDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    // Janela: dia 1 do mês até dia 6 do mês seguinte (mesmo threshold do card de meta)
+    const startDate = new Date(goalParams.year, goalParams.month - 1, 1)
+    const lastDayOfMonth = new Date(goalParams.year, goalParams.month, 0) // último dia do mês
+    const totalDays = Math.round((lastDayOfMonth.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
     const dailyActuals = new Array(totalDays).fill(0)
 
     if (props.contracts.length) {
+      const startOfMonth = new Date(goalParams.year, goalParams.month - 1, 1)
+      const endOfMonth = new Date(goalParams.year, goalParams.month, 0, 23, 59, 59)
+      const thresholdP1 = new Date(goalParams.year, goalParams.month, 6, 23, 59, 59)
       props.contracts.forEach((c) => {
         if (!c.signed) return
-        const rawDate = c.first_payment_date || c.created_at || ''
-        const dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate
-        const date = new Date(dateStr + 'T12:00:00')
-        const diffDays = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        // signed_date deve estar no mês corrente
+        const rawSign = c.signed_date || c.created_at || ''
+        const signStr = rawSign.includes('T') ? rawSign.split('T')[0] : rawSign
+        const signDt = new Date(signStr + 'T12:00:00')
+        if (signDt < startOfMonth || signDt > endOfMonth) return
+        // first_payment_date deve ser ≤ dia 6 do mês seguinte, senão P1 é perdido
+        if (c.first_payment_date) {
+          const rawPay = c.first_payment_date as string
+          const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
+          const payDt = new Date(payStr + 'T12:00:00')
+          if (payDt > thresholdP1) return
+        }
+        // plota na posição do signed_date (P1 é realizado quando o contrato é assinado)
+        const diffDays = Math.floor((signDt.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
         if (diffDays >= 0 && diffDays < totalDays) {
           let val = parseFloat(c.first_payment_amount) || 0
           if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
@@ -737,12 +771,14 @@ const dailyData = computed(() => {
       p4 = mVals[3] != null ? Number(mVals[3]) : totalGoal
     }
 
+    const calendarWeeks = computeCalendarWeeks(goalParams.year, goalParams.month)
+
     const dailyTargets = new Array(totalDays).fill(0)
     const checkpoints = [
       { day: 0, val: 0 },
-      { day: 6, val: p1 },
-      { day: 12, val: p2 },
-      { day: 20, val: p3 },
+      { day: Math.round(totalDays * 0.25), val: p1 },
+      { day: Math.round(totalDays * 0.5), val: p2 },
+      { day: Math.round(totalDays * 0.75), val: p3 },
       { day: totalDays - 1, val: p4 },
     ]
     for (let i = 0; i < checkpoints.length - 1; i++) {
@@ -764,7 +800,7 @@ const dailyData = computed(() => {
       categories.push([dateStr, weekDays[d.getDay()]])
     }
 
-    return { cumulativeActuals, dailyTargets, categories, p1, p2, p3, p4, totalDays }
+    return { cumulativeActuals, dailyTargets, categories, p1, p2, p3, p4, totalDays, calendarWeeks }
   } else {
     // Range mode (Quarter/Year/All)
     let monthsRange = props.currentRange?.months || []
@@ -783,19 +819,26 @@ const dailyData = computed(() => {
     monthsRange.forEach((mObj) => {
       const d = new Date(mObj.y, mObj.m - 1, 1)
       categories.push(d.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase())
-      const startP1 = new Date(mObj.y, mObj.m - 1, 6)
-      const endP1 = new Date(mObj.y, mObj.m, 5, 23, 59, 59)
+      const startOfMonth = new Date(mObj.y, mObj.m - 1, 1)
+      const endOfMonth = new Date(mObj.y, mObj.m, 0, 23, 59, 59)
+      const thresholdP1 = new Date(mObj.y, mObj.m, 6, 23, 59, 59) // dia 6 do mês seguinte
       const monthActual = props.contracts.reduce((acc, c) => {
         if (!c.signed) return acc
-        const rawDt = c.first_payment_date || c.created_at || ''
-        const dtStr = rawDt.includes('T') ? rawDt.split('T')[0] : rawDt
-        const dt = new Date(dtStr + 'T12:00:00')
-        if (dt >= startP1 && dt <= endP1) {
-          let val = parseFloat(c.first_payment_amount) || 0
-          if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
-          return acc + val
+        // signed_date deve estar no mês M
+        const rawSign = c.signed_date || c.created_at || ''
+        const signStr = rawSign.includes('T') ? rawSign.split('T')[0] : rawSign
+        const signDt = new Date(signStr + 'T12:00:00')
+        if (signDt < startOfMonth || signDt > endOfMonth) return acc
+        // first_payment_date deve ser ≤ dia 6 do mês M+1, senão P1 é perdido
+        if (c.first_payment_date) {
+          const rawPay = c.first_payment_date
+          const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
+          const payDt = new Date(payStr + 'T12:00:00')
+          if (payDt > thresholdP1) return acc
         }
-        return acc
+        let val = parseFloat(c.first_payment_amount) || 0
+        if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
+        return acc + val
       }, 0)
       cumActual += monthActual
       monthlyActuals.push(Number(cumActual.toFixed(2)))
@@ -823,52 +866,34 @@ const chartData = computed(() => {
 
   const { p1, p2, p3, p4 } = dailyData.value as any
 
-  if (selectedGranularity.value === 'all') {
+  const weeks = (dailyData.value as any).calendarWeeks || []
+
+  // Visão "Mês Inteiro" ou mês individual dentro de trimestre
+  if (selectedGranularity.value === 'all' || isIndividualMonth) {
     return {
-      categories: ['D1-7', 'D8-13', 'D14-21', 'D22-EOF'],
-      actuals: [
-        cumulativeActuals[6] || 0,
-        cumulativeActuals[12] || 0,
-        cumulativeActuals[20] || 0,
-        cumulativeActuals[totalDays - 1] || 0,
-      ],
-      targets: [p1, p2, p3, p4],
+      categories: weeks.map((w: any) => `D${w.start + 1}-${w.end + 1}`),
+      actuals: weeks.map((w: any) => Number((cumulativeActuals[w.end] || 0).toFixed(2))),
+      targets: weeks.map((w: any) => Number((dailyTargets[w.end] || 0).toFixed(2))),
     }
   }
 
-  let startIdx = 0
-  let endIdx = 6
-  if (selectedGranularity.value === 'week1') {
-    startIdx = 0
-    endIdx = 6
-  } else if (selectedGranularity.value === 'week2') {
-    startIdx = 7
-    endIdx = 12
-  } else if (selectedGranularity.value === 'week3') {
-    startIdx = 13
-    endIdx = 20
-  } else if (selectedGranularity.value === 'week4') {
-    startIdx = 21
-    endIdx = totalDays - 1
+  // Visão de semana individual (week1, week2, ...)
+  const weekIdx = parseInt(selectedGranularity.value.replace('week', '')) - 1
+  const week = weeks[weekIdx]
+  if (!week) {
+    return { categories: [], actuals: [], targets: [] }
   }
-  // Se for um mês específico dentro de um trimestre, mostramos o mês inteiro agrupado por semanas
-  else if (isIndividualMonth) {
-    return {
-      categories: ['D1-7', 'D8-13', 'D14-21', 'D22-EOF'],
-      actuals: [
-        cumulativeActuals[6] || 0,
-        cumulativeActuals[12] || 0,
-        cumulativeActuals[20] || 0,
-        cumulativeActuals[totalDays - 1] || 0,
-      ],
-      targets: [p1, p2, p3, p4],
-    }
+
+  // Âncora: inclui último dia da semana anterior (exceto semana 1)
+  let startIdx = week.start
+  if (weekIdx > 0) {
+    startIdx = weeks[weekIdx - 1].end
   }
 
   return {
-    categories: (categories as any).slice(startIdx, endIdx + 1),
-    actuals: cumulativeActuals.slice(startIdx, endIdx + 1).map((v) => Number(v.toFixed(2))),
-    targets: dailyTargets.slice(startIdx, endIdx + 1).map((v) => Number(v.toFixed(2))),
+    categories: (categories as any).slice(startIdx, week.end + 1),
+    actuals: cumulativeActuals.slice(startIdx, week.end + 1).map((v) => Number(v.toFixed(2))),
+    targets: dailyTargets.slice(startIdx, week.end + 1).map((v) => Number(v.toFixed(2))),
   }
 })
 
@@ -938,33 +963,36 @@ const lineSeries = computed(() => {
     let isFuture = false
 
     if (props.periodType === 'month' || selectedGranularity.value.startsWith('month_')) {
-      // No modo diário do mês: compara cada dia com hoje
       const goalMonth = props.goal?.month || props.currentRange?.months[0]?.m || now.getMonth() + 1
       const goalYear = props.goal?.year || props.currentRange?.months[0]?.y || now.getFullYear()
-      const startDate = new Date(goalYear, goalMonth - 1, 6)
+      const startDate = new Date(goalYear, goalMonth - 1, 1)
+      const weeks = (dailyData.value as any).calendarWeeks || []
 
-      // Se for agrupado por semanas no "all" ou "month_..."
       if (selectedGranularity.value === 'all' || selectedGranularity.value.startsWith('month_')) {
-        const milestones = [6, 12, 20, 30] // Dias de corte aproximados
-        const checkDate = new Date(startDate)
-        checkDate.setDate(checkDate.getDate() + milestones[idx])
-        if (checkDate > now) isFuture = true
+        // Período só é "futuro" se o início da semana ainda não chegou
+        const week = weeks[idx]
+        if (week) {
+          const checkDate = new Date(startDate)
+          checkDate.setDate(checkDate.getDate() + week.start)
+          if (checkDate > now) isFuture = true
+        }
       } else {
-        // Se for detalhado dia a dia (weekX)
-        const weekPrefix = selectedGranularity.value.replace('week', '')
-        const startOffsets = [0, 7, 13, 21]
-        const offset = startOffsets[parseInt(weekPrefix) - 1] || 0
-        const checkDate = new Date(startDate)
-        checkDate.setDate(checkDate.getDate() + offset + idx)
-        if (checkDate > now) isFuture = true
+        // Semana individual: usa o startIdx real (com âncora)
+        const weekIdx = parseInt(selectedGranularity.value.replace('week', '')) - 1
+        const week = weeks[weekIdx]
+        if (week) {
+          let dayStart = week.start
+          if (weekIdx > 0) dayStart = weeks[weekIdx - 1].end
+          const checkDate = new Date(startDate)
+          checkDate.setDate(checkDate.getDate() + dayStart + idx)
+          if (checkDate > now) isFuture = true
+        }
       }
     } else {
-      // No modo trimestral/anual/all (comparação por meses)
       const monthsRange = props.currentRange?.months || []
       const mObj = monthsRange[idx]
       if (mObj) {
         const monthDate = new Date(mObj.y, mObj.m - 1, 1)
-        // Se o mês do gráfico é posterior ao mês atual
         const currentMonthFirstDay = new Date(now.getFullYear(), now.getMonth(), 1)
         if (monthDate > currentMonthFirstDay) isFuture = true
       }

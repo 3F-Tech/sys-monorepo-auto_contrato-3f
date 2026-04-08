@@ -12,7 +12,7 @@
         </p>
       </div>
 
-      <button @click="showCreateModal = true"
+      <button v-if="['admin', 'head', 'coord'].includes(authStore.user?.type || '')" @click="showCreateModal = true"
         class="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan hover:bg-brand-cyan hover:text-brand-deep transition-all duration-300 text-[10px] font-black uppercase tracking-wider group">
         <Plus class="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
         Nova Equipe
@@ -196,6 +196,18 @@
       </div>
     </div>
 
+    <!-- Confirm Delete Modal -->
+    <ConfirmModal
+      :is-open="confirmDeleteOpen"
+      title="Excluir Equipe"
+      message="Tem certeza que deseja excluir esta equipe? Esta ação não pode ser desfeita."
+      confirm-text="Excluir"
+      cancel-text="Cancelar"
+      type="danger"
+      @confirm="confirmDelete"
+      @cancel="confirmDeleteOpen = false"
+    />
+
     <!-- Add Member Modal -->
     <!-- Add Member Modal -->
     <div v-if="selectingTeamForMember" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -267,6 +279,7 @@ import { useTeamStore, type Team } from '../../store/team'
 import { useSellerStore } from '../../store/seller'
 import { useAuthStore } from '../../store/auth'
 import { useToast } from '../../composables/useToast'
+import ConfirmModal from '../ui/ConfirmModal.vue'
 
 const teamStore = useTeamStore()
 const sellerStore = useSellerStore()
@@ -276,6 +289,8 @@ const toast = useToast()
 const showCreateModal = ref(false)
 const editingTeam = ref<Team | null>(null)
 const selectingTeamForMember = ref<Team | null>(null)
+const confirmDeleteOpen = ref(false)
+const teamToDelete = ref<number | null>(null)
 
 const dragOver = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -400,15 +415,35 @@ const saveTeam = async () => {
     toast.success(editingTeam.value ? 'Equipe atualizada!' : 'Equipe criada com sucesso!')
     closeFormModal()
   } else {
-    toast.error('Erro ao salvar equipe.')
+    const status = (res.error as any)?.response?.status
+    const msg = (res.error as any)?.response?.data?.error
+    if (status === 403) {
+      toast.error(msg || 'Acesso negado. Você não tem permissão para esta ação.')
+    } else {
+      toast.error('Erro ao salvar equipe.')
+    }
   }
 }
 
-const handleDeleteTeam = async (id: number) => {
-  if (confirm('Tem certeza que deseja excluir esta equipe?')) {
-    const res = await teamStore.deleteTeam(id)
-    if (res.success) {
-      toast.success('Equipe removida.')
+const handleDeleteTeam = (id: number) => {
+  teamToDelete.value = id
+  confirmDeleteOpen.value = true
+}
+
+const confirmDelete = async () => {
+  if (teamToDelete.value === null) return
+  confirmDeleteOpen.value = false
+  const res = await teamStore.deleteTeam(teamToDelete.value)
+  teamToDelete.value = null
+  if (res.success) {
+    toast.success('Equipe removida.')
+  } else {
+    const status = (res.error as any)?.response?.status
+    const msg = (res.error as any)?.response?.data?.error
+    if (status === 403) {
+      toast.error(msg || 'Acesso negado. Você não tem permissão para excluir esta equipe.')
+    } else {
+      toast.error('Erro ao remover equipe.')
     }
   }
 }
@@ -423,6 +458,14 @@ const addMember = async (teamId: number, sellerId: string) => {
     toast.success('Vendedor adicionado!')
     await sellerStore.fetchAllSellers()
     selectingTeamForMember.value = teamStore.teams.find((t) => t.id === teamId) || null
+  } else {
+    const status = (res.error as any)?.response?.status
+    const msg = (res.error as any)?.response?.data?.error
+    if (status === 403) {
+      toast.error(msg || 'Acesso negado. Você não tem permissão para adicionar este vendedor.')
+    } else {
+      toast.error('Erro ao adicionar vendedor.')
+    }
   }
 }
 
@@ -431,6 +474,14 @@ const handleRemoveMember = async (teamId: number, sellerId: string) => {
   if (res.success) {
     toast.success('Membro removido da equipe.')
     await sellerStore.fetchAllSellers()
+  } else {
+    const status = (res.error as any)?.response?.status
+    const msg = (res.error as any)?.response?.data?.error
+    if (status === 403) {
+      toast.error(msg || 'Acesso negado. Você não tem permissão para remover este membro.')
+    } else {
+      toast.error('Erro ao remover membro.')
+    }
   }
 }
 </script>

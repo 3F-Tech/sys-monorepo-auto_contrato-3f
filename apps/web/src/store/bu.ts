@@ -9,6 +9,7 @@ export const useBuStore = defineStore('bu', () => {
   const loading = ref(false);
 
   async function fetchBusinesses() {
+    if (businesses.value.length > 0) return;
     loading.value = true;
     try {
       const data = await getBusiness({ client });

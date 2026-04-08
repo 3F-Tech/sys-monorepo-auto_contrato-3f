@@ -35,7 +35,8 @@
             <div v-if="managementMenuOpen"
               class="management-dropdown-menu absolute right-0 mt-2 w-52 rounded-xl bg-brand-offset/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden z-[60] animate-in fade-in zoom-in-95 duration-200">
               <div class="p-1.5 space-y-1">
-                <button v-if="user?.type === 'admin'" @click="router.push('/admin/users'); managementMenuOpen = false"
+                <button v-if="['admin', 'head', 'coord'].includes(user?.type || '')"
+                  @click="router.push('/admin/users'); managementMenuOpen = false"
                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-white/70 hover:text-brand-cyan hover:bg-brand-cyan/5 transition-all">
                   <div class="p-1.5 rounded-md bg-white/5">
                     <Users class="h-3.5 w-3.5" />
@@ -68,13 +69,13 @@
                   <span class="text-[11px] font-bold uppercase tracking-wider">Custos Comerciais</span>
                 </button>
 
-                <button @click="cacModalOpen = true; managementMenuOpen = false"
+                <!-- <button @click="cacModalOpen = true; managementMenuOpen = false"
                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-white/70 hover:text-brand-cyan hover:bg-brand-cyan/5 transition-all">
                   <div class="p-1.5 rounded-md bg-white/5">
                     <TrendingUp class="h-3.5 w-3.5" />
                   </div>
                   <span class="text-[11px] font-bold uppercase tracking-wider">Configurar CAC</span>
-                </button>
+                </button> -->
               </div>
             </div>
           </div>
@@ -172,7 +173,7 @@
           </div>
           <div class="min-w-[240px] flex-1 md:flex-none" v-if="!['seller', 'sdr'].includes(user?.type || '')">
             <CustomSelect v-model="selectedSellerId" :options="sellerOptionsFormatted" placeholder="Selecionar Vendedor"
-              :icon="Users2" searchable allow-clear />
+              :icon="UserRound" searchable allow-clear />
           </div>
         </template>
 
@@ -208,9 +209,6 @@
             <TrendingUp class="h-4 w-4 text-brand-cyan" />
             Performance
           </h2>
-          <p class="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 mt-0.5 ml-6">
-            Indicadores sincronizados em tempo real
-          </p>
         </div>
       </div>
 
@@ -447,10 +445,9 @@
                   placeholder="BU" :icon="Building2" />
                 <template v-else>
                   <CustomSelect v-model="selectedTeamId" :options="teamOptionsFormatted" placeholder="Equipe"
-                    :icon="Users" searchable allow-clear />
-                  <CustomSelect v-if="!['seller', 'sdr'].includes(user?.type || '')" v-model="selectedSellerId" 
-                    :options="sellerOptionsFormatted" placeholder="Vendedor"
-                    :icon="Users2" searchable allow-clear />
+                    :icon="UsersRound" searchable allow-clear />
+                  <CustomSelect v-if="!['seller', 'sdr'].includes(user?.type || '')" v-model="selectedSellerId"
+                    :options="sellerOptionsFormatted" placeholder="Vendedor" :icon="UserRound" searchable allow-clear />
                 </template>
               </div>
               <div class="h-px bg-white/5"></div>
@@ -492,7 +489,8 @@ import client from '../api/client'
 import {
   LogOut, FileText, Users, Building2, LayoutGrid, ArrowRight, TrendingUp, Receipt, DollarSign, BanknoteArrowUp, ShieldCheck,
   Settings, Users2, UserRound, Check, Search, Calendar, X, ChevronDown as ChevronDownIcon, Clock,
-  Activity, Construction, Briefcase, Target, Info, ListFilterPlus, FileCheck, Percent, Timer
+  Activity, Construction, Briefcase, Target, Info, ListFilterPlus, FileCheck, Percent, Timer,
+  UsersRound
 } from '@lucide/vue'
 import ProfileModal from '../components/profile/ProfileModal.vue'
 import GoalsDashboard from '../components/dashboard/GoalsDashboard.vue'
@@ -507,6 +505,7 @@ import CustomSelect from '../components/ui/CustomSelect.vue'
 import { useTeamStore } from '../store/team'
 import { useCacStore } from '../store/cac'
 import { useCostsStore } from '../store/costs'
+import { useBuStore } from '../store/bu'
 
 // --- Stores ---
 const authStore = useAuthStore()
@@ -516,6 +515,7 @@ const goalStore = useGoalStore()
 const teamStore = useTeamStore()
 const costsStore = useCostsStore()
 const cacStore = useCacStore()
+const buStore = useBuStore()
 const router = useRouter()
 const toast = useToast()
 
@@ -539,7 +539,7 @@ const selectedSellerId = ref<string | null>(null)
 const selectedYear = ref(new Date().getFullYear().toString())
 const selectedPeriodType = ref<'month' | 'quarter' | 'year' | 'all'>('month')
 const selectedPeriodValue = ref(new Date().toISOString().substring(0, 7))
-const businessList = ref<Business[]>([])
+const businessList = computed(() => buStore.businesses)
 
 // --- FAB Logic ---
 const filterSectionRef = ref<HTMLElement | null>(null)
@@ -577,7 +577,7 @@ onMounted(() => {
   }
   sellerStore.fetchAllSellers()
   teamStore.fetchTeams()
-  getBusiness({ client }).then(data => businessList.value = data as Business[])
+  buStore.fetchBusinesses()
 })
 
 onUnmounted(() => {
@@ -623,10 +623,10 @@ const currentDateRange = computed(() => {
   }
   if (selectedPeriodType.value === 'month') {
     const [y, m] = selectedPeriodValue.value.split('-').map(Number)
-    return { 
-      p1: { start: new Date(y, m - 1, 6, 0, 0, 0), end: new Date(y, m, 5, 23, 59, 59, 999) }, 
-      gen: { start: new Date(y, m - 1, 1, 0, 0, 0), end: new Date(y, m, 0, 23, 59, 59, 999) }, 
-      months: [{ m, y }] 
+    return {
+      p1: { start: new Date(y, m - 1, 6, 0, 0, 0), end: new Date(y, m, 5, 23, 59, 59, 999) },
+      gen: { start: new Date(y, m - 1, 1, 0, 0, 0), end: new Date(y, m, 0, 23, 59, 59, 999) },
+      months: [{ m, y }]
     }
   }
   if (selectedPeriodType.value === 'year') {
@@ -683,32 +683,23 @@ const signedContracts = computed(() => filteredContracts.value.filter(c => c.sig
 const filteredP1Contracts = computed(() => {
   const range = currentDateRange.value
 
-  // Contratos assinados no período (por signed_date)
+  // Passo 1: contrato deve estar assinado dentro do período (ex: abril)
   const contractsInPeriod = signedContracts.value.filter(c => {
     const d = parseLocalDate(c.signed_date || c.created_at)
     return d.getTime() >= range.gen.start.getTime() && d.getTime() <= range.gen.end.getTime()
   })
 
+  // Passo 2: first_payment_date deve ser ≤ dia 6 do mês seguinte ao período
+  // Senão o P1 é perdido e não conta para nenhum mês
+  const end = range.gen.end
+  const tMonth = end.getMonth() + 1
+  const tYear = tMonth > 11 ? end.getFullYear() + 1 : end.getFullYear()
+  const threshold = new Date(tYear, tMonth > 11 ? 0 : tMonth, 6, 23, 59, 59)
+
   return contractsInPeriod.filter(c => {
-    // Data de assinatura para cálculo do limite de pagamento
-    const signDate = parseLocalDate(c.signed_date || c.created_at)
-
-    // Threshold: dia 6 do mês seguinte à assinatura
-    let thresholdYear = signDate.getFullYear()
-    let thresholdMonth = signDate.getMonth() + 1
-    if (thresholdMonth > 11) {
-      thresholdMonth = 0
-      thresholdYear += 1
-    }
-    const threshold = new Date(thresholdYear, thresholdMonth, 6, 23, 59, 59)
-
-    // Data de Pagamento do P1
     if (!c.first_payment_date) return true
-
-    const pDateObj = parseLocalDate(c.first_payment_date as string)
-
-    // Apenas conta se o pagamento foi até o dia 06 do mês subsequente
-    return pDateObj <= threshold
+    const pDate = parseLocalDate(c.first_payment_date as string)
+    return pDate.getTime() <= threshold.getTime()
   })
 })
 
@@ -848,10 +839,46 @@ const dynamicPeriodOptions = computed(() => {
 const periodValuePlaceholder = computed(() => selectedPeriodType.value === 'quarter' ? 'Trimestre' : selectedPeriodType.value === 'year' ? 'Ano' : 'Mês')
 
 const buOptionsFormatted = computed(() => {
-  const opts = [{ value: 'all', label: '3F' }]
-  businessList.value.forEach(b => opts.push({ value: b.id?.toString() || '', label: b.name || '' }))
+  const u = authStore.user
+  const isAdmin = u?.type === 'admin'
+  const myBUIds = (u as any)?.seller_business?.map((sb: any) => Number(sb.business_id)) || []
+  
+  const opts: any[] = []
+  
+  // Apenas Admin ou quem tem múltiplas BUs vê a opção "Geral"
+  if (isAdmin) {
+    opts.push({ value: 'all', label: '3F Venture', image: '/3fventure-logo.jpg' })
+  } else if (myBUIds.length > 1) {
+    opts.push({ value: 'all', label: 'Geral (Minhas BUs)', image: '/3fventure-logo.jpg' })
+  }
+
+  businessList.value.forEach(b => {
+    const isMyBU = myBUIds.includes(Number(b.id))
+    if (isAdmin || isMyBU) {
+      opts.push({
+        value: b.id?.toString() || '',
+        label: b.name || '',
+        image: b.img_base64 || undefined
+      })
+    }
+  })
+  
   return opts
 })
+
+// Garantir que selectedBUId seja inicializado corretamente de acordo com as permissões
+watch(buOptionsFormatted, (opts) => {
+  if (!opts.length) return
+  
+  const canSeeAll = opts.some(o => o.value === 'all')
+  
+  if (!selectedBUId.value) {
+    selectedBUId.value = opts[0].value
+  } else if (selectedBUId.value === 'all' && !canSeeAll) {
+    // Se o usuário não pode ver "Geral", muda para a primeira BU disponível
+    selectedBUId.value = opts[0].value
+  }
+}, { immediate: true })
 const teamOptionsFormatted = computed(() => teamStore.teams.map(t => ({ value: `team_${t.id}`, label: t.name })))
 const sellerOptionsFormatted = computed(() => {
   let sls = sellerStore.allSellers

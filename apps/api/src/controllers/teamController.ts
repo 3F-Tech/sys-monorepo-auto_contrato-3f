@@ -14,7 +14,7 @@ export const getTeams = async (req: any, res: Response) => {
     const requester = req.user;
     const where: any = {};
 
-    if (requester.type === "head") {
+    if (requester.type === "head" || requester.type === "coord") {
       where.head_id = BigInt(requester.id);
     } else if (requester.type === "seller") {
       const seller = await prisma.sellers.findUnique({
@@ -61,7 +61,7 @@ export const createTeam = async (req: any, res: Response) => {
     const { name, photo_url, description } = req.body;
     const requester = req.user;
 
-    if (!["admin", "head"].includes(requester.type)) {
+    if (!["admin", "head", "coord"].includes(requester.type)) {
       return res.status(403).json({
         error: "Acesso negado. Você não tem permissão para criar equipes.",
       });
@@ -114,7 +114,7 @@ export const updateTeam = async (req: any, res: Response) => {
     const team = await prisma.teams.findUnique({ where: { id: teamId } });
     if (
       !team ||
-      (requester.type === "head" &&
+      (["head", "coord"].includes(requester.type) &&
         team.head_id?.toString() !== requester.id.toString())
     ) {
       return res.status(403).json({
@@ -163,13 +163,26 @@ export const addTeamMember = async (req: any, res: Response) => {
     const team = await prisma.teams.findUnique({ where: { id: teamId } });
     if (
       !team ||
-      (requester.type === "head" &&
+      (["head", "coord"].includes(requester.type) &&
         team.head_id?.toString() !== requester.id.toString())
     ) {
       return res.status(403).json({
         error:
           "Acesso negado. Você não tem permissão para adicionar membros a esta equipe.",
       });
+    }
+
+    if (requester.type === "coord") {
+      const seller = await prisma.sellers.findUnique({
+        where: { id: BigInt(sellerId) },
+        select: { head_id: true },
+      });
+      if (seller?.head_id?.toString() !== requester.id.toString()) {
+        return res.status(403).json({
+          error:
+            "Acesso negado. Este vendedor não pertence à sua hierarquia.",
+        });
+      }
     }
 
     await prisma.sellers.update({
@@ -212,15 +225,13 @@ export const removeTeamMember = async (req: any, res: Response) => {
     const team = await prisma.teams.findUnique({ where: { id: teamId } });
     if (
       !team ||
-      (requester.type === "head" &&
+      (["head", "coord"].includes(requester.type) &&
         team.head_id?.toString() !== requester.id.toString())
     ) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Acesso negado. Você não tem permissão para remover membros desta equipe.",
-        });
+      return res.status(403).json({
+        error:
+          "Acesso negado. Você não tem permissão para remover membros desta equipe.",
+      });
     }
 
     await prisma.sellers.update({
@@ -257,15 +268,13 @@ export const deleteTeam = async (req: any, res: Response) => {
     const team = await prisma.teams.findUnique({ where: { id: teamId } });
     if (
       !team ||
-      (requester.type === "head" &&
+      (["head", "coord"].includes(requester.type) &&
         team.head_id?.toString() !== requester.id.toString())
     ) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Acesso negado. Você não tem permissão para excluir esta equipe.",
-        });
+      return res.status(403).json({
+        error:
+          "Acesso negado. Você não tem permissão para excluir esta equipe.",
+      });
     }
 
     // Antes de deletar, limpa os vínculos
