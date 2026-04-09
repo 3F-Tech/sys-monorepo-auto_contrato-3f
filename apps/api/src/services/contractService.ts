@@ -17,7 +17,7 @@ export class ContractService {
             throw new Error(`Contrato com ID ${contractId} não encontrado.`);
         }
 
-        const clicksignId = (contract as any).envelope_id || contract.document_id || '';
+        const clicksignId = contract.document_id || (contract as any).envelope_id || '';
         if (!clicksignId) {
             console.warn(`[SYNC] Contrato "${contract.title}" não possui ID do Clicksign.`);
             return contract;
@@ -109,20 +109,38 @@ export class ContractService {
                         isFullySigned = true;
                     }
 
-                    const listSigners = document.list || [];
+                    const listSigners = document.signers || [];
                     totalSigners = listSigners.length;
-                    signedCount = listSigners.filter((s: any) => s.signature?.signed_at).length;
+                    
+                    const signEvents = (document.events || []).filter((e: any) => e.name === 'sign');
 
-                    signersToUpdate = listSigners.map((s: any) => ({
-                        email: s.email,
-                        name: s.name || s.email,
-                        signed: !!s.signature?.signed_at,
-                        signed_at: s.signature?.signed_at ? new Date(s.signature.signed_at) : null
-                    }));
+                    let maxSignedDate: Date | null = null;
+                    signersToUpdate = listSigners.map((s: any) => {
+                        const sigEvent = signEvents.find((e: any) => e.data?.signer?.email === s.email);
+                        const eventDate = sigEvent ? new Date(sigEvent.occurred_at) : null;
+                        
+                        // Atualiza a data máxima de assinatura encontrada
+                        if (eventDate && (!maxSignedDate || eventDate > maxSignedDate)) {
+                            maxSignedDate = eventDate;
+                        }
 
-                    if (isFullySigned) {
+                        return {
+                            email: s.email,
+                            name: s.name || s.email,
+                            signed: !!sigEvent,
+                            signed_at: eventDate
+                        };
+                    });
+                    
+                    signedCount = signersToUpdate.filter(s => s.signed).length;
+
+                    if (isFullySigned || (signedCount >= totalSigners && totalSigners > 0)) {
+                        isFullySigned = true;
                         signedCount = totalSigners;
                     }
+
+                    // Armazena a data máxima para uso no update final
+                    (contract as any)._calculated_signed_date = maxSignedDate;
                 } catch (v1Error: any) {
                     console.warn(`[SYNC] Contrato "${contract.title}" (${clicksignId}): indisponível na v3 (${v3Error.message}) e v1 (${v1Error.message}). Retornando sem alteração.`);
                     return contract;
@@ -139,8 +157,11 @@ export class ContractService {
                     signed_count: signedCount,
                     total_signers: totalSigners > 0 ? totalSigners : undefined,
                     signed: markAsSigned,
-                    // Define signed_date se acabou de ser assinado ou se está assinado mas não tinha data
-                    signed_date: (markAsSigned && !contract.signed_date) ? new Date() : undefined,
+                    // CORREÇÃO: Usa a data calculada da Clicksign se disponível, 
+                    // caso contrário mantém a atual ou usa 'agora' se acabou de assinar.
+                    signed_date: markAsSigned 
+                        ? ((contract as any)._calculated_signed_date || contract.signed_date || new Date()) 
+                        : null,
                     ...(foundEnvelopeId && foundEnvelopeId !== (contract as any).envelope_id ? { envelope_id: foundEnvelopeId } : {})
                 }
             });

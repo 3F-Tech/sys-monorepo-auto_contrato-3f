@@ -264,11 +264,19 @@ export const updateContract = async (req: Request, res: Response) => {
             }
         }
 
+        const existing = await prisma.contracts.findUnique({
+            where: { id: BigInt(id) }
+        });
+
         const contract = await prisma.contracts.update({
             where: { id: BigInt(id) },
             data: {
                 ...(signed !== undefined && { signed }),
-                ...(signed_date !== undefined && { signed_date }),
+                ...(signed !== undefined && signed === true && {
+                    signed_count: existing?.total_signers || 0,
+                    signed_date: signed_date || new Date().toISOString()
+                }),
+                ...(signed_date !== undefined && signed === undefined && { signed_date }),
                 ...(created_at !== undefined && { created_at }),
                 ...(link !== undefined && { link }),
                 ...(change_status !== undefined && { change_status }),
@@ -524,7 +532,7 @@ export const getContractSigners = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Contrato não encontrado' });
         }
 
-        const clicksignId = (contract as any).envelope_id || contract.document_id;
+        const clicksignId = contract.document_id || (contract as any).envelope_id;
         if (!clicksignId) {
             return res.json({ success: true, signers: [] });
         }
@@ -571,13 +579,17 @@ export const getContractSigners = async (req: Request, res: Response) => {
                 // Fallback para API v1
                 try {
                     const docV1 = await ClickSignService.getDocumentV1(contract.document_id || '');
-                    const listSigners = docV1.document?.list || [];
+                    const listSigners = docV1.document?.signers || [];
+                    const signEvents = (docV1.document?.events || []).filter((e: any) => e.name === 'sign');
                     
-                    const signersList = listSigners.map((s: any) => ({
-                        name: s.name || s.email,
-                        email: s.email,
-                        signed: !!s.signature?.signed_at
-                    }));
+                    const signersList = listSigners.map((s: any) => {
+                        const sigEvent = signEvents.find((e: any) => e.data?.signer?.email === s.email);
+                        return {
+                            name: s.name || s.email,
+                            email: s.email,
+                            signed: !!sigEvent
+                        };
+                    });
                     
                     return res.json({ success: true, signers: signersList });
                 } catch (v1Error: any) {

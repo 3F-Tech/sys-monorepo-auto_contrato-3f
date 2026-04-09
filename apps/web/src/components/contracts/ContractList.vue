@@ -8,7 +8,7 @@
         </h3>
 
         <button v-if="isLeadership" @click="showAlertsOnly = !showAlertsOnly" :class="[
-          'px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border flex items-center gap-2',
+          'px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border flex items-center gap-2',
           showAlertsOnly
             ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-sm'
             : 'bg-brand-surface border-brand-glass-border text-white/40 hover:text-white',
@@ -21,7 +21,7 @@
 
         <div class="flex items-center gap-1 p-1 bg-black/20 border border-brand-glass-border rounded-xl">
           <button v-for="opt in signedFilterOptions" :key="opt.value" @click="signedFilter = opt.value" :class="[
-            'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all',
+            'px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all',
             signedFilter === opt.value
               ? 'bg-brand-cyan text-brand-deep shadow-lg shadow-brand-cyan/20'
               : 'text-white/30 hover:text-white/60',
@@ -79,424 +79,506 @@
 
     <div v-else class="space-y-3">
       <div v-for="contract in paginatedContracts" :key="contract.id?.toString()" :class="[
-        'group bg-brand-offset border rounded-xl transition-all overflow-hidden shadow-sm',
+        'group bg-brand-offset border rounded-xl overflow-hidden shadow-sm transition-all duration-200 hover:shadow-lg',
         contract.canceled_at
-          ? 'border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:border-red-400'
+          ? 'border-red-500/40 hover:border-red-400/60'
           : contract.signed
-            ? 'border-green-500/60 shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:border-green-400'
+            ? 'border-green-500/40 hover:border-green-400/60'
             : 'border-brand-glass-border hover:border-brand-cyan/30',
       ]">
-        <!-- Header / Summary -->
-        <div @click="toggleExpand(contract.id?.toString()!)"
-          class="p-1 px-2 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-white/5">
-          <div class="flex items-center gap-2">
-            <div :class="[
-              'rounded-lg border border-brand-glass-border transition-all overflow-hidden flex items-center justify-center flex-shrink-0',
-              getBuImage(contract.bu_id) ? 'bg-brand-surface' : 'p-2',
-              contract.canceled_at
-                ? 'text-red-400 border-red-500/60 bg-red-500/5'
-                : contract.signed
-                  ? 'text-green-400 border-green-500/30 bg-green-500/5'
-                  : 'text-brand-cyan border-brand-cyan/20',
-            ]" style="width: 36px; height: 36px">
-              <img v-if="getBuImage(contract.bu_id)" :src="getBuImage(contract.bu_id)!"
-                class="h-full w-full object-cover" :alt="getBuName(contract.bu_id)" />
-              <FileCheck v-else-if="contract.signed" class="h-4 w-4" />
-              <FileText v-else class="h-4 w-4" />
-            </div>
-            <div>
-              <h4 class="text-sm font-bold text-white group-hover:text-brand-cyan transition-colors">
-                {{ contract.title }}
-              </h4>
-              <p class="text-[10px] text-white/50 font-medium uppercase tracking-wider">
-                {{ getSellerName(contract.seller_id) }} · {{ contract.type_contract }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <!-- Progresso de Assinaturas -->
-            <div class="hidden lg:flex flex-col items-end gap-1">
-              <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Assinaturas</span>
-              <div v-if="contract.total_signers"
-                class="flex items-center gap-2 px-3 py-1 rounded-full shadow-sm group/progress border transition-all duration-300"
-                :class="getSignaturesStatus(contract).badge">
-                <div class="h-1.5 w-1.5 rounded-full transition-all duration-300"
-                  :class="getSignaturesStatus(contract).dot"></div>
-                <span class="text-[10px] font-black uppercase tracking-widest"
-                  :class="getSignaturesStatus(contract).text">
-                  {{ contract.signed_count || 0 }}/{{ contract.total_signers }}
-                </span>
-                <!-- Botão de Detalhes de Assinatura -->
-                <button @click.stop="openSignersModal(contract)"
-                  class="ml-1 p-0.5 hover:bg-white/10 rounded transition-all duration-300 opacity-0 group-hover/progress:opacity-100"
-                  :title="'Ver detalhes de quem assinou'">
-                  <Users :class="[
-                    'h-2.5 w-2.5 transition-all text-white/40 hover:text-brand-cyan',
-                    loadingSignersId === contract.id ? 'animate-pulse text-brand-cyan' : '',
-                  ]" />
-                </button>
-              </div>
-              <span v-else
-                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white/20 bg-white/5 border border-white/5 shadow-inner">
-                - / -
-              </span>
-            </div>
-
-            <div class="hidden md:flex flex-col items-end gap-1">
-              <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Status da Alteração</span>
-              <span v-if="contract.change_status === 'alert'"
-                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm bg-orange-500/20 text-orange-400 border border-orange-500/20">
-                <template v-if="isLeadership">Revisar Aviso</template>
-                <template v-else>Em Validação</template>
-              </span>
-              <span v-else-if="contract.change_status === 'approved'"
-                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm bg-green-500/20 text-green-300 border border-green-500/20">
-                Aprovado
-              </span>
-              <span v-else-if="contract.change_status === 'reject'"
-                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm bg-red-500/20 text-red-300 border border-red-500/20">
-                Recusado
-              </span>
-              <span v-else
-                class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20">
-                Nenhum
-              </span>
-            </div>
-
-            <div class="hidden md:flex flex-col items-end gap-1">
-              <span class="text-[8px] text-white/30 uppercase font-black tracking-widest">Contrato</span>
-              <span :class="[
-                'text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm',
-                contract.canceled_at
-                  ? 'bg-red-500/20 text-red-500 border border-red-500/20'
-                  : contract.signed
-                    ? 'bg-green-500/20 text-green-300 border border-green-500/20'
-                    : !(contract as any).approved
-                      ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/20'
-                      : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20',
-              ]">
-                {{
+        <!-- Flex wrapper: barra status + conteúdo -->
+        <div class="flex">
+          <!-- Barra lateral colorida de status -->
+          <div :class="[
+            'w-1 flex-shrink-0 rounded-l-xl transition-all duration-300',
+            contract.canceled_at
+              ? 'bg-red-500/70'
+              : contract.signed
+                ? 'bg-green-500/60'
+                : contract.change_status === 'alert'
+                  ? 'bg-orange-500/70'
+                  : 'bg-white/5 group-hover:bg-brand-cyan/40',
+          ]"></div>
+          <div class="flex-1 min-w-0">
+            <!-- Header / Summary -->
+            <div @click="toggleExpand(contract.id?.toString()!)"
+              class="px-4 py-3 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-white/[0.015] gap-3">
+              <!-- Esquerda: Avatar BU + Info -->
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div :class="[
+                  'rounded-xl border flex-shrink-0 overflow-hidden flex items-center justify-center transition-all',
+                  getBuImage(contract.bu_id) ? 'bg-brand-surface' : 'p-2.5',
                   contract.canceled_at
-                    ? 'Cancelado'
+                    ? 'text-red-400 border-red-500/40 bg-red-500/5'
                     : contract.signed
-                      ? 'Assinado'
-                      : !(contract as any).approved
-                        ? 'Rascunho'
-                        : 'Pendente'
-                }}
-              </span>
-            </div>
-            <ChevronDown :class="[
-              'h-4 w-4 text-white/30 transition-transform duration-300',
-              expandedId === contract.id?.toString() ? 'rotate-180 text-brand-cyan' : '',
-            ]" />
-          </div>
-        </div>
+                      ? 'text-green-400 border-green-500/25 bg-green-500/5'
+                      : 'text-brand-cyan border-brand-cyan/20 bg-brand-cyan/5',
+                ]" style="width: 44px; height: 44px">
+                  <img v-if="getBuImage(contract.bu_id)" :src="getBuImage(contract.bu_id)!"
+                    class="h-full w-full object-cover" :alt="getBuName(contract.bu_id)" />
+                  <FileCheck v-else-if="contract.signed" class="h-5 w-5" />
+                  <FileText v-else class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                  <h4
+                    class="text-base font-bold text-white group-hover:text-brand-cyan transition-colors leading-tight truncate">
+                    {{ contract.title }}
+                  </h4>
+                  <p class="text-xs text-white/40 font-medium uppercase tracking-wider mt-0.5 truncate">
+                    {{ getSellerName(contract.seller_id) }} · {{ contract.type_contract }}
+                  </p>
+                </div>
+              </div>
 
-        <!-- Content Expansível -->
-        <Transition name="expand">
-          <div v-if="expandedId === contract.id?.toString()"
-            class="px-6 pb-8 pt-4 border-t border-brand-glass-border bg-black/20 space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-              <!-- Coluna 1: Infos e Link -->
-              <div class="space-y-6">
-                <div class="space-y-3">
-                  <label
-                    class="text-[10px] font-black text-brand-cyan uppercase tracking-[0.2em] flex items-center gap-2">
-                    <LinkIcon class="h-3 w-3" />
-                    Link do Documento
-                  </label>
-                  <div class="flex gap-2">
-                    <div class="relative flex-1 group/input">
-                      <img src="/drive.png"
-                        class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 object-contain opacity-50 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
-                      <input v-model="editingLink" type="url" placeholder="Cole o link aqui..."
-                        class="w-full pr-4 py-3 pl-11 rounded-xl bg-brand-offset border border-brand-glass-border text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan transition-all shadow-inner" />
+              <!-- Direita: Métricas + Chevron -->
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <!-- Mensalidade (xl+) -->
+                <div class="hidden xl:flex flex-col items-start gap-0.5">
+                  <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Mensalidade</span>
+                  <span class="text-xs font-black text-white/80 px-2.5 py-1">{{ formatCurrency(contract.monthly_fee)
+                  }}</span>
+                </div>
+                <div class="hidden xl:block h-7 w-px bg-white/5"></div>
+
+                <!-- Assinaturas (md+) -->
+                <div class="hidden md:flex flex-col items-start gap-0.5">
+                  <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Assinaturas</span>
+                  <div class="flex items-center gap-1">
+                    <div v-if="contract.total_signers"
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black border transition-all duration-300"
+                      :class="getSignaturesStatus(contract).badge">
+                      <div class="h-1.5 w-1.5 rounded-full" :class="getSignaturesStatus(contract).dot"></div>
+                      <span :class="getSignaturesStatus(contract).text">
+                        {{ contract.signed_count || 0 }}/{{ contract.total_signers }}
+                      </span>
                     </div>
-
-                    <a v-if="contract.link" :href="contract.link" target="_blank" rel="noopener noreferrer"
-                      title="Abrir Link"
-                      class="flex items-center justify-center aspect-square px-3 py-3 rounded-xl bg-brand-offset border border-brand-cyan/20 text-brand-cyan hover:bg-brand-cyan/10 transition-all shadow-lg">
-                      <ExternalLink class="h-4 w-4" />
-                    </a>
-                    <div v-else title="Nenhum link salvo"
-                      class="flex items-center justify-center aspect-square px-3 py-3 rounded-xl bg-brand-offset opacity-50 border border-brand-glass-border text-white/20 cursor-not-allowed shadow-inner">
-                      <ExternalLink class="h-4 w-4" />
-                    </div>
-
-                    <button @click="handleUpdateLink(contract)"
-                      class="px-6 py-3 rounded-xl bg-brand-cyan text-brand-deep font-black text-[10px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg hover:shadow-brand-cyan/20">
-                      Salvar
+                    <span v-else
+                      class="text-xs font-black px-2.5 py-1 rounded-full text-white/20 bg-white/5 border border-white/5">
+                      - / -
+                    </span>
+                    <button v-if="contract.total_signers" @click.stop="openSignersModal(contract)"
+                      class="group p-1 rounded-lg hover:bg-brand-cyan/10 border border-transparent hover:border-brand-cyan/20 transition-all hover:text-brand-cyan"
+                      title="Ver quem assinou">
+                      <UsersRound :class="[
+                        'h-3 w-3 transition-colors group-hover:text-brand-cyan',
+                        loadingSignersId === contract.id ? 'animate-pulse text-brand-cyan' : 'text-white/30',
+                      ]" />
                     </button>
                   </div>
                 </div>
+                <div class="hidden md:block h-7 w-px bg-white/5"></div>
 
-                <div class="p-5 rounded-2xl bg-black/40 border border-brand-glass-border shadow-md space-y-4">
-                  <div class="space-y-1.5 flex items-center justify-between border-b border-white/5 pb-3">
-                    <div class="space-y-1">
-                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Vencimento</p>
-                      <p class="text-sm font-bold text-white">{{ formatDate(contract.due_date) }}</p>
-                    </div>
-                    <div class="text-right space-y-1">
-                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">CNPJ do Cliente</p>
-                      <p class="text-sm font-bold text-white/60">{{ contract.cnpj_client || 'Não informado' }}</p>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Implementação</p>
-                      <p class="text-sm font-black text-white">{{ formatCurrency(contract.implementation_fee) }}</p>
-                    </div>
-                    <div class="text-right space-y-1">
-                      <p class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">Mensalidade</p>
-                      <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
-                    </div>
-                  </div>
+                <!-- Status da Alteração (sm+) -->
+                <div class="hidden sm:flex flex-col items-start gap-0.5">
+                  <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Status da
+                    Alteração</span>
+                  <span v-if="contract.change_status === 'alert'"
+                    class="text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-orange-500/15 text-orange-400 border border-orange-500/20">
+                    <template v-if="isLeadership">Revisar Aviso</template>
+                    <template v-else>Em Validação</template>
+                  </span>
+                  <span v-else-if="contract.change_status === 'approved'"
+                    class="text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-green-500/15 text-green-300 border border-green-500/20">
+                    Aprovado
+                  </span>
+                  <span v-else-if="contract.change_status === 'reject'"
+                    class="text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-red-500/15 text-red-300 border border-red-500/20">
+                    Recusado
+                  </span>
+                  <span v-else
+                    class="text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20">
+                    Nenhum
+                  </span>
+                </div>
+                <div class="hidden sm:block h-7 w-px bg-white/5"></div>
 
-                  <!-- P1 Info (Nova) -->
-                  <div class="pt-4 mt-4 border-t border-white/5 space-y-3">
-                    <div class="grid grid-cols-1 gap-3">
-                      <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <div class="flex items-center gap-2 mb-1">
-                          <CreditCard class="h-3 w-3 text-brand-cyan/60" />
-                          <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Valor P1</span>
-                        </div>
-                        <p class="text-xs font-bold text-white/90">
-                          {{ formatCurrency(contract.first_payment_amount) }}
-                        </p>
+                <!-- Contrato Status (md+) -->
+                <div class="hidden md:flex flex-col items-start gap-0.5">
+                  <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Contrato</span>
+                  <span :class="[
+                    'text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest',
+                    contract.canceled_at
+                      ? 'bg-red-500/15 text-red-400 border border-red-500/20'
+                      : contract.signed
+                        ? 'bg-green-500/15 text-green-300 border border-green-500/20'
+                        : !(contract as any).approved
+                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                          : 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20',
+                  ]">
+                    {{
+                      contract.canceled_at
+                        ? 'Cancelado'
+                        : contract.signed
+                          ? 'Assinado'
+                          : !(contract as any).approved
+                            ? 'Rascunho'
+                            : 'Pendente'
+                    }}
+                  </span>
+                </div>
+
+                <ChevronDown :class="[
+                  'h-4 w-4 text-white/25 transition-transform duration-300 ml-4',
+                  expandedId === contract.id?.toString() ? 'rotate-180 text-brand-cyan' : '',
+                ]" />
+              </div>
+            </div>
+
+            <!-- Content Expansível -->
+            <Transition name="expand">
+              <div v-if="expandedId === contract.id?.toString()" class="border-t border-brand-glass-border bg-black/20">
+                <div class="px-5 py-5 space-y-5">
+                  <!-- Row 1: Link do Documento -->
+                  <div class="flex items-center gap-2">
+                    <label
+                      class="text-xs font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-1.5 flex-shrink-0 w-28">
+                      <LinkIcon class="h-3 w-3 text-brand-cyan" />
+                      Link Doc.
+                    </label>
+                    <div class="flex gap-2 flex-1">
+                      <div class="relative flex-1 group/input">
+                        <img src="/drive.png"
+                          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 object-contain opacity-40 group-focus-within/input:opacity-90 transition-opacity pointer-events-none" />
+                        <input v-model="editingLink" type="url" placeholder="Cole o link do Google Drive aqui..."
+                          class="w-full pr-4 py-2.5 pl-10 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-brand-cyan transition-all" />
                       </div>
-                    </div>
-                  </div>
-
-                  <!-- Tempo Metric (Nova) -->
-                  <div class="pt-4 border-t border-white/5">
-                    <div
-                      class="flex items-center justify-between p-3 rounded-xl bg-brand-cyan/5 border border-brand-cyan/10">
-                      <div class="flex items-center gap-2">
-                        <Clock class="h-3.5 w-3.5 text-brand-cyan" />
-                        <span class="text-[9px] font-black text-white/40 uppercase tracking-[0.15em]">
-                          {{ contract.signed ? 'Tempo até Assinatura' : 'Tempo em Aberto' }}
-                        </span>
+                      <a v-if="contract.link" :href="contract.link" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center justify-center w-10 rounded-lg bg-brand-offset border border-brand-cyan/20 text-brand-cyan hover:bg-brand-cyan/10 transition-all flex-shrink-0">
+                        <ExternalLink class="h-3.5 w-3.5" />
+                      </a>
+                      <div v-else
+                        class="flex items-center justify-center w-10 rounded-lg bg-brand-offset border border-brand-glass-border text-white/20 opacity-50 cursor-not-allowed flex-shrink-0">
+                        <ExternalLink class="h-3.5 w-3.5" />
                       </div>
-                      <span class="text-xs font-black text-brand-cyan">
-                        {{ calculateDuration(contract) }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Seção: Datas -->
-                  <div class="pt-4 border-t border-white/5 space-y-3">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <Calendar class="h-3 w-3 text-brand-cyan/60" />
-                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Datas</span>
-                      </div>
-                      <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)"
-                        class="text-[9px] font-bold text-brand-cyan hover:underline uppercase tracking-widest transition-all">
-                        Editar
+                      <button @click="handleUpdateLink(contract)"
+                        class="px-4 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex-shrink-0">
+                        Salvar
                       </button>
                     </div>
+                  </div>
 
-                    <!-- Exibição sempre visível -->
-                    <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-4 gap-y-3">
-                      <div class="space-y-0.5">
-                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Criação</p>
-                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.created_at) }}</p>
+                  <!-- Row 2: Info + Datas + Ações -->
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Coluna 1: Dados Financeiros -->
+                    <div class="rounded-xl bg-black/30 border border-brand-glass-border p-4 space-y-3">
+                      <p
+                        class="text-xs font-black text-brand-cyan/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                        <CreditCard class="h-3 w-3" />
+                        Financeiro
+                      </p>
+                      <!-- Grid 2x2 dados -->
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <p class="text-xs font-black text-white/30 uppercase tracking-widest mb-0.5">CNPJ</p>
+                          <p class="text-sm font-bold text-white/90">{{ contract.cnpj_client || '—' }}</p>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-xs font-black text-white/30 uppercase tracking-widest mb-0.5">LT</p>
+                          <p class="text-sm font-bold text-white">{{ (contract as any).contractual_term || 12 }} meses
+                          </p>
+                        </div>
+                        <div class="mt-2">
+                          <p class="text-xs font-black text-white/30 uppercase tracking-widest mb-0.5">
+                            Implementação
+                          </p>
+                          <p class="text-sm font-bold text-white">{{ formatCurrency(contract.implementation_fee) }}</p>
+                        </div>
+                        <div class="text-right mt-2">
+                          <p class="text-xs font-black text-white/30 uppercase tracking-widest mb-0.5">
+                            Mensalidade
+                          </p>
+                          <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
+                        </div>
                       </div>
-                      <div class="space-y-0.5">
-                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Aprovação</p>
-                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.approved_at) }}</p>
+                      <!-- P1 + NMRR + TCV -->
+                      <div class="pt-5 border-t border-white/5 grid grid-cols-3 gap-2">
+                        <div>
+                          <p
+                            class="text-[11px] font-black text-white/30 uppercase tracking-widest mb-0.5 whitespace-nowrap">
+                            Valor P1
+                          </p>
+                          <p class="text-[14px] font-bold text-white/80">
+                            {{ formatCurrency(contract.first_payment_amount) }}
+                          </p>
+                        </div>
+                        <div class="text-center">
+                          <p
+                            class="text-[11px] font-black text-white/30 uppercase tracking-widest mb-0.5 whitespace-nowrap">
+                            NMRR</p>
+                          <p class="text-[14px] font-bold text-brand-cyan">
+                            {{ formatCurrency(calculateNMRR(contract)) }}
+                          </p>
+                        </div>
+                        <div class="text-right">
+                          <p
+                            class="text-[11px] font-black text-white/30 uppercase tracking-widest mb-0.5 whitespace-nowrap">
+                            TCV</p>
+                          <p class="text-[14px] font-bold text-white/90">
+                            {{ formatCurrency(calculateTCV(contract)) }}
+                          </p>
+                        </div>
                       </div>
-                      <div class="space-y-0.5">
-                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Assinatura</p>
-                        <p class="text-[11px] font-bold text-white/70">{{ formatDate(contract.signed_date) }}</p>
+                    </div>
+
+                    <!-- Coluna 2: Datas -->
+                    <div class="rounded-xl bg-black/30 border border-brand-glass-border p-4 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <p
+                          class="text-xs font-black text-brand-cyan/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                          <Calendar class="h-3 w-3" />
+                          Datas
+                        </p>
+                        <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)"
+                          class="text-xs font-bold text-brand-cyan/60 hover:text-brand-cyan uppercase tracking-widest transition-colors">
+                          Editar
+                        </button>
                       </div>
-                      <div class="space-y-0.5">
-                        <p class="text-[8px] font-black text-white/30 uppercase tracking-widest">Pgto. P1</p>
-                        <p class="text-[11px] font-bold"
-                          :class="contract.first_payment_date ? 'text-brand-cyan' : 'text-white/30'">
-                          {{ formatDate(contract.first_payment_date) }}
+
+                      <!-- Exibição -->
+                      <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-3 gap-y-3">
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Criação</p>
+                          <p class="text-sm font-bold text-white/90">{{ formatDate(contract.created_at) }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Aprovação</p>
+                          <p class="text-sm font-bold text-white/90">{{ formatDate(contract.approved_at) }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Assinatura</p>
+                          <p class="text-sm font-bold"
+                            :class="contract.signed_date ? 'text-green-400' : 'text-white/90'">
+                            {{ formatDate(contract.signed_date) }}
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Pgto. P1</p>
+                          <p class="text-sm font-bold" :class="[
+                            !contract.first_payment_date ? 'text-white/40' :
+                              isP1ValidForMeta(contract) ? 'text-brand-cyan' : 'text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
+                          ]">
+                            {{ formatDate(contract.first_payment_date) }}
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Vencimento</p>
+                          <p class="text-sm font-bold text-white">{{ formatDate(contract.due_date) }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">
+                            {{ contract.signed ? 'Lead Assinatura' : 'Tempo Aberto' }}
+                          </p>
+                          <p class="text-sm font-black text-brand-cyan">{{ calculateDuration(contract) }}</p>
+                        </div>
+                      </div>
+
+                      <!-- Edição -->
+                      <div v-if="isEditingDates === contract.id?.toString()" class="space-y-2">
+                        <div>
+                          <label class="text-xs font-black text-white/30 uppercase tracking-widest">
+                            Data de Criação
+                          </label>
+                          <input v-model="editCreatedAt" type="date"
+                            class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
+                        </div>
+                        <div v-if="contract.signed">
+                          <label class="text-xs font-black text-white/30 uppercase tracking-widest">
+                            Data de Assinatura
+                          </label>
+                          <input v-model="editSignedDate" type="date"
+                            class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                          <div>
+                            <label class="text-xs font-black text-white/30 uppercase tracking-widest">
+                              Pagamento P1
+                            </label>
+                            <input v-model="editFirstPaymentDate" type="date"
+                              class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
+                          </div>
+                          <div>
+                            <label class="text-xs font-black text-white/30 uppercase tracking-widest">
+                              Vencimento
+                            </label>
+                            <input v-model="editDueDate" type="date"
+                              class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
+                          </div>
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                          <button @click="saveDates(contract)" :disabled="isSavingDates"
+                            class="flex-1 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all">
+                            {{ isSavingDates ? 'Salvando...' : 'Salvar' }}
+                          </button>
+                          <button @click="isEditingDates = null" :disabled="isSavingDates"
+                            class="px-3 py-2 rounded-lg bg-white/5 text-white/40 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Status final -->
+                      <div v-if="contract.signed && contract.signed_date"
+                        class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <CheckCircle2 class="h-3 w-3 text-green-400 flex-shrink-0" />
+                        <p class="text-xs font-black uppercase tracking-widest text-green-400">
+                          Assinado em: {{ formatDate(contract.signed_date) }}
                         </p>
                       </div>
                     </div>
 
-                    <!-- Painel de edição -->
-                    <div v-if="isEditingDates === contract.id?.toString()"
-                      class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div class="space-y-1">
-                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">
-                          Data de Criação
-                        </label>
-                        <input v-model="editCreatedAt" type="date"
-                          class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="text-[8px] font-black text-white/30 uppercase tracking-widest">
-                          Data de Assina.
-                        </label>
-                        <input v-model="editSignedDate" type="date"
-                          class="w-full px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-[11px] text-white focus:border-brand-cyan outline-none transition-all" />
-                      </div>
-                      <div class="col-span-2 flex gap-2 pt-1">
-                        <button @click="saveDates(contract)" :disabled="isSavingDates"
-                          class="flex-1 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-[9px] uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-lg shadow-brand-cyan/10">
-                          {{ isSavingDates ? 'Salvando...' : 'Salvar Alterações' }}
+                    <!-- Coluna 3: Ações -->
+                    <div class="rounded-xl bg-black/30 border border-brand-glass-border p-4 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <p
+                          class="text-xs font-black text-brand-cyan/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                          <Settings2 class="h-3 w-3" />
+                          Ações
+                        </p>
+                        <button v-if="isAdmin || (contract as any).canceled_at || !(contract as any).approved"
+                          @click="handleDeleteContract(contract)"
+                          class="text-xs py-1 px-2 rounded font-bold uppercase tracking-widest text-white/20 hover:text-red-400 hover:bg-red-500/10 flex items-center gap-1 transition-all">
+                          <Trash2 class="h-3 w-3" />
+                          Excluir
                         </button>
-                        <button @click="isEditingDates = null" :disabled="isSavingDates"
-                          class="px-4 py-2 rounded-lg bg-white/5 text-white/40 font-bold text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">
-                          Cancelar
+                      </div>
+
+                      <div class="space-y-2">
+                        <!-- Marcar Assinado -->
+                        <button v-if="(contract as any).approved && !(contract as any).canceled_at"
+                          @click="handleToggleSigned(contract)"
+                          :disabled="contract.change_status === 'alert' || contract.signed" :class="[
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group/btn',
+                            contract.change_status === 'alert' ? 'opacity-50 cursor-not-allowed grayscale' : '',
+                            contract.signed
+                              ? 'bg-green-500/15 border-green-500/40 text-green-400 cursor-default'
+                              : 'bg-brand-offset border-brand-glass-border text-white/40 hover:border-green-500/40 hover:text-green-400 hover:bg-green-500/5',
+                          ]">
+                          <CheckCircle2 :class="[
+                            'h-4 w-4 flex-shrink-0 transition-transform group-hover/btn:scale-110',
+                            contract.signed ? 'text-green-400' : '',
+                          ]" />
+                          <span class="text-xs font-black uppercase tracking-wider">
+                            {{ contract.signed ? 'Assinado' : 'Marcar Assinado' }}
+                          </span>
                         </button>
+
+                        <!-- Aviso Mudança -->
+                        <button v-if="
+                          !isLeadership &&
+                          !(contract as any).approved &&
+                          contract.change_status !== 'alert' &&
+                          !(contract as any).canceled_at
+                        " @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed" :class="[
+                          'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group/btn',
+                          'bg-brand-offset border-brand-glass-border text-white/40 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5',
+                          !contract.link || contract.signed
+                            ? 'opacity-25 cursor-not-allowed pointer-events-none'
+                            : '',
+                        ]">
+                          <AlertCircle class="h-4 w-4 flex-shrink-0 transition-transform group-hover/btn:scale-110" />
+                          <span class="text-xs font-black uppercase tracking-wider">Aviso de Mudança</span>
+                        </button>
+
+                        <!-- Enviar Clicksign -->
+                        <button v-if="!(contract as any).approved && !(contract as any).canceled_at"
+                          @click="confirmSendToClicksign(contract)" :disabled="!contract.link || isSendingToClicksign"
+                          :class="[
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group/btn',
+                            'bg-[#FF4B12]/10 border-[#FF4B12]/30 text-[#FF4B12] hover:bg-[#FF4B12]/20 hover:border-[#FF4B12]',
+                            !contract.link || isSendingToClicksign
+                              ? 'opacity-25 cursor-not-allowed pointer-events-none'
+                              : '',
+                          ]">
+                          <img src="/clicksign.png"
+                            class="h-4 w-4 object-contain opacity-80 group-hover/btn:opacity-100 flex-shrink-0" />
+                          <span class="text-xs font-black uppercase tracking-wider">Enviar ao Clicksign</span>
+                        </button>
+
+                        <!-- Cancelar Contrato -->
+                        <button v-if="(contract as any).approved && !(contract as any).canceled_at"
+                          @click="confirmCancelContract(contract)" :disabled="contract.signed" :class="[
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group/btn',
+                            'bg-brand-offset border-brand-glass-border text-white/30',
+                            contract.signed
+                              ? 'opacity-25 cursor-not-allowed pointer-events-none'
+                              : 'hover:border-red-500/40 hover:text-red-400 hover:bg-red-500/5',
+                          ]">
+                          <Ban class="h-4 w-4 flex-shrink-0 transition-transform group-hover/btn:scale-110" />
+                          <span class="text-xs font-black uppercase tracking-wider">Cancelar Contrato</span>
+                        </button>
+
+                        <!-- Cancelado -->
+                        <div v-if="(contract as any).canceled_at"
+                          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400/60 opacity-70 cursor-not-allowed">
+                          <Ban class="h-4 w-4 flex-shrink-0" />
+                          <span class="text-xs font-black uppercase tracking-wider">Contrato Cancelado</span>
+                        </div>
+
+                        <!-- Em Validação (Seller) -->
+                        <div v-else-if="!isLeadership && contract.change_status === 'alert'"
+                          class="relative rounded-xl border-2 border-orange-500/30 bg-orange-500/8 p-3 group/cancel">
+                          <button @click="cancelChangeRequest(contract)"
+                            class="absolute top-2 right-2 p-1 rounded bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-brand-deep transition-all opacity-0 group-hover/cancel:opacity-100">
+                            <X class="h-3 w-3" />
+                          </button>
+                          <div class="flex items-center gap-2">
+                            <AlertCircle class="h-4 w-4 text-orange-400 flex-shrink-0" />
+                            <p class="text-xs font-black uppercase tracking-widest text-orange-400">Em Validação</p>
+                          </div>
+                          <p v-if="contract.change_description" class="text-xs mt-2 text-white/50 italic line-clamp-2">
+                            "{{ contract.change_description }}"
+                          </p>
+                        </div>
+
+                        <!-- Revisão (Liderança) -->
+                        <div v-if="isLeadership && contract.change_status === 'alert'"
+                          class="rounded-xl border border-orange-500/20 bg-orange-500/5 p-3">
+                          <span class="text-xs font-black text-orange-400/70 uppercase tracking-widest">
+                            Motivo:
+                          </span>
+                          <p class="text-xs text-white/70 italic mt-1 line-clamp-2">
+                            "{{ contract.change_description || 'Sem descrição' }}"
+                          </p>
+                          <button @click="openReviewModal(contract)"
+                            class="text-xs font-black uppercase tracking-widest text-orange-400 hover:text-orange-300 underline underline-offset-2 mt-2 transition-colors">
+                            Ver detalhes →
+                          </button>
+                        </div>
+
+                        <!-- Bloqueio geral assinado/cancelado -->
+                        <div v-if="contract.signed || (contract as any).canceled_at"
+                          class="flex items-center gap-2 px-3 py-2 rounded-lg" :class="contract.signed
+                            ? 'bg-green-500/5 border border-green-500/10'
+                            : 'bg-red-500/5 border border-red-500/10'
+                            ">
+                          <component :is="contract.signed ? CheckCircle2 : Ban"
+                            :class="['h-3 w-3', contract.signed ? 'text-green-400/50' : 'text-red-400/50']" />
+                          <p class="text-xs font-bold uppercase tracking-widest"
+                            :class="contract.signed ? 'text-green-400/60' : 'text-red-400/60'">
+                            Contrato {{ contract.signed ? 'assinado' : 'cancelado' }} — sem alterações
+                          </p>
+                        </div>
+
+                        <!-- Link ausente -->
+                        <div v-else-if="!contract.link"
+                          class="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                          <HelpCircle class="h-3 w-3 text-orange-400/50" />
+                          <p class="text-xs text-orange-400/60 font-bold uppercase tracking-widest">
+                            Adicione o link para habilitar ações
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <!-- /grid 3 cols -->
                 </div>
+                <!-- /px-5 padding wrapper -->
               </div>
-
-              <!-- Coluna 2: Ações de Status -->
-              <div class="space-y-6">
-                <div class="flex items-center justify-between">
-                  <label
-                    class="text-[10px] font-black text-brand-cyan uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Settings2 class="h-3 w-3" />
-                    Ações Administrativas
-                  </label>
-                  <button v-if="isAdmin || (contract as any).canceled_at || !(contract as any).approved"
-                    @click="handleDeleteContract(contract)"
-                    class="text-[10px] py-1 px-3 rounded-md font-bold uppercase tracking-widest text-white/20 hover:text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 transition-all"
-                    title="Excluir Contrato Permanentemente">
-                    <Trash2 class="h-3 w-3" />
-                    Excluir
-                  </button>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <button v-if="(contract as any).approved && !(contract as any).canceled_at"
-                    @click="handleToggleSigned(contract)"
-                    :disabled="contract.change_status === 'alert' || contract.signed" :class="[
-                      'p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 group/btn shadow-lg',
-                      contract.change_status === 'alert' ? 'opacity-50 cursor-not-allowed grayscale' : '',
-                      contract.signed
-                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                        : 'bg-brand-offset border-brand-glass-border text-white/30 hover:border-green-500/50 hover:text-green-400 hover:bg-green-500/5',
-                    ]">
-                    <CheckCircle2 :class="[
-                      'h-8 w-8 transition-transform group-hover/btn:scale-110',
-                      contract.signed ? 'text-green-400' : 'group-hover/btn:text-green-400',
-                    ]" />
-                    <span v-if="contract.signed" class="text-[10px] font-black uppercase tracking-[0.15em]">
-                      Assinado
-                    </span>
-                    <span v-else class="text-[10px] font-black uppercase tracking-[0.15em]">Marcar Assinado</span>
-                  </button>
-
-                  <button v-if="
-                    !isLeadership &&
-                    !(contract as any).approved &&
-                    contract.change_status !== 'alert' &&
-                    !(contract as any).canceled_at
-                  " @click="openChangeModal(contract)" :disabled="!contract.link || contract.signed" :class="[
-                    'p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
-                    'bg-brand-offset border-brand-glass-border text-white/30 hover:border-orange-500/50 hover:text-orange-400 hover:bg-orange-500/5',
-                    !contract.link || contract.signed
-                      ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none'
-                      : '',
-                  ]">
-                    <AlertCircle class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em]">Aviso Mudança</span>
-                  </button>
-
-                  <button v-if="!(contract as any).approved && !(contract as any).canceled_at"
-                    @click="confirmSendToClicksign(contract)" :disabled="!contract.link || isSendingToClicksign" :class="[
-                      'p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg group/btn',
-                      'bg-[#FF4B12]/10 border-[#FF4B12]/30 text-[#FF4B12] hover:bg-[#FF4B12]/20 hover:border-[#FF4B12]',
-                      !contract.link || isSendingToClicksign
-                        ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none'
-                        : '',
-                    ]">
-                    <img src="/clicksign.png"
-                      class="h-8 w-8 object-contain opacity-70 group-hover/btn:opacity-100 transition-all duration-300 group-hover/btn:scale-110" />
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-center">Enviar Clicksign</span>
-                  </button>
-
-                  <button v-if="(contract as any).approved && !(contract as any).canceled_at"
-                    @click="confirmCancelContract(contract)" :disabled="contract.signed" :class="[
-                      'p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-lg bg-brand-offset border-brand-glass-border text-white/30 group/btn',
-                      contract.signed
-                        ? 'opacity-25 cursor-not-allowed grayscale pointer-events-none'
-                        : 'hover:border-red-500/50 hover:text-red-400 hover:bg-red-500/5',
-                    ]">
-                    <Ban class="h-8 w-8 transition-transform group-hover/btn:scale-110" />
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em]">Cancelar</span>
-                  </button>
-
-                  <button v-if="(contract as any).canceled_at" disabled
-                    class="col-span-2 p-6 rounded-2xl border-2 border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center gap-3 shadow-lg text-red-400/50 text-center relative opacity-50 cursor-not-allowed">
-                    <Ban class="h-8 w-8" />
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em]">Contrato Cancelado</span>
-                  </button>
-
-                  <div v-else-if="!isLeadership && contract.change_status === 'alert'"
-                    class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-orange-500/40 bg-orange-500/10 text-orange-400 text-center gap-2 relative group/cancel">
-                    <button @click="cancelChangeRequest(contract)"
-                      class="absolute top-2 right-2 p-1.5 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-brand-deep transition-all opacity-0 group-hover/cancel:opacity-100"
-                      title="Cancelar Aviso">
-                      <X class="h-4 w-4" />
-                    </button>
-                    <AlertCircle class="h-6 w-6" />
-                    <p class="text-[10px] font-black uppercase tracking-widest">Em Validação</p>
-                    <p v-if="contract.change_description"
-                      class="text-xs mt-2 text-white/60 italic border-t border-orange-500/20 pt-2 w-full break-all">
-                      "{{ contract.change_description }}"
-                    </p>
-                  </div>
-
-                  <div v-if="isLeadership && contract.change_status === 'alert'"
-                    class="col-span-1 border-2 border-orange-500/20 rounded-2xl p-4 flex flex-col gap-3 bg-orange-500/5">
-                    <div class="flex flex-col">
-                      <span class="text-[9px] font-black text-orange-400/80 uppercase tracking-widest mb-1">
-                        Motivo:
-                      </span>
-                      <p class="text-sm text-white/80 italic line-clamp-2 border-b border-orange-500/10 pb-3 mb-1">
-                        "{{ contract.change_description || 'Sem descrição' }}"
-                      </p>
-                    </div>
-                    <button @click="openReviewModal(contract)"
-                      class="text-[10px] font-black uppercase tracking-widest text-orange-400 hover:text-orange-300 underline underline-offset-2 text-left transition-colors">
-                      Ver detalhes &rarr;
-                    </button>
-                  </div>
-                </div>
-
-                <div v-if="contract.signed || (contract as any).canceled_at"
-                  class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10"
-                  :class="contract.signed ? 'bg-green-500/5 border-green-500/10' : 'bg-red-500/5 border-red-500/10'">
-                  <component :is="contract.signed ? CheckCircle2 : Ban"
-                    :class="['h-3 w-3', contract.signed ? 'text-green-400/50' : 'text-red-400/50']" />
-                  <p class="text-[9px] font-bold uppercase tracking-widest text-center"
-                    :class="contract.signed ? 'text-green-400/70' : 'text-red-400/70'">
-                    Contrato {{ contract.signed ? 'assinado' : 'cancelado' }} não permite alteração
-                  </p>
-                </div>
-
-                <!-- Data de Assinatura Centralizada (Verde) -->
-                <div v-if="contract.signed && contract.signed_date" class="flex flex-col items-center gap-1.5">
-                  <div class="h-px w-24 bg-green-500/10"></div>
-                  <p class="text-[9px] font-black uppercase tracking-widest text-green-400 flex items-center gap-2">
-                    <CheckCircle2 class="h-3 w-3" />
-                    Assinado em: {{ formatDate(contract.signed_date) }}
-                  </p>
-                </div>
-                <div v-else-if="!contract.link"
-                  class="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                  <HelpCircle class="h-3 w-3 text-orange-400/50" />
-                  <p class="text-[9px] text-orange-400/70 font-bold uppercase tracking-widest text-center">
-                    Adicione o link para habilitar o Aviso de Mudança
-                  </p>
-                </div>
-              </div>
-            </div>
+            </Transition>
           </div>
-        </Transition>
+          <!-- /flex-1 -->
+        </div>
+        <!-- /flex (barra lateral + conteúdo) -->
       </div>
 
       <!-- Pagination Controls -->
@@ -505,7 +587,7 @@
           class="px-3 py-1 rounded-md bg-brand-surface border border-brand-glass-border text-xs text-white/60 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
           Anterior
         </button>
-        <span class="text-[10px] font-medium text-white/40 uppercase tracking-wider">
+        <span class="text-xs font-medium text-white/40 uppercase tracking-wider">
           Página {{ currentPage }} de {{ totalPages }}
         </span>
         <button @click="currentPage < totalPages && currentPage++" :disabled="currentPage === totalPages"
@@ -525,14 +607,14 @@
             <AlertCircle class="h-8 w-8" />
             <div>
               <h3 class="text-xl font-bold text-white">Solicitar Aprovação de Alteração</h3>
-              <p class="text-[10px] uppercase font-black tracking-widest text-orange-400/70">
+              <p class="text-xs uppercase font-black tracking-widest text-orange-400/70">
                 {{ selectedContractForChange?.title }}
               </p>
             </div>
           </div>
 
           <div class="space-y-3">
-            <label class="text-[10px] font-black text-brand-cyan uppercase tracking-[0.2em] flex items-center gap-2">
+            <label class="text-xs font-black text-brand-cyan uppercase tracking-[0.2em] flex items-center gap-2">
               <FileText class="h-3 w-3" />
               Motivo da Alteração
             </label>
@@ -574,10 +656,10 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-white">Aviso de Mudança</h3>
-              <p class="text-[10px] uppercase font-black tracking-widest text-orange-400/70">
+              <p class="text-xs uppercase font-black tracking-widest text-orange-400/70">
                 {{ reviewContract?.title }}
               </p>
-              <p class="text-[10px] text-white/40 font-medium mt-0.5">
+              <p class="text-xs text-white/40 font-medium mt-0.5">
                 Vendedor:
                 <span class="text-white/70">{{ getSellerName(reviewContract?.seller_id) }}</span>
               </p>
@@ -585,7 +667,7 @@
           </div>
 
           <div class="space-y-2 p-5 rounded-2xl bg-brand-offset border border-orange-500/20">
-            <span class="text-[9px] font-black text-orange-400/80 uppercase tracking-widest">
+            <span class="text-xs font-black text-orange-400/80 uppercase tracking-widest">
               Motivo descrito pelo vendedor:
             </span>
             <p class="text-sm text-white/80 leading-relaxed italic break-words">
@@ -594,18 +676,14 @@
           </div>
 
           <div class="grid grid-cols-2 gap-4 pt-4 border-t border-brand-glass-border">
-            <button @click="
-              handleApproveRejectChange(reviewContract!, 'reject');
-            reviewModalOpen = false
-              "
+            <!-- prettier-ignore -->
+            <button @click="handleApproveRejectChange(reviewContract!, 'reject'); reviewModalOpen = false"
               class="p-4 rounded-2xl bg-red-500/20 border-2 border-red-500/30 text-red-400 font-black text-xs uppercase tracking-widest hover:bg-red-500/30 transition-all flex items-center justify-center gap-2">
               <X class="h-4 w-4" />
               Recusar
             </button>
-            <button @click="
-              handleApproveRejectChange(reviewContract!, 'approved');
-            reviewModalOpen = false
-              "
+            <!-- prettier-ignore -->
+            <button @click="handleApproveRejectChange(reviewContract!, 'approved'); reviewModalOpen = false"
               class="p-4 rounded-2xl bg-green-500/20 border-2 border-green-500/30 text-green-400 font-black text-xs uppercase tracking-widest hover:bg-green-500/30 transition-all flex items-center justify-center gap-2">
               <Check class="h-4 w-4" />
               Aprovar
@@ -692,6 +770,7 @@ import {
   FileStack,
   FileCheck,
   FileText,
+  UsersRound,
   ChevronDown,
   Link as LinkIcon,
   CheckCircle2,
@@ -789,6 +868,8 @@ const currentSigners = ref<any[]>([])
 const isEditingDates = ref<string | null>(null)
 const editCreatedAt = ref('')
 const editSignedDate = ref('')
+const editFirstPaymentDate = ref('')
+const editDueDate = ref('')
 const isSavingDates = ref(false)
 
 const startEditingDates = (contract: Contracts) => {
@@ -807,6 +888,20 @@ const startEditingDates = (contract: Contracts) => {
   } else {
     editSignedDate.value = ''
   }
+
+  if (contract.first_payment_date) {
+    const date = new Date(contract.first_payment_date)
+    editFirstPaymentDate.value = date.toISOString().split('T')[0]
+  } else {
+    editFirstPaymentDate.value = ''
+  }
+
+  if (contract.due_date) {
+    const date = new Date(contract.due_date)
+    editDueDate.value = date.toISOString().split('T')[0]
+  } else {
+    editDueDate.value = ''
+  }
 }
 
 const saveDates = async (contract: Contracts) => {
@@ -815,12 +910,30 @@ const saveDates = async (contract: Contracts) => {
   try {
     const res = await contractStore.updateContract(contract.id.toString(), {
       created_at: editCreatedAt.value ? new Date(editCreatedAt.value + 'T12:00:00Z').toISOString() : undefined,
-      signed_date: editSignedDate.value ? new Date(editSignedDate.value + 'T12:00:00Z').toISOString() : null,
+      signed_date:
+        contract.signed && editSignedDate.value
+          ? new Date(editSignedDate.value + 'T12:00:00Z').toISOString()
+          : contract.signed_date,
+      first_payment_date: editFirstPaymentDate.value
+        ? new Date(editFirstPaymentDate.value + 'T12:00:00Z').toISOString()
+        : null,
+      due_date: editDueDate.value ? new Date(editDueDate.value + 'T12:00:00Z').toISOString() : null,
     } as any)
 
     if (res.success) {
       toastSuccess('Datas atualizadas com sucesso')
       isEditingDates.value = null
+
+      // Atualiza o objeto local para refletir no Dashboard/Charts imediatamente
+      contract.created_at = editCreatedAt.value ? new Date(editCreatedAt.value + 'T12:00:00Z').toISOString() : contract.created_at
+      if (contract.signed) {
+        contract.signed_date = editSignedDate.value ? new Date(editSignedDate.value + 'T12:00:00Z').toISOString() : contract.signed_date
+      }
+      contract.first_payment_date = editFirstPaymentDate.value ? new Date(editFirstPaymentDate.value + 'T12:00:00Z').toISOString() : null
+      contract.due_date = editDueDate.value ? new Date(editDueDate.value + 'T12:00:00Z').toISOString() : null
+
+      // Se houver uma função de refresh global ou fetch no store, poderíamos chamar aqui
+      // Mas a reatividade do Vue no objeto 'contract' já deve suprir a maioria dos casos de dash local
     } else {
       toastError('Erro ao atualizar as datas')
     }
@@ -1334,6 +1447,33 @@ const getSignaturesStatus = (contract: Contracts) => {
     badge: 'bg-red-500/20 border-red-500/20',
     text: 'text-red-400',
   }
+}
+
+const isP1ValidForMeta = (contract: Contracts) => {
+  if (!contract.signed_date || !contract.first_payment_date) return true
+
+  const signed = new Date(contract.signed_date)
+  const payment = new Date(contract.first_payment_date)
+
+  // A regra diz: assinado no Mês A só conta se pago até dia 06 do Mês B
+  // Criamos o limite: Dia 6 do mês seguinte ao da assinatura, às 23:59:59
+  const deadline = new Date(signed.getFullYear(), signed.getMonth() + 1, 6, 23, 59, 59)
+
+  return payment <= deadline
+}
+
+const calculateNMRR = (contract: Contracts) => {
+  const implementation = parseFloat(contract.implementation_fee as any) || 0
+  const monthly = parseFloat(contract.monthly_fee as any) || 0
+  const term = (contract as any).contractual_term || 12
+  return (implementation / term) + monthly
+}
+
+const calculateTCV = (contract: Contracts) => {
+  const implementation = parseFloat(contract.implementation_fee as any) || 0
+  const monthly = parseFloat(contract.monthly_fee as any) || 0
+  const term = (contract as any).contractual_term || 12
+  return (monthly * term) + implementation
 }
 </script>
 

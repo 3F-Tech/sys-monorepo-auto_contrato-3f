@@ -343,7 +343,9 @@
       <!-- Contracts List -->
       <section class="pt-10">
         <ContractList :contracts="allFilteredContracts" :isHead="user?.type === 'head'"
-          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :filterMode="contractFilterMode"
+          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')"
+          :isAdmin="user?.type === 'admin'"
+          :filterMode="contractFilterMode"
           :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="contractStore.loading"
           @update:filterMode="mode => contractFilterMode = mode" />
       </section>
