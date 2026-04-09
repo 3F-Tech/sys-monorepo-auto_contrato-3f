@@ -782,7 +782,7 @@ const dailyData = computed(() => {
     const dailyPendingTcv = new Array(totalDays).fill(0)
     const dailyPendingNmrr = new Array(totalDays).fill(0)
     props.contracts.forEach((c) => {
-      if (c.signed || c.canceled_at || !c.approved) return
+      if (c.signed || c.canceled_at) return
       const rawDate = c.created_at || ''
       const dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate
       const dateDt = new Date(dateStr + 'T12:00:00')
@@ -948,7 +948,7 @@ const dailyData = computed(() => {
       monthlyTargetsNmrr.push(Number(cumTargetNmrr.toFixed(2)))
 
       const pendingInMonth = props.contracts.filter((c) => {
-        if (c.signed || c.canceled_at || !c.approved) return false
+        if (c.signed || c.canceled_at) return false
         const rawDate = c.created_at || ''
         const dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate
         const dateDt = new Date(dateStr + 'T12:00:00')
@@ -1173,7 +1173,7 @@ function onChartDataPointClick(_event: any, _ctx: any, config: any) {
 }
 
 const hasProjection = computed(() =>
-  props.contracts.some((c) => !c.signed && !c.canceled_at && c.approved)
+  props.contracts.some((c) => !c.signed && !c.canceled_at)
 )
 
 const lineOptions = computed(() => {

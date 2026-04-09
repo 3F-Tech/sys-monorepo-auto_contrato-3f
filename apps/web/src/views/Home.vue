@@ -704,7 +704,7 @@ const baseContextContracts = computed(() => {
 
 const filteredContracts = computed(() => baseContextContracts.value.filter(c => !c.canceled_at))
 const signedContracts = computed(() => filteredContracts.value.filter(c => c.signed))
-const pendingContracts = computed(() => filteredContracts.value.filter(c => !c.signed && c.approved))
+const pendingContracts = computed(() => filteredContracts.value.filter(c => !c.signed))
 const filteredP1Contracts = computed(() => {
   const range = currentDateRange.value
 

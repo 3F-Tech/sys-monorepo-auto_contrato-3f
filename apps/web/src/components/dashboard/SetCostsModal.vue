@@ -39,7 +39,7 @@
         <!-- Dashboard View: Grid of BU Cards -->
         <div v-if="currentView === 'list'" class="space-y-6 pt-2">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div v-for="bu in buStore.businesses" :key="bu.id" @click="selectBU(bu.id.toString())"
+            <div v-for="bu in filteredBusinesses" :key="bu.id" @click="selectBU(bu.id.toString())"
               class="group relative overflow-hidden p-6 rounded-[2rem] bg-white/[0.03] border border-white/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04] transition-all duration-500 cursor-pointer">
 
               <!-- Background Icon Decor -->
@@ -324,6 +324,7 @@ import { DollarSign, X, Loader2, Calculator, Save, Building2, ChevronRight, Arro
 import { useToast } from '../../composables/useToast'
 import { useCostsStore } from '../../store/costs'
 import { useBuStore } from '../../store/bu'
+import { useAuthStore } from '../../store/auth'
 import CustomSelect from '../ui/CustomSelect.vue'
 
 const props = defineProps<{
@@ -336,15 +337,23 @@ const emit = defineEmits(['close', 'saved'])
 
 const costsStore = useCostsStore()
 const buStore = useBuStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const currentView = ref<'list' | 'form'>('list')
 const selectedBuId = ref<string | null>(null)
+
+const filteredBusinesses = computed(() => {
+  if (authStore.user?.type === 'admin') return buStore.businesses
+  const userBUIds = authStore.user?.seller_business?.map(sb => sb.business_id) || []
+  return buStore.businesses.filter(bu => userBUIds.includes(bu.id))
+})
+
 const selectedBu = computed(() =>
   buStore.businesses.find((b) => b.id.toString() === selectedBuId.value),
 )
 const buOptions = computed(() =>
-  buStore.businesses.map((b) => ({
+  filteredBusinesses.value.map((b) => ({
     value: b.id.toString(),
     label: b.name,
   })),
@@ -555,10 +564,7 @@ const handleSave = async () => {
       commercial_tools: parseBRL(commForm.value.commercial_tools),
       remuneration_coord: parseBRL(commForm.value.remuneration_coord),
       referral_commission: parseBRL(commForm.value.referral_commission),
-      members: [
-        { type: 'SDR' as const, value: 100 },
-        { type: 'CLOSER' as const, value: 200 }
-      ],
+      members,
       month: props.month,
       year: props.year,
       bu_id: Number(selectedBuId.value),
