@@ -14,7 +14,7 @@
       <div class="relative z-10 flex items-center justify-between mb-6">
         <h3 class="text-xl font-bold flex items-center gap-2">
           <UserRoundPlus v-if="!user" class="h-5 w-5 text-brand-cyan" />
-          <UserCog v-else class="h-5 w-5 text-brand-cyan" />
+          <UserRoundCog v-else class="h-5 w-5 text-brand-cyan" />
           {{ user ? 'Editar Usuário' : 'Novo Usuário' }}
         </h3>
         <button @click="close" class="p-2 rounded-lg hover:bg-white/5 transition-colors">
@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { UserRoundPlus, UserCog, X, Loader2, Building2, Save } from '@lucide/vue'
+import { UserRoundPlus, UserCog, X, Loader2, Building2, Save, UserRoundCog } from '@lucide/vue'
 import CustomSelect from '../ui/CustomSelect.vue'
 import client from '../../api/client'
 import type { Sellers } from '../../gen/types/Sellers'

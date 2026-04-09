@@ -71,9 +71,12 @@ const executeClickSignv3Flow = async (params: {
     sellerCpf?: string,
     coordName?: string,
     coordEmail?: string,
-    coordCpf?: string
+    coordCpf?: string,
+    headName?: string,
+    headEmail?: string,
+    headCpf?: string
 }) => {
-    const { contractId, fileId, fileName, buName, signerName, signerEmail, signerCpf, witnessEmails, trackingId, debugMode, sellerName, sellerEmail, sellerCpf, coordName, coordEmail, coordCpf } = params;
+    const { contractId, fileId, fileName, buName, signerName, signerEmail, signerCpf, witnessEmails, trackingId, debugMode, sellerName, sellerEmail, sellerCpf, coordName, coordEmail, coordCpf, headName, headEmail, headCpf } = params;
     const clicksignStartTime = Date.now();
 
     console.log(`[CLICKSIGN] Iniciando exportação PDF e upload para Clicksign para contrato ${contractId}...`);
@@ -186,6 +189,17 @@ const executeClickSignv3Flow = async (params: {
                 role: 'witness'
             });
             addedEmails.add(coordEmail.toLowerCase());
+        }
+
+        // Head da BU (Regra 6.5)
+        if (headEmail && headName && !addedEmails.has(headEmail.toLowerCase())) {
+            signersToProcess.push({
+                email: headEmail,
+                name: `${headName} (Head BU)`,
+                cpf: headCpf,
+                role: 'witness'
+            });
+            addedEmails.add(headEmail.toLowerCase());
         }
 
         // Testemunhas Adicionais
@@ -704,6 +718,16 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
             }
         });
 
+        // Buscar Head da BU (Regra 6.5)
+        const head = await prisma.sellers.findFirst({
+            where: {
+                type: 'head',
+                seller_business: {
+                    some: { business_id: contract.bu_id }
+                }
+            }
+        });
+
         // Executar o fluxo do Clicksign
         const witnessEmails = contract.witnesses_email.map(w => w.email);
         
@@ -723,7 +747,10 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
             sellerCpf: contract.sellers?.cpf || '',
             coordName: coordinator?.name || '',
             coordEmail: coordinator?.email || '',
-            coordCpf: coordinator?.cpf || ''
+            coordCpf: coordinator?.cpf || '',
+            headName: head?.name || '',
+            headEmail: head?.email || '',
+            headCpf: head?.cpf || ''
         });
 
         // Atualizar o Banco

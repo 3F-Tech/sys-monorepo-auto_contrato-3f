@@ -50,7 +50,7 @@ out/
 # --- KUBB & SWAGGER ---
 # Ignorar arquivos gerados automaticamente pelo Kubb
 # (Eles serão gerados na VPS pelo 'pnpm codegen')
-src/gen/
+apps/web/src/gen/
 openapi.json
 swagger.json
 

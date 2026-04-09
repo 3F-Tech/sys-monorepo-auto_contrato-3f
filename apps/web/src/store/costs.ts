@@ -3,18 +3,23 @@ import { getCommercialCosts } from '../gen/hooks/getCommercialCosts';
 import { postCommercialCosts } from '../gen/hooks/postCommercialCosts';
 import client from '../api/client';
 
+export interface CommercialCostMember {
+  id?: number;
+  type: 'SDR' | 'CLOSER';
+  value: number;
+}
+
 export interface CommercialCosts {
   id?: number;
   month: number;
   year: number;
+  bu_id?: number | string | null;
   media_investment?: number;
   commercial_tools?: number;
-  remuneration_pre_sales_1?: number;
-  remuneration_pre_sales_2?: number;
-  remuneration_closer_1?: number;
-  remuneration_closer_2?: number;
   remuneration_coord?: number;
   referral_commission?: number;
+  members?: CommercialCostMember[];
+  items?: CommercialCosts[];
 }
 
 export const useCostsStore = defineStore('costs', {
@@ -28,24 +33,24 @@ export const useCostsStore = defineStore('costs', {
     totalCommercialCosts: (state) => {
       if (!state.currentCosts) return 0;
       const c = state.currentCosts;
-      return (
+      const base = (
         (Number(c.media_investment) || 0) +
         (Number(c.commercial_tools) || 0) +
-        (Number(c.remuneration_pre_sales_1) || 0) +
-        (Number(c.remuneration_pre_sales_2) || 0) +
-        (Number(c.remuneration_closer_1) || 0) +
-        (Number(c.remuneration_closer_2) || 0) +
         (Number(c.remuneration_coord) || 0) +
         (Number(c.referral_commission) || 0)
       );
+      const membersTotal = (c.members || []).reduce((acc, m) => acc + (Number(m.value) || 0), 0);
+      return base + membersTotal;
     }
   },
 
   actions: {
-    async fetchCosts(month: number, year: number) {
+    async fetchCosts(month: number, year: number, buId?: number | string | null) {
       this.loading = true;
       try {
-        const data = await getCommercialCosts({ params: { month, year }, client });
+        const params: any = { month, year };
+        if (buId !== undefined && buId !== null) params.bu_id = buId;
+        const data = await getCommercialCosts({ params, client });
         this.currentCosts = data as CommercialCosts;
       } catch (err: any) {
         this.error = 'Falha ao buscar indicadores de custos';

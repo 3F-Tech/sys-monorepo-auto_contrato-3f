@@ -7,12 +7,12 @@ const toPlainObject = (costs: any) => {
         ...costs,
         media_investment: Number(costs.media_investment || 0),
         commercial_tools: Number(costs.commercial_tools || 0),
-        remuneration_pre_sales_1: Number(costs.remuneration_pre_sales_1 || 0),
-        remuneration_pre_sales_2: Number(costs.remuneration_pre_sales_2 || 0),
-        remuneration_closer_1: Number(costs.remuneration_closer_1 || 0),
-        remuneration_closer_2: Number(costs.remuneration_closer_2 || 0),
         remuneration_coord: Number(costs.remuneration_coord || 0),
         referral_commission: Number(costs.referral_commission || 0),
+        members: (costs.members || []).map((m: any) => ({
+            ...m,
+            value: Number(m.value || 0)
+        }))
     };
 };
 
@@ -26,36 +26,55 @@ const toPlainObject = (costs: any) => {
  */
 export const getCommercialCosts = async (req: any, res: Response) => {
     try {
-        const { month, year } = req.query;
+        const { month, year, bu_id } = req.query;
         if (!month || !year) {
             return res.status(400).json({ error: "Mês e ano são obrigatórios" });
         }
 
         const m = parseInt(month as string);
         const y = parseInt(year as string);
+        const buId = bu_id ? parseInt(bu_id as string) : null;
 
-        const costs = await prisma.commercial_costs.findUnique({
-            where: {
-                month_year: {
-                    month: m,
-                    year: y
-                }
+        // Se bu_id === 'all' ou não especificado, soma todos os registros do mês
+        if (bu_id === 'all' || !bu_id) {
+            const allCosts = await prisma.commercial_costs.findMany({
+                where: { month: m, year: y },
+                include: { members: true }
+            });
+
+            if (!allCosts.length) {
+                return res.json({ month: m, year: y, bu_id: null, media_investment: 0, commercial_tools: 0, remuneration_coord: 0, referral_commission: 0, members: [] });
             }
+
+            // Soma todos os registros de BUs
+            const summed = allCosts.reduce((acc, c) => {
+                const costs = toPlainObject(c);
+                return {
+                    media_investment: acc.media_investment + costs.media_investment,
+                    commercial_tools: acc.commercial_tools + costs.commercial_tools,
+                    remuneration_coord: acc.remuneration_coord + costs.remuneration_coord,
+                    referral_commission: acc.referral_commission + costs.referral_commission,
+                    members: [...acc.members, ...costs.members],
+                    items: [...acc.items, costs]
+                };
+            }, { media_investment: 0, commercial_tools: 0, remuneration_coord: 0, referral_commission: 0, members: [] as any[], items: [] as any[] });
+
+            return res.json({ 
+                month: m, 
+                year: y, 
+                bu_id: null, 
+                ...summed
+            });
+        }
+
+        // Busca custos de uma BU específica
+        const costs = await prisma.commercial_costs.findFirst({
+            where: { month: m, year: y, bu_id: buId },
+            include: { members: true }
         });
 
         if (!costs) {
-            return res.json({
-                month: m,
-                year: y,
-                media_investment: 0,
-                commercial_tools: 0,
-                remuneration_pre_sales_1: 0,
-                remuneration_pre_sales_2: 0,
-                remuneration_closer_1: 0,
-                remuneration_closer_2: 0,
-                remuneration_coord: 0,
-                referral_commission: 0
-            });
+            return res.json({ month: m, year: y, bu_id: buId, media_investment: 0, commercial_tools: 0, remuneration_coord: 0, referral_commission: 0, members: [] });
         }
 
         res.json(toPlainObject(costs));
@@ -83,44 +102,75 @@ export const upsertCommercialCosts = async (req: any, res: Response) => {
         const {
             month,
             year,
+            bu_id,
             media_investment,
             commercial_tools,
-            remuneration_pre_sales_1,
-            remuneration_pre_sales_2,
-            remuneration_closer_1,
-            remuneration_closer_2,
             remuneration_coord,
-            referral_commission
+            referral_commission,
+            members // Array de { type: 'SDR' | 'CLOSER', value: number }
         } = req.body;
+
+        if (!bu_id) {
+            return res.status(400).json({ error: "BU é obrigatória para salvar os custos" });
+        }
 
         const data = {
             media_investment: parseFloat(media_investment) || 0,
             commercial_tools: parseFloat(commercial_tools) || 0,
-            remuneration_pre_sales_1: parseFloat(remuneration_pre_sales_1) || 0,
-            remuneration_pre_sales_2: parseFloat(remuneration_pre_sales_2) || 0,
-            remuneration_closer_1: parseFloat(remuneration_closer_1) || 0,
-            remuneration_closer_2: parseFloat(remuneration_closer_2) || 0,
             remuneration_coord: parseFloat(remuneration_coord) || 0,
             referral_commission: parseFloat(referral_commission) || 0,
         };
 
-        const costs = await prisma.commercial_costs.upsert({
-            where: {
-                month_year: {
-                    month: parseInt(month),
-                    year: parseInt(year)
-                }
-            },
-            create: {
-                month: parseInt(month),
-                year: parseInt(year),
-                ...data
-            },
-            update: {
-                ...data,
-                updated_at: new Date()
-            }
+        const buIdInt = parseInt(bu_id);
+
+        // Busca registro existente para esse bu_id + month + year
+        const existing = await prisma.commercial_costs.findFirst({
+            where: { month: parseInt(month), year: parseInt(year), bu_id: buIdInt }
         });
+
+        let costs;
+        if (existing) {
+            // Limpa membros antigos e cria novos para sincronizar (mais simples que update individual)
+            await prisma.commercial_cost_member.deleteMany({
+                where: { cost_id: existing.id }
+            });
+
+            costs = await prisma.commercial_costs.update({
+                where: { id: existing.id },
+                data: { 
+                    ...data, 
+                    bu_id: buIdInt, 
+                    updated_at: new Date(),
+                    members: {
+                        createMany: {
+                            data: Array.isArray(members) ? members.map((m: any) => ({
+                                type: m.type,
+                                value: parseFloat(m.value) || 0
+                            })) : []
+                        }
+                    }
+                },
+                include: { members: true }
+            });
+        } else {
+            costs = await prisma.commercial_costs.create({
+                data: {
+                    month: parseInt(month),
+                    year: parseInt(year),
+                    bu_id: buIdInt,
+                    ...data,
+                    members: {
+                        createMany: {
+                            data: Array.isArray(members) ? members.map((m: any) => ({
+                                type: m.type,
+                                value: parseFloat(m.value) || 0
+                            })) : []
+                        }
+                    }
+                },
+                include: { members: true }
+            });
+        }
 
         res.json(toPlainObject(costs));
     } catch (error) {

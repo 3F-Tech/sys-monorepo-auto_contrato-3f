@@ -8,7 +8,7 @@
             <ArrowLeft class="h-5 w-5 text-white/40" />
           </button>
           <div class="h-10 w-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
-            <Users class="h-6 w-6" />
+            <UsersRound class="h-6 w-6" />
           </div>
           <div>
             <h2 class="text-sm font-semibold text-white/90 leading-tight">Gestão de Usuários</h2>
@@ -91,7 +91,7 @@
             <div v-if="seller.seller_business?.length" class="flex flex-wrap gap-2 mb-6">
               <div v-for="sb in seller.seller_business" :key="sb.business_id"
                 class="group/bu relative h-9 w-9 rounded-xl border border-white/5 bg-brand-surface/30 flex items-center justify-center transition-transform hover:scale-110">
-                
+
                 <img v-if="getBusinessLogo(sb.business_id)" :src="getBusinessLogo(sb.business_id)"
                   class="h-full w-full object-cover rounded-xl" />
                 <div v-else class="h-full w-full flex items-center justify-center"
@@ -100,9 +100,12 @@
                 </div>
 
                 <!-- Custom Premium Tooltip -->
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 rounded-lg bg-brand-offset/95 backdrop-blur-md border border-brand-glass-border text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover/bu:opacity-100 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center">
+                <div
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 rounded-lg bg-brand-offset/95 backdrop-blur-md border border-brand-glass-border text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover/bu:opacity-100 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center">
                   {{ getBusinessName(sb.business_id) }}
-                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-glass-border"></div>
+                  <div
+                    class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-glass-border">
+                  </div>
                 </div>
               </div>
             </div>
@@ -110,16 +113,19 @@
               <div class="h-10 w-[1px] bg-brand-surface/30"></div>
               <div v-for="team in seller.teams" :key="team.id"
                 class="group/team relative h-9 w-9 rounded-xl border border-white/5 bg-brand-surface/30 flex items-center justify-center transition-transform hover:scale-110">
-                
+
                 <img v-if="team.photo_url" :src="team.photo_url" class="h-full w-full object-cover rounded-xl" />
                 <div v-else class="h-full w-full flex items-center justify-center bg-brand-cyan/10 rounded-xl">
                   <UsersRound class="h-4 w-4 text-brand-cyan" />
                 </div>
 
                 <!-- Custom Premium Tooltip -->
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 rounded-lg bg-brand-offset/95 backdrop-blur-md border border-brand-glass-border text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover/team:opacity-100 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center">
+                <div
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 rounded-lg bg-brand-offset/95 backdrop-blur-md border border-brand-glass-border text-[10px] font-black uppercase tracking-widest text-brand-cyan opacity-0 group-hover/team:opacity-100 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap shadow-2xl flex flex-col items-center">
                   {{ team.name }}
-                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-glass-border"></div>
+                  <div
+                    class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-glass-border">
+                  </div>
                 </div>
               </div>
             </div>
@@ -225,7 +231,7 @@ const loadSellers = async () => {
     }
 
     sellers.value = (sellersData as Sellers[]).map(s => {
-      const userTeams = allTeams.value.filter(t => 
+      const userTeams = allTeams.value.filter(t =>
         t.id === s.team_id || t.head_id?.toString() === s.id?.toString()
       )
       return {

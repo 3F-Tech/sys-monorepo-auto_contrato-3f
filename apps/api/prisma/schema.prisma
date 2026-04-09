@@ -9,16 +9,17 @@ datasource db {
 }
 
 model business {
-  id              Int               @id @default(autoincrement())
-  name            String?           @db.VarChar(255)
-  cnpj            String?           @db.VarChar(18)
-  created_at      DateTime?         @default(now()) @db.Timestamp(6)
-  update_at       DateTime?         @default(now()) @db.Timestamp(6)
-  img_base64      String?
-  color           String?
-  bu_cac          bu_cac[]
-  contracts       contracts[]
-  seller_business seller_business[]
+  id               Int                @id @default(autoincrement())
+  name             String?            @db.VarChar(255)
+  cnpj             String?            @db.VarChar(18)
+  created_at       DateTime?          @default(now()) @db.Timestamp(6)
+  update_at        DateTime?          @default(now()) @db.Timestamp(6)
+  img_base64       String?
+  color            String?
+  bu_cac           bu_cac[]
+  commercial_costs commercial_costs[]
+  contracts        contracts[]
+  seller_business  seller_business[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -145,19 +146,26 @@ model bu_cac {
 }
 
 model commercial_costs {
-  id                       Int      @id @default(autoincrement())
+  id                       Int       @id @default(autoincrement())
   month                    Int
   year                     Int
-  media_investment         Decimal? @db.Decimal
-  commercial_tools         Decimal? @db.Decimal
-  remuneration_pre_sales_1 Decimal? @db.Decimal
-  remuneration_pre_sales_2 Decimal? @db.Decimal
-  remuneration_closer_1    Decimal? @db.Decimal
-  remuneration_closer_2    Decimal? @db.Decimal
-  remuneration_coord       Decimal? @db.Decimal
-  referral_commission      Decimal? @db.Decimal
-  created_at               DateTime @default(now()) @db.Timestamptz(6)
-  updated_at               DateTime @default(now()) @db.Timestamptz(6)
+  media_investment         Decimal?                  @db.Decimal
+  commercial_tools         Decimal?                  @db.Decimal
+  remuneration_coord       Decimal?                  @db.Decimal
+  referral_commission      Decimal?                  @db.Decimal
+  created_at               DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                  @default(now()) @db.Timestamptz(6)
+  bu_id                    Int?
+  business                 business?                 @relation(fields: [bu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members                  commercial_cost_member[]
 
-  @@unique([month, year])
+  @@unique([month, year, bu_id])
+}
+
+model commercial_cost_member {
+  id        Int              @id @default(autoincrement())
+  cost_id   Int
+  type      String // SDR | CLOSER
+  value     Decimal          @db.Decimal
+  cost      commercial_costs @relation(fields: [cost_id], references: [id], onDelete: Cascade)
 }

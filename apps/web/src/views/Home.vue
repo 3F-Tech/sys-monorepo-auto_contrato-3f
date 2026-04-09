@@ -39,7 +39,7 @@
                   @click="router.push('/admin/users'); managementMenuOpen = false"
                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-white/70 hover:text-brand-cyan hover:bg-brand-cyan/5 transition-all">
                   <div class="p-1.5 rounded-md bg-white/5">
-                    <Users class="h-3.5 w-3.5" />
+                    <UsersRound class="h-3.5 w-3.5" />
                   </div>
                   <span class="text-[11px] font-bold uppercase tracking-wider">Usuários</span>
                 </button>
@@ -232,7 +232,7 @@
 
       <!-- Goals Dashboard -->
       <GoalsDashboard :goal="activeGoal" :goals="activeGoalsList" :period-type="selectedPeriodType"
-        :current-range="currentDateRange" :actuals="currentPerformance" :contracts="filteredP1Contracts"
+        :current-range="currentDateRange" :actuals="currentPerformance" :contracts="dashboardContracts"
         @open-settings="handleOpenGoalSettings('goals')" @open-periods="handleOpenGoalSettings('periods')"
         @open-costs="costsModalOpen = true" />
 
@@ -253,8 +253,8 @@
           <span class="text-[9px] font-black uppercase tracking-[0.35em] text-white/35">Indicadores Financeiros</span>
         </div>
 
-        <!-- Row 1: 5 financial cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-5">
+        <!-- 4 financial cards: Implementação, Mensal, CAC, ROI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           <div v-for="(stat, i) in financialStats" :key="stat.label"
             class="relative overflow-hidden p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04] transition-all duration-500 group cursor-default"
             :style="{ animationDelay: i * 80 + 'ms' }">
@@ -278,12 +278,7 @@
 
             <!-- Label + Value -->
             <div class="relative z-10">
-              <div class="flex items-center gap-1.5 mb-1">
-                <p class="text-[9px] font-black text-whitKe/45 uppercase tracking-[0.18em] leading-tight">{{ stat.label
-                }}</p>
-                <Info v-if="stat.tooltip" :title="stat.tooltip"
-                  class="h-3 w-3 text-white/20 hover:text-brand-cyan transition-colors cursor-help flex-shrink-0" />
-              </div>
+              <p class="text-[9px] font-black text-white/45 uppercase tracking-[0.18em] leading-tight mb-1">{{ stat.label }}</p>
               <div v-if="contractStore.loading" class="h-8 w-28 bg-white/5 rounded-lg animate-pulse"></div>
               <h3 v-else
                 class="text-[22px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300 leading-none">
@@ -292,39 +287,6 @@
             </div>
 
             <!-- Bottom glow line on hover -->
-            <div
-              class="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            </div>
-          </div>
-        </div>
-
-        <!-- Row 2: CAC + ROI (2 cards, half width) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5">
-          <div v-for="(stat, i) in financialStats2" :key="stat.label"
-            class="relative overflow-hidden p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04] transition-all duration-500 group cursor-default xl:col-span-1">
-            <div
-              class="absolute -right-4 -bottom-4 opacity-[0.04] group-hover:opacity-[0.10] group-hover:scale-110 transition-all duration-700 pointer-events-none text-brand-cyan">
-              <component :is="stat.icon" class="h-28 w-28 rotate-[-12deg]" />
-            </div>
-            <div class="flex items-center justify-between mb-5 relative z-10">
-              <div
-                class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
-                <component :is="stat.icon" class="h-5 w-5" />
-              </div>
-              <div class="flex flex-col items-end">
-                <span class="text-[7px] font-black text-white/20 uppercase tracking-[0.25em]">Status</span>
-                <span class="text-[8px] font-black text-brand-cyan/80 uppercase tracking-widest">Ativo</span>
-              </div>
-            </div>
-            <div class="relative z-10">
-              <p class="text-[9px] font-black text-white/45 uppercase tracking-[0.18em] leading-tight mb-1">{{
-                stat.label }}
-              </p>
-              <div v-if="contractStore.loading" class="h-8 w-24 bg-white/5 rounded-lg animate-pulse"></div>
-              <h3 v-else
-                class="text-[22px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300 leading-none">
-                {{ stat.value }}</h3>
-            </div>
             <div
               class="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
             </div>
@@ -340,28 +302,25 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div v-for="(stat, i) in operationalStats" :key="stat.label"
-            :class="[
-              'relative overflow-hidden p-6 rounded-[1.5rem] transition-all duration-500 group cursor-default',
-              stat.label === 'Contratos Assinados'
-                ? 'bg-green-500/[0.02] border border-green-500/10 hover:border-green-500/40 hover:bg-green-500/[0.04]'
-                : 'bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04]'
+          <div v-for="(stat, i) in operationalStats" :key="stat.label" :class="[
+            'relative overflow-hidden p-6 rounded-[1.5rem] transition-all duration-500 group cursor-default',
+            stat.label === 'Contratos Assinados'
+              ? 'bg-green-500/[0.02] border border-green-500/10 hover:border-green-500/40 hover:bg-green-500/[0.04]'
+              : 'bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04]'
+          ]">
+            <div :class="[
+              'absolute -right-4 -bottom-4 opacity-[0.04] group-hover:opacity-[0.10] group-hover:scale-110 transition-all duration-700 pointer-events-none',
+              stat.label === 'Contratos Assinados' ? 'text-green-400' : 'text-brand-cyan'
             ]">
-            <div
-              :class="[
-                'absolute -right-4 -bottom-4 opacity-[0.04] group-hover:opacity-[0.10] group-hover:scale-110 transition-all duration-700 pointer-events-none',
-                stat.label === 'Contratos Assinados' ? 'text-green-400' : 'text-brand-cyan'
-              ]">
               <component :is="stat.icon" class="h-28 w-28 rotate-[-12deg]" />
             </div>
             <div class="flex items-center justify-between mb-5 relative z-10">
-              <div
-                :class="[
-                  'p-2.5 rounded-xl transition-all duration-300 shadow-sm',
-                  stat.label === 'Contratos Assinados'
-                    ? 'bg-green-500/10 text-green-400 group-hover:bg-green-500 group-hover:text-brand-deep'
-                    : 'bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep'
-                ]">
+              <div :class="[
+                'p-2.5 rounded-xl transition-all duration-300 shadow-sm',
+                stat.label === 'Contratos Assinados'
+                  ? 'bg-green-500/10 text-green-400 group-hover:bg-green-500 group-hover:text-brand-deep'
+                  : 'bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep'
+              ]">
                 <component :is="stat.icon" class="h-5 w-5" />
               </div>
               <div class="flex flex-col items-end">
@@ -379,20 +338,18 @@
               <div v-if="sellerStore.loading || contractStore.loading"
                 class="h-8 w-16 bg-white/5 rounded-lg animate-pulse">
               </div>
-              <h3 v-else
-                :class="[
-                  'text-[22px] font-black tracking-tight text-white transition-colors duration-300 leading-none',
-                  stat.label === 'Contratos Assinados' ? 'group-hover:text-green-400' : 'group-hover:text-brand-cyan'
-                ]">
+              <h3 v-else :class="[
+                'text-[22px] font-black tracking-tight text-white transition-colors duration-300 leading-none',
+                stat.label === 'Contratos Assinados' ? 'group-hover:text-green-400' : 'group-hover:text-brand-cyan'
+              ]">
                 {{ stat.value }}</h3>
             </div>
-            <div
-              :class="[
-                'absolute bottom-0 left-0 h-[2px] w-full transition-opacity duration-500 opacity-0 group-hover:opacity-100',
-                stat.label === 'Contratos Assinados'
-                  ? 'bg-gradient-to-r from-transparent via-green-500/40 to-transparent'
-                  : 'bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent'
-              ]">
+            <div :class="[
+              'absolute bottom-0 left-0 h-[2px] w-full transition-opacity duration-500 opacity-0 group-hover:opacity-100',
+              stat.label === 'Contratos Assinados'
+                ? 'bg-gradient-to-r from-transparent via-green-500/40 to-transparent'
+                : 'bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent'
+            ]">
             </div>
           </div>
         </div>
@@ -545,9 +502,9 @@ import type { Business } from '../gen/types/Business'
 import { getBusiness } from '../gen/hooks/getBusiness'
 import client from '../api/client'
 import {
-  LogOut, FileText, Users, Building2, LayoutGrid, ArrowRight, TrendingUp, Receipt, DollarSign, BanknoteArrowUp, ShieldCheck,
+  LogOut, FileText, Users, Building2, LayoutGrid, ArrowRight, TrendingUp, Receipt, DollarSign, BanknoteArrowUp,
   Settings, Users2, UserRound, Check, Search, Calendar, X, ChevronDown as ChevronDownIcon, Clock,
-  Activity, Construction, Briefcase, Target, Info, ListFilterPlus, FileCheck, Percent, Timer,
+  Activity, Construction, Target, ListFilterPlus, FileCheck, Percent, Timer,
   UsersRound
 } from '@lucide/vue'
 import ProfileModal from '../components/profile/ProfileModal.vue'
@@ -747,6 +704,7 @@ const baseContextContracts = computed(() => {
 
 const filteredContracts = computed(() => baseContextContracts.value.filter(c => !c.canceled_at))
 const signedContracts = computed(() => filteredContracts.value.filter(c => c.signed))
+const pendingContracts = computed(() => filteredContracts.value.filter(c => !c.signed && c.approved))
 const filteredP1Contracts = computed(() => {
   const range = currentDateRange.value
 
@@ -769,6 +727,7 @@ const filteredP1Contracts = computed(() => {
     return pDate.getTime() <= threshold.getTime()
   })
 })
+const dashboardContracts = computed(() => [...filteredP1Contracts.value, ...pendingContracts.value])
 
 const currentPerformance = computed(() => {
   const range = currentDateRange.value
@@ -821,16 +780,6 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 
 const financialStats = computed(() => {
   const perf = currentPerformance.value
-  return [
-    { label: 'Total Implementação', value: fmt(perf.implementation), icon: Receipt },
-    { label: 'Recorrência Mensal', value: fmt(perf.monthly), icon: Activity },
-    { label: 'Valor P1', value: fmt(perf.p1), icon: TrendingUp, tooltip: 'Competência P1: soma da primeira parcela dos contratos gerados no período, desde que o pagamento ocorra até o dia 06 do mês seguinte.' },
-    { label: 'Valor Total (TCV)', value: fmt(perf.tcv), icon: Briefcase },
-    { label: 'NMRR', value: fmt(perf.nmrr), icon: ShieldCheck },
-  ]
-})
-
-const financialStats2 = computed(() => {
   const totalCosts = costsStore.totalCommercialCosts
   const range = currentDateRange.value
   const clientsAcquired = signedContracts.value.filter(c => {
@@ -838,9 +787,10 @@ const financialStats2 = computed(() => {
     return d.getTime() >= range.gen.start.getTime() && d.getTime() <= range.gen.end.getTime()
   }).length
   const cac = clientsAcquired > 0 ? totalCosts / clientsAcquired : 0
-  const p1 = currentPerformance.value.p1
-  const roi = totalCosts > 0 ? (p1 / totalCosts).toFixed(2) + 'x' : '0x'
+  const roi = totalCosts > 0 ? (perf.p1 / totalCosts).toFixed(2) + 'x' : '0x'
   return [
+    { label: 'Total Implementação', value: fmt(perf.implementation), icon: Receipt },
+    { label: 'Recorrência Mensal', value: fmt(perf.monthly), icon: Activity },
     { label: 'Custo por Aquisição (CAC)', value: fmt(cac), icon: DollarSign },
     { label: 'ROI P1', value: roi, icon: BanknoteArrowUp },
   ]
@@ -1020,11 +970,11 @@ watch(selectedYear, (y) => {
   }
 })
 
-watch([dashboardContext], () => {
+watch([dashboardContext, selectedBUId], () => {
   goalStore.fetchGoals(dashboardContext.value.month, dashboardContext.value.year)
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
-    cacStore.fetchCac(dashboardContext.value.month, dashboardContext.value.year)
-    costsStore.fetchCosts(dashboardContext.value.month, dashboardContext.value.year)
+    cacStore.fetchCac(dashboardContext.value.month, dashboardContext.value.year, selectedBUId.value)
+    costsStore.fetchCosts(dashboardContext.value.month, dashboardContext.value.year, selectedBUId.value)
   }
 }, { immediate: true })
 </script>
