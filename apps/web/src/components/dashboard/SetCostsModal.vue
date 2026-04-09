@@ -185,12 +185,15 @@
 
                 <!-- Coordenadora (Fixed) -->
                 <div class="space-y-1.5 group/field">
-                  <label class="text-[10px] font-black text-brand-cyan/60 group-focus-within/field:text-brand-cyan uppercase tracking-widest ml-1 transition-colors">
+                  <label
+                    class="text-[10px] font-black text-brand-cyan/60 group-focus-within/field:text-brand-cyan uppercase tracking-widest ml-1 transition-colors">
                     Remuneração Coordenadora
                   </label>
                   <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20 group-focus-within/field:text-brand-cyan/40 transition-colors">R$</span>
-                    <input v-model="commForm.remuneration_coord" type="text" v-maska="maskOptions" @keypress="onlyNumbers" inputmode="numeric" class="cost-input-pro" placeholder="0,00" />
+                    <span
+                      class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20 group-focus-within/field:text-brand-cyan/40 transition-colors">R$</span>
+                    <input v-model="commForm.remuneration_coord" type="text" v-maska="maskOptions"
+                      @keypress="onlyNumbers" inputmode="numeric" class="cost-input-pro" placeholder="0,00" />
                   </div>
                 </div>
               </div>
@@ -202,7 +205,8 @@
                 <h4 class="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] ml-1">Time & Remuneração</h4>
                 <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 border border-white/5">
                   <Users class="h-3 w-3 text-brand-cyan/40" />
-                  <span class="text-[9px] font-black text-white/20 uppercase">{{ dynamicSdrs.length + dynamicClosers.length }} Integrantes</span>
+                  <span class="text-[9px] font-black text-white/20 uppercase">{{ dynamicSdrs.length +
+                    dynamicClosers.length }} Integrantes</span>
                 </div>
               </div>
 
@@ -211,24 +215,30 @@
                 <div class="space-y-4">
                   <div class="flex items-center justify-between px-1">
                     <span class="text-[9px] font-black text-brand-cyan/40 uppercase tracking-widest">Equipe SDR</span>
-                    <button @click="addSdr" class="text-[9px] font-black text-brand-cyan uppercase hover:text-white transition-colors flex items-center gap-1">
+                    <button @click="addSdr"
+                      class="text-[9px] font-black text-brand-cyan uppercase hover:text-white transition-colors flex items-center gap-1">
                       <Plus class="h-3 w-3" /> Adicionar
                     </button>
                   </div>
-                  
-                  <div v-for="(sdr, idx) in dynamicSdrs" :key="sdr.id" class="animate-in fade-in slide-in-from-top-1 duration-300">
+
+                  <div v-for="(sdr, idx) in dynamicSdrs" :key="sdr.id"
+                    class="animate-in fade-in slide-in-from-top-1 duration-300">
                     <div class="space-y-1.5 group/field relative">
                       <div class="flex items-center justify-between mb-1 ml-1">
-                        <label class="text-[9px] font-black text-brand-cyan/60 group-focus-within/field:text-brand-cyan uppercase tracking-widest transition-colors">
+                        <label
+                          class="text-[9px] font-black text-brand-cyan/60 group-focus-within/field:text-brand-cyan uppercase tracking-widest transition-colors">
                           SDR {{ idx + 1 }}
                         </label>
-                        <button v-if="dynamicSdrs.length > 1" @click="removeSdr(idx)" class="opacity-0 group-hover/field:opacity-40 hover:!opacity-100 transition-all text-red-400">
+                        <button v-if="dynamicSdrs.length > 1" @click="removeSdr(idx)"
+                          class="opacity-0 group-hover/field:opacity-40 hover:!opacity-100 transition-all text-red-400">
                           <Trash2 class="h-3 w-3" />
                         </button>
                       </div>
                       <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-focus-within/field:text-brand-cyan/40 transition-colors">R$</span>
-                        <input v-model="sdr.value" type="text" v-maska="maskOptions" @keypress="onlyNumbers" inputmode="numeric" class="cost-input-pro pl-8 !py-3 !text-sm" placeholder="0,00" />
+                        <span
+                          class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-focus-within/field:text-brand-cyan/40 transition-colors">R$</span>
+                        <input v-model="sdr.value" type="text" v-maska="maskOptions" @keypress="onlyNumbers"
+                          inputmode="numeric" class="cost-input-pro pl-8 !py-3 !text-sm" placeholder="0,00" />
                       </div>
                     </div>
                   </div>
@@ -237,25 +247,32 @@
                 <!-- Closers Dynamic List -->
                 <div class="space-y-4">
                   <div class="flex items-center justify-between px-1">
-                    <span class="text-[9px] font-black text-brand-blue/50 uppercase tracking-widest">Equipe Closer</span>
-                    <button @click="addCloser" class="text-[9px] font-black text-brand-blue uppercase hover:text-white transition-colors flex items-center gap-1">
+                    <span class="text-[9px] font-black text-brand-blue/50 uppercase tracking-widest">Equipe
+                      Closer</span>
+                    <button @click="addCloser"
+                      class="text-[9px] font-black text-brand-blue uppercase hover:text-white transition-colors flex items-center gap-1">
                       <Plus class="h-3 w-3" /> Adicionar
                     </button>
                   </div>
-                  
-                  <div v-for="(closer, idx) in dynamicClosers" :key="closer.id" class="animate-in fade-in slide-in-from-top-1 duration-300">
+
+                  <div v-for="(closer, idx) in dynamicClosers" :key="closer.id"
+                    class="animate-in fade-in slide-in-from-top-1 duration-300">
                     <div class="space-y-1.5 group/field relative">
                       <div class="flex items-center justify-between mb-1 ml-1">
-                        <label class="text-[9px] font-black text-brand-blue/60 group-focus-within/field:text-brand-blue uppercase tracking-widest transition-colors">
+                        <label
+                          class="text-[9px] font-black text-brand-blue/60 group-focus-within/field:text-brand-blue uppercase tracking-widest transition-colors">
                           Closer {{ idx + 1 }}
                         </label>
-                        <button v-if="dynamicClosers.length > 1" @click="removeCloser(idx)" class="opacity-0 group-hover/field:opacity-40 hover:!opacity-100 transition-all text-red-400">
+                        <button v-if="dynamicClosers.length > 1" @click="removeCloser(idx)"
+                          class="opacity-0 group-hover/field:opacity-40 hover:!opacity-100 transition-all text-red-400">
                           <Trash2 class="h-3 w-3" />
                         </button>
                       </div>
                       <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-focus-within/field:text-brand-blue/40 transition-colors">R$</span>
-                        <input v-model="closer.value" type="text" v-maska="maskOptions" @keypress="onlyNumbers" inputmode="numeric" class="cost-input-pro pl-8 !py-3 !text-sm" placeholder="0,00" />
+                        <span
+                          class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-focus-within/field:text-brand-blue/40 transition-colors">R$</span>
+                        <input v-model="closer.value" type="text" v-maska="maskOptions" @keypress="onlyNumbers"
+                          inputmode="numeric" class="cost-input-pro pl-8 !py-3 !text-sm" placeholder="0,00" />
                       </div>
                     </div>
                   </div>
@@ -340,12 +357,12 @@ const getBuCostData = (buId: number) => {
 const calculateBuTotal = (buId: number) => {
   const data = getBuCostData(buId)
   if (!data) return 0
-  const base = 
+  const base =
     Number(data.media_investment || 0) +
     Number(data.commercial_tools || 0) +
     Number(data.remuneration_coord || 0) +
     Number(data.referral_commission || 0)
-  
+
   const membersTotal = (data.members || []).reduce((acc, m) => acc + Number(m.value || 0), 0)
   return base + membersTotal
 }
@@ -503,13 +520,13 @@ watch(
       dynamicSdrs.value = (existing.members || [])
         .filter(m => m.type === 'SDR')
         .map(m => ({ id: m.id || Date.now() + Math.random(), value: formatBRLInput(Number(m.value)) }))
-      
+
       if (dynamicSdrs.value.length === 0) dynamicSdrs.value.push({ id: Date.now(), value: '' })
 
       dynamicClosers.value = (existing.members || [])
         .filter(m => m.type === 'CLOSER')
         .map(m => ({ id: m.id || Date.now() + Math.random(), value: formatBRLInput(Number(m.value)) }))
-      
+
       if (dynamicClosers.value.length === 0) dynamicClosers.value.push({ id: Date.now() + 1, value: '' })
     } else {
       clearForm()
@@ -538,7 +555,10 @@ const handleSave = async () => {
       commercial_tools: parseBRL(commForm.value.commercial_tools),
       remuneration_coord: parseBRL(commForm.value.remuneration_coord),
       referral_commission: parseBRL(commForm.value.referral_commission),
-      members,
+      members: [
+        { type: 'SDR' as const, value: 100 },
+        { type: 'CLOSER' as const, value: 200 }
+      ],
       month: props.month,
       year: props.year,
       bu_id: Number(selectedBuId.value),
