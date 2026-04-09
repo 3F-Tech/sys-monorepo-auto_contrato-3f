@@ -138,7 +138,7 @@
       <!-- Filters Section -->
       <div ref="filterSectionRef" class="flex flex-wrap items-center gap-4 py-4 px-2 border-b border-white/5 mb-8">
         <!-- Mode Toggle -->
-        <div v-if="['admin', 'coord'].includes(user?.type || '')"
+        <div v-if="['admin', 'coord'].includes(user?.type || '') && (isAdmin || teamOptionsFormatted.length > 0)"
           class="flex p-1 bg-white/5 rounded-xl border border-white/5">
           <button @click="dashboardFilterType = 'bu'"
             :class="dashboardFilterType === 'bu' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
@@ -150,7 +150,8 @@
             Equipe</button>
         </div>
 
-        <div v-if="user?.type === 'head'" class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+        <div v-if="user?.type === 'head' && teamOptionsFormatted.length > 0"
+          class="flex p-1 bg-white/5 rounded-xl border border-white/5">
           <button @click="dashboardFilterType = 'team'"
             :class="dashboardFilterType === 'team' ? 'bg-brand-cyan text-brand-deep shadow-lg' : 'text-white/40'"
             class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all">Minhas
@@ -161,17 +162,50 @@
             BUs</button>
         </div>
 
-        <!-- Dynamic Selects -->
-        <div v-if="dashboardFilterType === 'bu'" class="min-w-[200px] flex-1 md:flex-none">
+        <!-- Filtro exclusivo Seller/SDR: Minha Meta / Meta da Equipe -->
+        <div v-if="isSeller && sellerTeam" class="flex items-center gap-3">
+          <!-- Toggle -->
+          <div class="flex p-1 bg-white/5 rounded-xl border border-white/5">
+            <button @click="contractFilterMode = 'own'"
+              :class="contractFilterMode === 'own' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">Minha
+              Meta</button>
+            <button @click="contractFilterMode = 'team'"
+              :class="contractFilterMode === 'team' ? 'bg-brand-cyan text-brand-deep shadow-lg scale-105' : 'text-white/40 hover:text-white'"
+              class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300">Meta
+              da Equipe</button>
+          </div>
+
+          <!-- Badge da equipe (visível apenas quando "Meta da Equipe" está ativo) -->
+          <Transition enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0 translate-x-2 scale-95" enter-to-class="opacity-100 translate-x-0 scale-100"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100 translate-x-0 scale-100" leave-to-class="opacity-0 translate-x-2 scale-95">
+            <div v-if="contractFilterMode === 'team'"
+              class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-cyan/10 border border-brand-cyan/20">
+              <div class="h-6 w-6 rounded-lg overflow-hidden flex-shrink-0 border border-brand-cyan/20">
+                <img v-if="sellerTeam.photo_url" :src="sellerTeam.photo_url" class="h-full w-full object-cover" />
+                <div v-else class="h-full w-full bg-brand-cyan/20 flex items-center justify-center">
+                  <Users class="h-3 w-3 text-brand-cyan" />
+                </div>
+              </div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-brand-cyan whitespace-nowrap">{{
+                sellerTeam.name }}</span>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Dynamic Selects (Admins, Leads, Coords apenas) -->
+        <div v-if="dashboardFilterType === 'bu' && !isSeller" class="min-w-[200px] flex-1 md:flex-none">
           <CustomSelect v-model="selectedBUId" :options="buOptionsFormatted" placeholder="Selecionar BU"
             :icon="Building2" />
         </div>
-        <template v-if="dashboardFilterType === 'team' || user?.type === 'seller'">
+        <template v-if="dashboardFilterType === 'team' && !isSeller">
           <div class="min-w-[240px] flex-1 md:flex-none">
             <CustomSelect v-model="selectedTeamId" :options="teamOptionsFormatted" placeholder="Selecionar Equipe"
               :icon="Users" searchable allow-clear />
           </div>
-          <div class="min-w-[240px] flex-1 md:flex-none" v-if="!['seller', 'sdr'].includes(user?.type || '')">
+          <div class="min-w-[240px] flex-1 md:flex-none">
             <CustomSelect v-model="selectedSellerId" :options="sellerOptionsFormatted" placeholder="Selecionar Vendedor"
               :icon="UserRound" searchable allow-clear />
           </div>
@@ -307,19 +341,35 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div v-for="(stat, i) in operationalStats" :key="stat.label"
-            class="relative overflow-hidden p-6 rounded-[1.5rem] bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04] transition-all duration-500 group cursor-default">
+            :class="[
+              'relative overflow-hidden p-6 rounded-[1.5rem] transition-all duration-500 group cursor-default',
+              stat.label === 'Contratos Assinados'
+                ? 'bg-green-500/[0.02] border border-green-500/10 hover:border-green-500/40 hover:bg-green-500/[0.04]'
+                : 'bg-brand-cyan/[0.02] border border-brand-cyan/10 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04]'
+            ]">
             <div
-              class="absolute -right-4 -bottom-4 opacity-[0.04] group-hover:opacity-[0.10] group-hover:scale-110 transition-all duration-700 pointer-events-none text-brand-cyan">
+              :class="[
+                'absolute -right-4 -bottom-4 opacity-[0.04] group-hover:opacity-[0.10] group-hover:scale-110 transition-all duration-700 pointer-events-none',
+                stat.label === 'Contratos Assinados' ? 'text-green-400' : 'text-brand-cyan'
+              ]">
               <component :is="stat.icon" class="h-28 w-28 rotate-[-12deg]" />
             </div>
             <div class="flex items-center justify-between mb-5 relative z-10">
               <div
-                class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all duration-300">
+                :class="[
+                  'p-2.5 rounded-xl transition-all duration-300 shadow-sm',
+                  stat.label === 'Contratos Assinados'
+                    ? 'bg-green-500/10 text-green-400 group-hover:bg-green-500 group-hover:text-brand-deep'
+                    : 'bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan group-hover:text-brand-deep'
+                ]">
                 <component :is="stat.icon" class="h-5 w-5" />
               </div>
               <div class="flex flex-col items-end">
                 <span class="text-[7px] font-black text-white/20 uppercase tracking-[0.25em]">Status</span>
-                <span class="text-[8px] font-black text-brand-cyan/80 uppercase tracking-widest">Ativo</span>
+                <span :class="[
+                  'text-[8px] font-black uppercase tracking-widest',
+                  stat.label === 'Contratos Assinados' ? 'text-green-400/80' : 'text-brand-cyan/80'
+                ]">Ativo</span>
               </div>
             </div>
             <div class="relative z-10">
@@ -330,11 +380,19 @@
                 class="h-8 w-16 bg-white/5 rounded-lg animate-pulse">
               </div>
               <h3 v-else
-                class="text-[22px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300 leading-none">
+                :class="[
+                  'text-[22px] font-black tracking-tight text-white transition-colors duration-300 leading-none',
+                  stat.label === 'Contratos Assinados' ? 'group-hover:text-green-400' : 'group-hover:text-brand-cyan'
+                ]">
                 {{ stat.value }}</h3>
             </div>
             <div
-              class="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              :class="[
+                'absolute bottom-0 left-0 h-[2px] w-full transition-opacity duration-500 opacity-0 group-hover:opacity-100',
+                stat.label === 'Contratos Assinados'
+                  ? 'bg-gradient-to-r from-transparent via-green-500/40 to-transparent'
+                  : 'bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent'
+              ]">
             </div>
           </div>
         </div>
@@ -343,11 +401,9 @@
       <!-- Contracts List -->
       <section class="pt-10">
         <ContractList :contracts="allFilteredContracts" :isHead="user?.type === 'head'"
-          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')"
-          :isAdmin="user?.type === 'admin'"
-          :filterMode="contractFilterMode"
-          :businessUnits="businessList" :sellers="sellerStore.allSellers" :loading="contractStore.loading"
-          @update:filterMode="mode => contractFilterMode = mode" />
+          :isLeadership="['head', 'coord', 'admin'].includes(user?.type || '')" :isAdmin="user?.type === 'admin'"
+          :filterMode="contractFilterMode" :businessUnits="businessList" :sellers="sellerStore.allSellers"
+          :loading="contractStore.loading" @update:filterMode="mode => contractFilterMode = mode" />
       </section>
 
       <!-- Team Manager -->
@@ -591,6 +647,15 @@ onUnmounted(() => {
 const user = computed(() => authStore.user)
 const firstName = computed(() => user.value?.name?.split(' ')[0] || 'Gestor')
 const userInitials = computed(() => user.value?.name?.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() || '??')
+const isAdmin = computed(() => user.value?.type === 'admin')
+const isSeller = computed(() => user.value?.type === 'seller' || user.value?.type === 'sdr')
+// true se o seller pertence a uma equipe (tem relação com algum team via team_id)
+const sellerTeam = computed(() => {
+  if (!isSeller.value || !user.value?.id) return null
+  return teamStore.teams.find(t =>
+    t.sellers_sellers_team_idToteams?.some((m: any) => m.id?.toString() === user.value?.id?.toString())
+  ) || null
+})
 const dashboardContext = computed(() => {
   if (selectedPeriodType.value === 'month') {
     const [y, m] = selectedPeriodValue.value.split('-').map(Number)
@@ -819,7 +884,7 @@ const operationalStats = computed(() => {
     { label: 'Contratos Assinados', value: signed.toString(), icon: FileCheck },
     { label: 'Média de Assinatura', value: avgDays, icon: Timer },
     { label: 'Taxa de Assinatura', value: rate, icon: Percent },
-    { label: 'Total de Colaboradores', value: sellerStore.allSellers.length.toString(), icon: Users },
+    { label: 'Total de Colaboradores', value: sellerStore.allSellers.length.toString(), icon: UsersRound },
   ]
 })
 
@@ -844,9 +909,9 @@ const buOptionsFormatted = computed(() => {
   const u = authStore.user
   const isAdmin = u?.type === 'admin'
   const myBUIds = (u as any)?.seller_business?.map((sb: any) => Number(sb.business_id)) || []
-  
+
   const opts: any[] = []
-  
+
   // Apenas Admin ou quem tem múltiplas BUs vê a opção "Geral"
   if (isAdmin) {
     opts.push({ value: 'all', label: '3F Venture', image: '/3fventure-logo.jpg' })
@@ -864,16 +929,16 @@ const buOptionsFormatted = computed(() => {
       })
     }
   })
-  
+
   return opts
 })
 
 // Garantir que selectedBUId seja inicializado corretamente de acordo com as permissões
 watch(buOptionsFormatted, (opts) => {
   if (!opts.length) return
-  
+
   const canSeeAll = opts.some(o => o.value === 'all')
-  
+
   if (!selectedBUId.value) {
     selectedBUId.value = opts[0].value
   } else if (selectedBUId.value === 'all' && !canSeeAll) {
@@ -881,7 +946,26 @@ watch(buOptionsFormatted, (opts) => {
     selectedBUId.value = opts[0].value
   }
 }, { immediate: true })
-const teamOptionsFormatted = computed(() => teamStore.teams.map(t => ({ value: `team_${t.id}`, label: t.name })))
+const teamOptionsFormatted = computed(() => {
+  const u = authStore.user
+  const isAdmin = u?.type === 'admin'
+  const isHead = u?.type === 'head'
+  const isCoord = u?.type === 'coord'
+  const myBUIds = (u as any)?.seller_business?.map((sb: any) => Number(sb.business_id)) || []
+
+  return teamStore.teams.filter(t => {
+    if (isAdmin) return true
+    if (isCoord) return t.head_id === u?.id?.toString()
+    if (isHead) {
+      // Para o Head, precisamos verificar se o dono do time (Coord) divide alguma BU com ele
+      const teamOwner = sellerStore.allSellers.find(s => s.id?.toString() === t.head_id)
+      if (!teamOwner) return false
+      const ownerBUs = (teamOwner as any).seller_business?.map((sb: any) => Number(sb.business_id)) || []
+      return ownerBUs.some((id: number) => myBUIds.includes(id))
+    }
+    return false
+  }).map(t => ({ value: `team_${t.id}`, label: t.name }))
+})
 const sellerOptionsFormatted = computed(() => {
   let sls = sellerStore.allSellers
   if (selectedTeamId.value?.startsWith('team_')) sls = sls.filter(s => s.team_id === parseInt(selectedTeamId.value!.replace('team_', '')))

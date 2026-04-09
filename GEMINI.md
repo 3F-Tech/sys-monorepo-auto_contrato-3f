@@ -77,6 +77,12 @@ Plataforma de **Automacao de Contratos** para uma agencia de marketing (3F Ventu
 13. **Regra de competencia:** A `signed_date` define o mes do contrato para **todas** as metricas (P1, TCV, NMRR, CAC, stats operacionais). Contrato gerado em marco e assinado em abril = contrato de abril em tudo.
 12. **Debug (Impulse Plano 1):** Flag `isDebug: "preencher"` substitui signatarios por emails de teste.
 14. **Semanas do Calendário (Gráficos):** As divisões semanais (Week 1, Week 2...) usadas nos gráficos (ex: Evolução P1) não adotam intervalos fixos de 7 dias ou de dia 6 ao dia 5. Elas espelham o calendário real (de Domingo a Sábado). Assim, se o mês começar, por exemplo, numa quinta-feira, a "Semana 1" irá apenas do dia 01 ao dia 03 (sábado), e assim por diante. Pode gerar de 4 a 6 divisões dependendo das semanas abrangidas pelo mês.
+15. **Sincronizacao Frontend-Banco (Real-Time):** O frontend DEVE sempre refletir o estado mais recente do banco sem necessidade de recarregar a página. Toda mutação bem-sucedida (criar, editar, excluir) DEVE acionar um `fetch` fresco na store correspondente. As stores do Pinia NÃO devem usar cache que bloqueie atualizações (ex: `if (items.length > 0) return`).
+16. **Filtros do Dashboard por Perfil (RBAC):**
+    - **seller / sdr:** Veem APENAS o toggle "Minha Meta / Meta da Equipe" — e somente se pertencerem a uma equipe. Nenhum select de BU, Equipe ou Vendedor é exibido.
+    - **coord:** Veem toggle "Por BU / Por Equipe" (somente se houver equipes vinculadas ao coord) + filtros de tempo.
+    - **head:** Veem toggle "Minhas Equipes / Minhas BUs" (somente se houver equipes na sua BU) + filtros de tempo.
+    - **admin:** Veem todos os filtros: toggle Por BU/Equipe, selects de BU, Equipe e Vendedor + filtros de tempo.
 
 ---
 

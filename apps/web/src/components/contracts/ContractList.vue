@@ -81,9 +81,9 @@
       <div v-for="contract in paginatedContracts" :key="contract.id?.toString()" :class="[
         'group bg-brand-offset border rounded-xl overflow-hidden shadow-sm transition-all duration-200 hover:shadow-lg',
         contract.canceled_at
-          ? 'border-red-500/40 hover:border-red-400/60'
+          ? 'border-red-500/40 hover:border-red-400/60 bg-red-500/[0.02]'
           : contract.signed
-            ? 'border-green-500/40 hover:border-green-400/60'
+            ? 'border-green-500/30 hover:border-green-400/50 bg-green-500/[0.03]'
             : 'border-brand-glass-border hover:border-brand-cyan/30',
       ]">
         <!-- Flex wrapper: barra status + conteúdo -->
@@ -156,7 +156,8 @@
                       class="text-xs font-black px-2.5 py-1 rounded-full text-white/20 bg-white/5 border border-white/5">
                       - / -
                     </span>
-                    <button v-if="contract.total_signers" @click.stop="openSignersModal(contract)"
+                    <button v-if="contract.total_signers && !contract.canceled_at"
+                      @click.stop="openSignersModal(contract)"
                       class="group p-1 rounded-lg hover:bg-brand-cyan/10 border border-transparent hover:border-brand-cyan/20 transition-all hover:text-brand-cyan"
                       title="Ver quem assinou">
                       <UsersRound :class="[
@@ -335,7 +336,7 @@
                       </div>
 
                       <!-- Exibição -->
-                      <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-3 gap-y-3">
+                      <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-3 gap-y-5">
                         <div>
                           <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Criação</p>
                           <p class="text-sm font-bold text-white/90">{{ formatDate(contract.created_at) }}</p>

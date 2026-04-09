@@ -24,8 +24,7 @@ export const useSellerStore = defineStore('seller', () => {
     }
   }
 
-  async function fetchAllSellers(force = false) {
-    if (!force && allSellers.value.length > 0) return;
+  async function fetchAllSellers() {
     loading.value = true;
     try {
       // Busca todos os usuários para que Admin possa gerenciar todos os cargos corretamente
