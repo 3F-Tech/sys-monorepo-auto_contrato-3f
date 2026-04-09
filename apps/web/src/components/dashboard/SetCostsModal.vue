@@ -345,17 +345,18 @@ const selectedBuId = ref<string | null>(null)
 
 const filteredBusinesses = computed(() => {
   if (authStore.user?.type === 'admin') return buStore.businesses
-  const userBUIds = authStore.user?.seller_business?.map(sb => sb.business_id) || []
-  return buStore.businesses.filter(bu => userBUIds.includes(bu.id))
+  const sellerBusiness = (authStore.user as any)?.seller_business as any[] | undefined
+  const userBUIds = sellerBusiness?.map((sb: any) => sb.business_id) || []
+  return buStore.businesses.filter(bu => bu.id && userBUIds.includes(bu.id))
 })
 
 const selectedBu = computed(() =>
-  buStore.businesses.find((b) => b.id.toString() === selectedBuId.value),
+  buStore.businesses.find((b) => b.id?.toString() === selectedBuId.value),
 )
 const buOptions = computed(() =>
   filteredBusinesses.value.map((b) => ({
-    value: b.id.toString(),
-    label: b.name,
+    value: b.id?.toString() || '',
+    label: b.name || '',
   })),
 )
 
@@ -555,8 +556,14 @@ const handleSave = async () => {
   saving.value = true
   try {
     const members = [
-      ...dynamicSdrs.value.map(s => ({ type: 'SDR', value: parseBRL(s.value) })),
-      ...dynamicClosers.value.map(c => ({ type: 'CLOSER', value: parseBRL(c.value) }))
+      ...dynamicSdrs.value.map(s => ({
+        type: 'SDR' as const,
+        value: parseBRL(s.value)
+      })),
+      ...dynamicClosers.value.map(c => ({
+        type: 'CLOSER' as const,
+        value: parseBRL(c.value)
+      }))
     ].filter(m => m.value > 0)
 
     const dataToSave = {
