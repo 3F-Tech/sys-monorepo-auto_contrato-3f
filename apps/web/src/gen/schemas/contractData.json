@@ -1,6 +1,0 @@
-{
-  "type": "object",
-  "additionalProperties": { "type": "string" },
-  "description": "Objeto dinâmico contendo os dados do formulário do contrato",
-  "x-readme-ref-name": "ContractData"
-}
