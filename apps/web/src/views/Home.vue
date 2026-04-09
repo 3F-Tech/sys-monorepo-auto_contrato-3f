@@ -973,7 +973,7 @@ watch(selectedYear, (y) => {
 watch([dashboardContext, selectedBUId], () => {
   goalStore.fetchGoals(dashboardContext.value.month, dashboardContext.value.year)
   if (['admin', 'head', 'coord'].includes(user.value?.type || '')) {
-    cacStore.fetchCac(dashboardContext.value.month, dashboardContext.value.year, selectedBUId.value)
+    cacStore.fetchCac(dashboardContext.value.month, dashboardContext.value.year)
     costsStore.fetchCosts(dashboardContext.value.month, dashboardContext.value.year, selectedBUId.value)
   }
 }, { immediate: true })
