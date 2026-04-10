@@ -48,7 +48,7 @@ const BOMMA_CONTRACT_NAMES: Record<string, string> = {
 
 const BU_SIGNERS_MAP: Record<string, { name: string, email: string, cpf: string }> = {
     'BOMMA': { name: 'Natália Selister Piccoli', email: 'natalia@bommamkt.com.br', cpf: '013.266.710-06' },
-    'SEED': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@seedagromarketing.com.br', cpf: '023.275.400-46' },
+    'SEED': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@3fventure.com.br', cpf: '023.275.400-46' },
     'IMPULSE': { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@3fventure.com.br', cpf: '023.275.400-46' }
 };
 
@@ -98,7 +98,7 @@ const executeClickSignv3Flow = async (params: {
     const envelope = await ClickSignService.createEnvelope(fileName);
     const envelopeId = envelope.id;
     console.log(`[CLICKSIGN v3] Envelope criado: ${envelopeId}`);
-    
+
     if (trackingId) {
         progressTracker.emitProgress(trackingId, {
             status: 'processing',
@@ -148,12 +148,11 @@ const executeClickSignv3Flow = async (params: {
         const buKey = Object.keys(BU_SIGNERS_MAP).find(k => buName.toUpperCase().includes(k));
         if (buKey) {
             const signerData = { ...BU_SIGNERS_MAP[buKey] };
-            
+
             if (debugMode === true || debugMode === 'true') {
                 const targetEmails = [
                     'luisfernando@3fventure.com.br',
-                    'natalia@bommamkt.com.br',
-                    'luisfernando@seedagromarketing.com.br'
+                    'natalia@bommamkt.com.br'
                 ];
                 if (targetEmails.includes(signerData.email.toLowerCase())) {
                     signerData.email = signerData.email.replace('@', '+test@');
@@ -205,14 +204,13 @@ const executeClickSignv3Flow = async (params: {
         // Testemunhas Adicionais
         const KNOWN_WITNESSES: Record<string, string> = {
             'natalia@bommamkt.com.br': 'Natália Selister Piccoli',
-            'luisfernando@3fventure.com.br': 'Luís Fernando Mauri Menti',
-            'luisfernando@seedagromarketing.com.br': 'Luís Fernando Mauri Menti'
+            'luisfernando@3fventure.com.br': 'Luís Fernando Mauri Menti'
         };
 
         for (const email of witnessEmails) {
             if (email && !addedEmails.has(email.toLowerCase())) {
                 const rawEmail = email.toLowerCase().replace(/\+test/g, '');
-                
+
                 let witnessName = KNOWN_WITNESSES[rawEmail];
                 if (!witnessName) {
                     // Busca nome de Head/Sellers no banco de dados para evitar "Testemunha Adicional"
@@ -224,7 +222,7 @@ const executeClickSignv3Flow = async (params: {
                     }
                 }
                 witnessName = witnessName || 'Testemunha Adicional';
-                
+
                 signersToProcess.push({
                     email: email,
                     name: witnessName,
@@ -247,7 +245,7 @@ const executeClickSignv3Flow = async (params: {
                 log: `Adicionando: ${s.name} (${s.role})`
             });
         }
-        
+
         const signer = await ClickSignService.addSignerToEnvelope(envelopeId, s);
         const signerId = signer.id;
         addedSignersInfo.push({ id: signerId, name: s.name });
@@ -352,10 +350,10 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                     log: `ID: ${providedEnvelopeId}`
                 });
             }
-            
+
             try {
                 let status: string | null = null;
-                
+
                 // 1. Tenta buscar como um Envelope (v3)
                 try {
                     const envelopeData = await ClickSignService.getEnvelope(providedEnvelopeId);
@@ -369,7 +367,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 }
 
                 envelopeIdForDb = providedEnvelopeId;
-                
+
                 if (status && ['closed', 'completed', 'document_closed'].includes(status)) {
                     isAlreadySigned = true;
                     console.log(`[CLICKSIGN] Documento/Envelope ${providedEnvelopeId} já está completamente assinado!`);
@@ -436,14 +434,14 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 // Atalhos universais conforme novos requisitos (Bomma)
                 const buNameUpper = (bu_name || 'BU').toUpperCase();
                 replacements['CONTRATANTE'] = data['RAZAO SOCIAL DO CONTRATANTE'] || '';
-                
+
                 // Mapeamento de Razão Social da Contratada (cada BU tem a sua)
                 const BU_LEGAL_NAMES: Record<string, string> = {
                     'BOMMA': 'BOMMA ASSESSORIA DE MARKETING LTDA',
-                    'SEED': 'SEED AGRO MARKETING LTDA', 
+                    'SEED': 'SEED AGRO MARKETING LTDA',
                     'IMPULSE': 'IMPULSE GESTAO DE NEGOCIOS LTDA'
                 };
-                
+
                 const buFound = Object.keys(BU_LEGAL_NAMES).find(k => buNameUpper.includes(k));
                 replacements['CONTRATADA'] = buFound ? BU_LEGAL_NAMES[buFound] : '3F VENTURE GESTAO DE NEGOCIOS LTDA';
 
@@ -645,7 +643,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         });
     } catch (error: any) {
         console.error(`[ERRO] Falha ao processar contrato ${sheetName}:`, error);
-        
+
         if (trackingId) {
             progressTracker.emitProgress(trackingId, {
                 status: 'error',
@@ -668,7 +666,7 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
     const startTime = Date.now();
 
     console.log(`[MANUAL] Iniciando envio do contrato ${id} para o Clicksign...`);
-    
+
     if (trackingId) {
         progressTracker.emitProgress(trackingId, {
             status: 'processing',
@@ -730,18 +728,18 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
 
         // Executar o fluxo do Clicksign
         const witnessEmails = contract.witnesses_email.map(w => w.email);
-        
+
         const result = await executeClickSignv3Flow({
             contractId: contract.id,
             fileId: fileId,
             fileName: contract.title || 'Contrato',
             buName: contract.business?.name || '',
-            signerName: contract.title?.split(' & ')[0] || '', 
+            signerName: contract.title?.split(' & ')[0] || '',
             signerEmail: contract.legal_repre_email || '',
-            signerCpf: '', 
+            signerCpf: '',
             witnessEmails: witnessEmails,
             trackingId: trackingId,
-            debugMode: isDebug, 
+            debugMode: isDebug,
             sellerName: contract.sellers?.name || '',
             sellerEmail: contract.sellers?.email || '',
             sellerCpf: contract.sellers?.cpf || '',
