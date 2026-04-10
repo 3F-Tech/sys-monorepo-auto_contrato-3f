@@ -277,70 +277,283 @@
     </div>
   </div>
 
-  <!-- Modal: Contratos do Período -->
+  <!-- Modal: Contratos do Período (Redesenhado) -->
   <Teleport to="body">
     <Transition name="modal-fade">
       <div v-if="selectedPeriodData" @click.self="closeContractsModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 md:p-8">
         <div
-          class="relative w-full max-w-2xl max-h-[80vh] flex flex-col rounded-[2.5rem] bg-brand-offset border border-white/10 shadow-2xl overflow-hidden">
+          class="relative w-full h-[85vh] flex flex-col rounded-[3rem] bg-brand-offset/90 border border-brand-glass-border shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden animate-in zoom-in-95 duration-500 transition-all duration-500 ease-in-out"
+          :class="selectedContractId ? 'max-w-5xl' : 'max-w-2xl'">
+          
           <!-- Header -->
-          <div class="flex items-center justify-between px-7 py-5 border-b border-white/[0.06]">
-            <div>
-              <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.25em] mb-1">Contratos Fechados</p>
-              <h4 class="text-lg font-black text-white tracking-tight">{{ selectedPeriodData.label }}</h4>
-            </div>
-            <button @click="closeContractsModal"
-              class="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors">
-              <X class="h-5 w-5" />
-            </button>
-          </div>
-
-          <!-- Contracts list -->
-          <div class="overflow-y-auto flex-1 px-7 py-4 space-y-3">
-            <div v-for="c in selectedPeriodData.contracts" :key="c.id"
-              class="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3">
-              <!-- Title + seller/BU row -->
-              <div class="flex items-start justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-black text-white leading-tight truncate">{{ c.title || '(sem título)' }}</p>
-                  <p class="text-[10px] font-bold text-white/30 uppercase tracking-wide mt-0.5">
-                    {{ getSellerName(c.seller_id) }} · {{ getBuName(c.bu_id) }}
-                  </p>
+          <div class="relative z-10 flex items-center justify-between px-10 py-8 border-b border-white/[0.04]">
+            <div class="flex items-center gap-5">
+              <button v-if="selectedContractId" @click="selectedContractId = null"
+                class="group flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-brand-cyan/10 hover:border-brand-cyan/20 transition-all duration-300">
+                <ArrowLeft class="h-5 w-5 text-white/40 group-hover:text-brand-cyan transition-colors" />
+              </button>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="h-1.5 w-1.5 rounded-full" :style="{ backgroundColor: metricColor }"></div>
+                  <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">
+                    {{ selectedContractId ? 'Detalhes do Contrato' : 'Contratos do Período' }}
+                  </span>
                 </div>
-                <span
-                  class="text-[9px] font-black text-brand-cyan/70 bg-brand-cyan/10 border border-brand-cyan/20 rounded-full px-2.5 py-1 whitespace-nowrap shrink-0">
-                  {{ formatDate(c.signed_date) }}
+                <h4 class="text-2xl font-black text-white tracking-tighter">
+                  {{ selectedContractId ? selectedContract?.title : selectedPeriodData.label }}
+                </h4>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <div v-if="!selectedContractId" class="hidden md:flex flex-col items-end px-6 py-2 rounded-2xl bg-white/[0.02] border border-white/5">
+                <span class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-0.5">Movimentação</span>
+                <span class="text-xs font-black text-brand-cyan uppercase tracking-wider">
+                  {{ selectedPeriodData.contracts.length }} contrato{{ selectedPeriodData.contracts.length !== 1 ? 's' : '' }}
                 </span>
               </div>
-              <!-- Financial metrics -->
-              <div class="grid grid-cols-3 gap-2">
-                <div class="bg-white/[0.03] rounded-xl p-2.5 text-center">
-                  <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Mensalidade</p>
-                  <p class="text-xs font-black text-white/70">{{ formatCurrency(parseFloat(c.monthly_fee) || 0) }}</p>
-                </div>
-                <div class="bg-white/[0.03] rounded-xl p-2.5 text-center">
-                  <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Implementação</p>
-                  <p class="text-xs font-black text-white/70">{{ formatCurrency(parseFloat(c.implementation_fee) || 0)
-                    }}</p>
-                </div>
-                <div class="bg-white/[0.03] rounded-xl p-2.5 text-center">
-                  <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">P1</p>
-                  <p class="text-xs font-black text-brand-cyan">{{ formatCurrency(parseFloat(c.first_payment_amount) ||
-                    parseFloat(c.monthly_fee) || 0) }}</p>
+              <button @click="closeContractsModal"
+                class="p-3 rounded-2xl bg-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all duration-300">
+                <X class="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="relative z-10 flex-1 overflow-hidden flex flex-col">
+            <Transition name="slide-up-fade" mode="out-in">
+              <!-- LIST VIEW -->
+              <div v-if="!selectedContractId" key="list" class="flex-1 overflow-y-auto px-10 py-6 pr-6 custom-scrollbar">
+                <div class="space-y-4">
+                    <div v-for="c in selectedPeriodData.contracts" :key="c.id"
+                    @click="selectedContractId = c.id"
+                    class="group relative overflow-hidden p-6 rounded-[2rem] bg-white/[0.02] border transition-all duration-500 cursor-pointer hover:shadow-2xl"
+                    :class="[
+                      c.signed ? 'border-emerald-500/20 bg-emerald-500/[0.03] hover:border-emerald-500/50' : 'border-white/5 hover:border-brand-cyan/40 hover:bg-brand-cyan/[0.04]'
+                    ]">
+                    
+                    <div class="flex items-start justify-between mb-6">
+                      <div class="flex-1 min-w-0 pr-4">
+                        <h5 class="text-sm font-black text-white group-hover:text-brand-cyan transition-colors truncate">
+                          {{ c.title || '(Sem Título)' }}
+                        </h5>
+                        <p class="text-[10px] font-black text-white/20 uppercase tracking-widest mt-1">
+                          {{ getSellerName(c.seller_id) }} · {{ getBuName(c.bu_id) }}
+                        </p>
+                      </div>
+                      <div class="shrink-0 flex flex-col items-end gap-2">
+                        <!-- Event Badge (New) -->
+                        <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border" :class="[getEventStyles(c, selectedPeriodData.range.start, selectedPeriodData.range.end).text, getEventStyles(c, selectedPeriodData.range.start, selectedPeriodData.range.end).border, getEventStyles(c, selectedPeriodData.range.start, selectedPeriodData.range.end).bg]">
+                          {{ getEventStyles(c, selectedPeriodData.range.start, selectedPeriodData.range.end).label }}
+                        </span>
+                        <!-- Status (Dimmed) -->
+                        <span class="text-[7px] font-bold uppercase tracking-widest text-white/10 group-hover:text-white/20 transition-colors">
+                          Status: {{ getStatusStyles(c).label }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 mb-2">
+                      <div class="p-3 rounded-2xl bg-black/20 border border-white/5">
+                        <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Mensal</p>
+                        <p class="text-xs font-black text-white/80 tabular-nums">{{ formatCurrency(parseFloat(c.monthly_fee) || 0) }}</p>
+                      </div>
+                      <div class="p-3 rounded-2xl bg-black/20 border border-white/5">
+                        <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Implantação</p>
+                        <p class="text-xs font-black text-white/80 tabular-nums">{{ formatCurrency(parseFloat(c.implementation_fee) || 0) }}</p>
+                      </div>
+                      <div class="p-3 rounded-2xl bg-brand-cyan/5 border border-brand-cyan/10">
+                        <p class="text-[8px] font-black text-brand-cyan/30 uppercase tracking-widest mb-1.5">P1</p>
+                        <p class="text-xs font-black text-brand-cyan tabular-nums">
+                          {{ formatCurrency(parseFloat(c.first_payment_amount) || parseFloat(c.monthly_fee) || 0) }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Expand Button (New Feature) -->
+                     <button class="w-full mt-4 py-2 rounded-xl bg-white/5 border border-white/5 group-hover:bg-brand-cyan/10 group-hover:border-brand-cyan/20 flex items-center justify-center gap-2 transition-all">
+                       <Maximize2 class="h-3 w-3 text-white/20 group-hover:text-brand-cyan" />
+                       <span class="text-[9px] font-black text-white/20 uppercase tracking-widest group-hover:text-brand-cyan">Ver Detalhes</span>
+                     </button>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              <!-- DETAIL VIEW -->
+              <div v-else key="detail" class="flex-1 overflow-y-auto px-10 py-6 pr-6 custom-scrollbar">
+                <div class="max-w-4xl mx-auto space-y-8">
+                  
+                  <!-- Metrics Compact Grid (4 Cards) -->
+                  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- MRR -->
+                    <div class="p-5 rounded-3xl bg-brand-cyan/5 border border-brand-cyan/10">
+                      <div class="flex items-center gap-2 mb-3">
+                        <Banknote class="h-3.5 w-3.5 text-brand-cyan/60" />
+                        <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-widest">Recorrente</span>
+                      </div>
+                      <p class="text-xl font-black text-white leading-none">{{ formatCurrency(parseFloat(selectedContract?.monthly_fee) || 0) }}</p>
+                    </div>
+
+                    <!-- Setup -->
+                    <div class="p-5 rounded-3xl bg-white/5 border border-white/10">
+                      <div class="flex items-center gap-2 mb-3">
+                        <Rocket class="h-3.5 w-3.5 text-white/30" />
+                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">Implantação</span>
+                      </div>
+                      <p class="text-xl font-black text-white leading-none">{{ formatCurrency(parseFloat(selectedContract?.implementation_fee) || 0) }}</p>
+                    </div>
+
+                    <!-- P1 -->
+                    <div class="p-5 rounded-3xl bg-brand-cyan/5 border border-brand-cyan/10">
+                      <div class="flex items-center gap-2 mb-3">
+                        <TrendingUp class="h-3.5 w-3.5 text-brand-cyan/60" />
+                        <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-widest">P1</span>
+                      </div>
+                      <p class="text-xl font-black text-brand-cyan leading-none">
+                        {{ formatCurrency(parseFloat(selectedContract?.first_payment_amount) || parseFloat(selectedContract?.monthly_fee) || 0) }}
+                      </p>
+                    </div>
+
+                    <!-- TCV -->
+                    <div class="p-5 rounded-3xl bg-white/5 border border-white/10">
+                      <div class="flex items-center gap-2 mb-3">
+                        <Target class="h-3.5 w-3.5 text-white/30" />
+                        <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">TCV Estimado</span>
+                      </div>
+                      <p class="text-xl font-black text-white/80 leading-none">
+                        {{ formatCurrency(((parseFloat(selectedContract?.monthly_fee) || 0) * (selectedContract?.contractual_term || 12)) + (parseFloat(selectedContract?.implementation_fee) || 0)) }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Participants & Docs -->
+                  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-8 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/10 space-y-8">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <!-- General Info Column -->
+                        <div class="space-y-6">
+                          <h6 class="text-[10px] font-black text-brand-cyan uppercase tracking-[0.4em] mb-4">Informações Gerais</h6>
+                          <div class="space-y-6">
+                            <!-- Status do Processo -->
+                            <div class="flex flex-col gap-3 pb-6 border-b border-white/5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Status do Processo</span>
+                              <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-lg" 
+                                  :class="[getStatusStyles(selectedContract).text, getStatusStyles(selectedContract).border, getStatusStyles(selectedContract).bg]">
+                                  {{ getStatusStyles(selectedContract).label }}
+                                </span>
+
+                                <div v-if="selectedContract?.total_signers" 
+                                  class="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black border transition-all duration-300 shadow-md"
+                                  :class="getSignaturesStatus(selectedContract).badge">
+                                  <div class="h-1.5 w-1.5 rounded-full" :class="getSignaturesStatus(selectedContract).dot"></div>
+                                  <span :class="getSignaturesStatus(selectedContract).text">
+                                    {{ selectedContract.signed_count || 0 }} de {{ selectedContract.total_signers }} assinaturas
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Representante Legal</span>
+                              <span class="text-base font-black text-brand-cyan/80 lowercase">{{ selectedContract?.legal_repre_email || '--' }}</span>
+                            </div>
+                              <div class="flex flex-col gap-1.5 pt-4 border-t border-white/5">
+                                <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Unidade de Negócio</span>
+                                <div class="flex items-center gap-4 mt-2">
+                                  <div v-if="getBuLogo(selectedContract?.bu_id)" class="h-12 w-12 rounded-2xl bg-brand-surface overflow-hidden flex items-center justify-center border border-white/10">
+                                    <img :src="getBuLogo(selectedContract?.bu_id)!" class="w-full h-full object-cover" />
+                                  </div>
+                                  <span class="text-lg font-black text-white leading-tight">{{ getBuName(selectedContract?.bu_id) }}</span>
+                                </div>
+                              </div>
+                          </div>
+                        </div>
+
+                        <!-- Dates & Terms Column -->
+                        <div class="space-y-6">
+                          <h6 class="text-[10px] font-black text-brand-cyan uppercase tracking-[0.4em] mb-4">Datas e Prazos</h6>
+                          <div class="space-y-6">
+                            <div class="flex flex-col gap-1.5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Prazo Contratual</span>
+                              <span class="text-lg font-black text-white">{{ selectedContract?.contractual_term || 12 }} meses</span>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Dia de Vencimento</span>
+                              <span class="text-lg font-black text-white">Todo dia {{ selectedContract?.due_date ? new Date(selectedContract.due_date).getUTCDate() : '--' }}</span>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Data de Assinatura</span>
+                              <span class="text-base font-black text-white/60">{{ formatDate(selectedContract?.signed_date) || 'Aguardando Assinatura' }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Context & Actions Column -->
+                    <div class="md:col-span-4 space-y-4">
+                      <div class="p-6 rounded-[2rem] bg-white/5 border border-white/10 space-y-6">
+                        <div class="space-y-4">
+                          <!-- Team Header -->
+                          <div class="flex flex-col border-b border-white/5 pb-4">
+                            <span class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-3 ml-0.5">Equipe Responsável</span>
+                            <div class="flex items-center gap-4">
+                              <div v-if="getTeamInfo(selectedContract?.seller_id)?.photo_url" class="h-12 w-12 rounded-2xl bg-white/5 overflow-hidden border border-white/10 p-0.5">
+                                <img :src="getTeamInfo(selectedContract?.seller_id)?.photo_url" class="w-full h-full object-cover rounded-xl" />
+                              </div>
+                              <div v-else class="h-12 w-12 rounded-2xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
+                                <Users class="h-6 w-6" />
+                              </div>
+                              <span class="text-sm font-black text-white tracking-tight uppercase">
+                                {{ getTeamInfo(selectedContract?.seller_id)?.name || 'Sem Equipe' }}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="flex flex-col">
+                            <span class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-3 ml-0.5">Participantes</span>
+                            <div class="space-y-3">
+                              <div class="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/5">
+                                <div class="h-8 w-8 rounded-full bg-brand-cyan/20 flex items-center justify-center text-[10px] font-black text-brand-cyan">
+                                  {{ getSellerName(selectedContract?.seller_id).split(' ').slice(0, 2).map(n => n?.[0]).join('').toUpperCase() }}
+                                </div>
+                                <div class="flex flex-col leading-none">
+                                  <span class="text-[10px] font-black text-white/80 uppercase tracking-tight">{{ getSellerName(selectedContract?.seller_id) }}</span>
+                                  <span class="text-[8px] font-black text-white/20 uppercase mt-1">Vendedor</span>
+                                </div>
+                              </div>
+                              <div v-if="selectedContract?.sdr_id" class="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/5">
+                                <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black text-white/40">
+                                  {{ getSellerName(selectedContract.sdr_id).split(' ').slice(0, 2).map(n => n?.[0]).join('').toUpperCase() }}
+                                </div>
+                                <div class="flex flex-col leading-none">
+                                  <span class="text-[10px] font-black text-white/80 uppercase tracking-tight">{{ getSellerName(selectedContract.sdr_id) }}</span>
+                                  <span class="text-[8px] font-black text-white/20 uppercase mt-1">SDR</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <a v-if="selectedContract?.link" :href="selectedContract.link" target="_blank"
+                        class="flex items-center justify-center gap-3 w-full py-5 rounded-[2rem] bg-brand-cyan text-brand-deep font-black text-[11px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-brand-cyan/20">
+                        <FileText class="h-4 w-4" />
+                        Acessar Documento
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Transition>
           </div>
 
           <!-- Footer -->
-          <div class="px-7 py-4 border-t border-white/[0.06] flex items-center justify-between">
-            <span class="text-[10px] font-black text-white/20 uppercase tracking-widest">
-              {{ selectedPeriodData.contracts.length }} contrato{{ selectedPeriodData.contracts.length !== 1 ? 's' : ''
-              }}
-            </span>
+          <div class="px-10 py-6 border-t border-white/[0.04] flex items-center justify-end">
             <button @click="closeContractsModal"
-              class="px-5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95">
+              class="px-8 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">
               Fechar
             </button>
           </div>
@@ -358,6 +571,7 @@ import {
   Clock,
   Info,
   ArrowRight,
+  ArrowLeft,
   Target,
   Calendar,
   ChevronLeft,
@@ -365,11 +579,18 @@ import {
   AlertCircle,
   TrendingUp,
   X,
+  Banknote,
+  Rocket,
+  FileText,
+  Maximize2,
+  Users,
 } from '@lucide/vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { useAuthStore } from '../../store/auth'
 import { useSellerStore } from '../../store/seller'
 import { useBuStore } from '../../store/bu'
+import { useTeamStore } from '../../store/team'
+import client from '../../api/client'
 import type { Goal } from '../../api/goalService'
 
 const apexchart = VueApexCharts
@@ -398,6 +619,97 @@ defineEmits(['open-settings', 'open-periods', 'open-costs'])
 const authStore = useAuthStore()
 const sellerStore = useSellerStore()
 const buStore = useBuStore()
+const teamStore = useTeamStore()
+
+const selectedContractId = ref<string | number | null>(null)
+const selectedContract = computed(() =>
+  props.contracts.find(c => c.id === selectedContractId.value)
+)
+
+function getStatusStyles(c: any) {
+  if (c.canceled_at) return { label: 'Cancelado', bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' }
+  if (c.signed) return { label: 'Assinado', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' }
+  if (c.approved) return { label: 'Pendente', bg: 'bg-brand-cyan/10', text: 'text-brand-cyan', border: 'border-brand-cyan/20' }
+  return { label: 'Rascunho', bg: 'bg-white/5', text: 'text-white/40', border: 'border-white/10' }
+}
+
+function getSignaturesStatus(c: any) {
+  if (!c.total_signers) {
+    return {
+      dot: 'bg-white/20',
+      badge: 'bg-white/5 border-white/5',
+      text: 'text-white/20',
+    }
+  }
+
+  const count = c.signed_count || 0
+  const total = c.total_signers
+  const ratio = count / total
+
+  if (count === total || c.signed) {
+    return {
+      dot: 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]',
+      badge: 'bg-green-500/20 border-green-500/20',
+      text: 'text-green-300',
+    }
+  }
+
+  if (ratio >= 0.5) {
+    return {
+      dot: 'bg-orange-500 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.4)]',
+      badge: 'bg-orange-500/20 border-orange-500/20',
+      text: 'text-orange-400',
+    }
+  }
+
+  return {
+    dot: 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]',
+    badge: 'bg-red-500/20 border-red-500/20',
+    text: 'text-red-400',
+  }
+}
+
+function getEventStyles(c: any, start: Date, end: Date) {
+  const isInRange = (dateStr: string | null | undefined) => {
+    if (!dateStr) return false
+    const str = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+    const dt = new Date(str + 'T12:00:00')
+    return dt >= start && dt <= end
+  }
+
+  // Prioridade: Assinado (Verde) > Aprovado (Amarelo) > Criado (Cinza)
+  if (isInRange(c.signed_date)) {
+    return { label: 'Assinado', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' }
+  }
+  if (isInRange(c.approved_at)) {
+    return { label: 'Aprovado', bg: 'bg-amber-400/10', text: 'text-amber-400', border: 'border-amber-400/20' }
+  }
+  if (isInRange(c.created_at)) {
+    return { label: 'Criado', bg: 'bg-white/5', text: 'text-white/40', border: 'border-white/10' }
+  }
+
+  // Fallback seguro
+  return { label: 'Evento', bg: 'bg-white/5', text: 'text-white/20', border: 'border-white/5' }
+}
+
+const getBuLogo = (id: number | string) => {
+  if (!id) return null
+  return buStore.businesses.find(b => Number(b.id) === Number(id))?.img_base64
+}
+const getTeamInfo = (sellerId: string | number) => {
+  if (!sellerId) return null
+  const seller = sellerStore.allSellers.find(s => String(s.id) === String(sellerId))
+  
+  // Primeiro tenta por team_id do vendedor (membro)
+  if (seller?.team_id) {
+    const team = teamStore.teams.find(t => Number(t.id) === Number(seller.team_id))
+    if (team) return team
+  }
+  
+  // Se não achar, tenta ver se ele é o LÍDER (head_id) de alguma equipe
+  return teamStore.teams.find(t => String(t.head_id) === String(sellerId)) || null
+}
+
 const canSetGoals = computed(() => {
   const type = authStore.user?.type
   return type === 'admin' || type === 'head' || type === 'coord'
@@ -499,11 +811,36 @@ onMounted(() => {
   updateCountdown()
   timerInterval = setInterval(updateCountdown, 1000)
   window.addEventListener('keydown', onKeydown)
+  
+  // Assegura que dados necessários estejam carregados
+  buStore.fetchBusinesses()
+  teamStore.fetchTeams()
+  sellerStore.fetchAllSellers()
 })
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
   window.removeEventListener('keydown', onKeydown)
+})
+
+// Sincronização automática ao visualizar contrato pendente no Dashboard
+watch(selectedContractId, async (newId) => {
+  if (!newId) return
+  
+  const contract = props.contracts.find(c => c.id === newId)
+  // Sincroniza apenas se for pendente e possuir signatários (enviado ao Clicksign)
+  if (contract && !contract.signed && !contract.canceled_at && (contract.total_signers || (contract as any).document_id)) {
+    try {
+      const response = await client.post(`/contracts/${newId}/sync`)
+      if (response.data.success) {
+        // Atualiza o objeto local reativamente. Como este objeto vem da store, 
+        // a mudança refletirá em todo o sistema.
+        Object.assign(contract, response.data.contract)
+      }
+    } catch (e) {
+      console.error('Erro ao sincronizar contrato no dashboard:', e)
+    }
+  }
 })
 
 const granularityOptions = computed(() => {
@@ -1052,7 +1389,7 @@ const chartClickEvents = {
 }
 
 // --- Modal: Contratos do Período ---
-const selectedPeriodData = ref<{ label: string; contracts: any[] } | null>(null)
+const selectedPeriodData = ref<{ label: string; contracts: any[]; range: { start: Date; end: Date } } | null>(null)
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '–'
@@ -1075,15 +1412,20 @@ function getBuName(buId: number | undefined): string {
 
 function closeContractsModal() {
   selectedPeriodData.value = null
+  selectedContractId.value = null
   document.body.style.overflow = ''
 }
 
 function getContractsForPeriod(start: Date, end: Date): any[] {
   return props.contracts.filter((c) => {
-    const raw = c.signed_date || c.created_at || ''
-    const str = raw.includes('T') ? raw.split('T')[0] : raw
-    const dt = new Date(str + 'T12:00:00')
-    return dt >= start && dt <= end
+    // Verifica se algum dos marcos temporais ocorreu no período
+    const dates = [c.signed_date, c.approved_at, c.created_at]
+    return dates.some(dateStr => {
+      if (!dateStr) return false
+      const str = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr
+      const dt = new Date(str + 'T12:00:00')
+      return dt >= start && dt <= end
+    })
   })
 }
 
@@ -1168,7 +1510,7 @@ function onChartDataPointClick(_event: any, _ctx: any, config: any) {
   const contracts = getContractsForPeriod(range.start, range.end)
   if (contracts.length === 0) return
 
-  selectedPeriodData.value = { label: range.label, contracts }
+  selectedPeriodData.value = { label: range.label, contracts, range: { start: range.start, end: range.end } }
   document.body.style.overflow = 'hidden'
 }
 
@@ -1384,5 +1726,20 @@ const lineSeries = computed(() => {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+.slide-up-fade-enter-active,
+.slide-up-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-up-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.slide-up-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 </style>

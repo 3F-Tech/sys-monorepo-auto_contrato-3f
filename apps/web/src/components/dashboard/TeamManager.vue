@@ -90,7 +90,7 @@
               class="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-brand-surface border border-brand-glass-border group/member hover:border-brand-cyan/30 transition-all">
               <div
                 class="h-5 w-5 rounded-full bg-brand-cyan/20 flex items-center justify-center text-[8px] font-black text-brand-cyan">
-                {{ member.name?.[0] }}
+                {{ member.name ? member.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() : '?' }}
               </div>
               <span class="text-[9px] font-bold text-white/60 group-hover/member:text-white">{{ member.name }}</span>
               <button @click="handleRemoveMember(team.id, member.id)"
@@ -238,7 +238,7 @@
             <div class="flex items-center gap-4 relative z-10">
               <div
                 class="h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-cyan/20 to-brand-blue/20 border border-brand-cyan/20 flex items-center justify-center text-brand-cyan font-black text-lg group-hover:scale-110 transition-transform duration-500">
-                {{ seller.name?.[0] }}
+                {{ seller.name ? seller.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() : '?' }}
               </div>
               <div>
                 <p class="text-sm font-bold text-white group-hover:text-brand-cyan transition-colors">

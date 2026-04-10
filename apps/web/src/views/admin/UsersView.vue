@@ -64,7 +64,7 @@
             <div class="flex items-center gap-4">
               <div
                 class="h-12 w-12 rounded-xl bg-brand-surface border border-brand-glass-border flex items-center justify-center text-brand-cyan font-bold text-lg group-hover:bg-brand-cyan group-hover:text-brand-deep transition-all">
-                {{ seller.name ? seller.name[0] : '?' }}
+                {{ seller.name ? seller.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() : '?' }}
               </div>
               <div>
                 <h4 class="font-bold text-white group-hover:text-brand-cyan transition-colors">{{ seller.name }}</h4>

@@ -164,11 +164,7 @@
   const getInitials = (name: string) => {
     if (!name) return '?'
     const parts = name.trim().split(' ')
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
-    // Pega primeira letra do primeiro nome e primeira letra do último nome
-    const first = parts[0][0]
-    const last = parts[parts.length - 1][0]
-    return (first + last).toUpperCase()
+    return parts.slice(0, 2).map(n => n[0]).join('').toUpperCase()
   }
 </script>
 
