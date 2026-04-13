@@ -559,7 +559,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 bu_id: Number(bu_id),
                 monthly_fee: parseDecimal(data['VALOR MENSALIDADE']),
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
-                contractual_term: parseInteger(data['PRAZO CONTRATUAL MESES']),
+                contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
                 legal_repre_email: data['EMAIL DO REPRESENTANTE'],
                 first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
@@ -573,15 +573,8 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 total_signers: signersToProcess.length,
                 change_status: null,
                 link: generatedFileLink,
-                fin_phone: data['TELEFONE FINANCEIRO CONTRATANTE'] || null,
-                fin_email: data['EMAIL FINANCEIRO CONTRATANTE'] || null,
                 approved: !!providedEnvelopeId, // Se for bypass, já nasce aprovado
-                approved_at: providedEnvelopeId ? new Date() : null,
-                type_of_negociation: data['TIPO_NEGOCIACAO'] || null,
-                first_quant: data['QTD_PRIMEIRAS_PARCELAS'] ? BigInt(data['QTD_PRIMEIRAS_PARCELAS']) : null,
-                first_value: parseDecimal(data['VALOR_PRIMEIRAS_PARCELAS']),
-                last_quant: data['QTD_ULTIMAS_PARCELAS'] ? BigInt(data['QTD_ULTIMAS_PARCELAS']) : null,
-                last_value: parseDecimal(data['VALOR_ULTIMAS_PARCELAS'])
+                approved_at: providedEnvelopeId ? new Date() : null
             }
         });
 
