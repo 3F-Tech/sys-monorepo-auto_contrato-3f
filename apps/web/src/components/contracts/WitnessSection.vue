@@ -246,7 +246,7 @@ const formatCpf = (cpfStr: string | null | undefined) => {
 }
 
 const PEOPLE = {
-  NATI: { name: 'Natália Selister Piccoli', email: 'natalia@bommamkt.com.br', cpf: '013.266.710-06' },
+  NATI: { name: 'Natália Selister Piccoli', email: 'natalia@3fventure.com.br', cpf: '013.266.710-06' },
   LUIS: { name: 'Luís Fernando Mauri Menti', email: 'luisfernando@3fventure.com.br', cpf: '023.275.400-46' },
 }
 
@@ -313,7 +313,7 @@ const updateFixedData = () => {
     if (!isDebug) return originalEmail
     const targetEmails = [
       'luisfernando@3fventure.com.br',
-      'natalia@bommamkt.com.br'
+      'natalia@3fventure.com.br'
     ]
     if (targetEmails.includes(originalEmail.toLowerCase())) {
       return originalEmail.replace('@', '+test@')
