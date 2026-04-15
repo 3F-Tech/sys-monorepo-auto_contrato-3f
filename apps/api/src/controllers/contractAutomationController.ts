@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { GoogleDriveService } from '../services/googleDriveService';
 import { GoogleDocsService } from '../services/googleDocsService';
 import { ClickSignService } from '../services/clickSignService';
+import { OpenAIService } from '../services/openaiService';
 import { contractSubmissionSchema } from '../schemas/contractSubmissionSchema';
 import { prisma } from '../prisma';
 import { progressTracker } from '../utils/progressTracker';
@@ -423,6 +424,8 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
 
                     // Não envia o e-mail do representante para o Google Docs (apenas banco)
                     if (key === 'EMAIL DO REPRESENTANTE') continue;
+                    // Campos internos de negociação — não são variáveis do Google Docs
+                    if (key.startsWith('NEGOTIATION_')) continue;
 
                     // Preserva a chave original com espaços
                     replacements[key] = valStr;
@@ -465,14 +468,15 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                     const cpf = replacements[cpfKey];
 
                     if (name && cpf) {
-                        allWitnessesForList.push(`NOME: ${name}\nCPF: ${cpf}\n`);
+                        // Adiciona o cabeçalho TESTEMUNHA para cada uma e quebra de linha extra para separar blocos
+                        allWitnessesForList.push(`TESTEMUNHA\nNOME: ${name}\nCPF: ${cpf}\n`);
                     }
                     // Garante que o placeholder não fique sujo no doc
                     if (!replacements[nameKey]) replacements[nameKey] = '';
                     if (!replacements[cpfKey]) replacements[cpfKey] = '';
                 }
 
-                // 3. Distribui nas listas L1 e L2 para o Google Docs
+                // 3. Distribui nas listas L1 e L2 para o Google Docs (para manter as 2 colunas alinhadas)
                 const l1Witnesses: string[] = [];
                 const l2Witnesses: string[] = [];
 
@@ -484,12 +488,32 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                     }
                 });
 
+                // Join com \n para garantir espaçamento entre os blocos de cada coluna
                 replacements['L1-TESTEMUNHAS'] = l1Witnesses.join('\n');
                 replacements['L2-TESTEMUNHAS'] = l2Witnesses.join('\n');
 
                 // Mapeamentos específicos extras conforme o modelo extraído
                 replacements['NOME-REPRESENTANTE-CONTRATANTE'] = data['NOME DO REPRESENTANTE'] || '';
                 replacements['CPF-REPRESENTANTE-CONTRATANTE'] = data['CPF DO REPRESENTANTE'] || '';
+
+                // === HEAD DA BU (testemunha nos contratos Bomma/Seed) ===
+                const headBu = await prisma.sellers.findFirst({
+                    where: {
+                        type: 'head',
+                        seller_business: {
+                            some: { business_id: Number(bu_id) }
+                        }
+                    }
+                });
+                replacements['NOME-HEAD-BU'] = headBu?.name || '';
+                replacements['CPF-HEAD-BU'] = headBu?.cpf || '';
+
+                // === CLÁUSULA DE NEGOCIAÇÃO DINÂMICA ({{negotiation_seller}}) ===
+                const renderedClause = data['NEGOTIATION_RENDERED_CLAUSE'];
+                if (renderedClause) {
+                    replacements['negotiation_seller'] = String(renderedClause);
+                    console.log(`[DOCS] Cláusula de negociação injetada via {{negotiation_seller}}`);
+                }
 
                 console.log(`[DOCS] Substituindo variáveis no documento...`);
                 if (trackingId) {
@@ -557,13 +581,13 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 seller_id: BigInt(user.id),
                 sdr_id: sdr_id ? BigInt(sdr_id) : null,
                 bu_id: Number(bu_id),
-                monthly_fee: parseDecimal(data['VALOR MENSALIDADE']),
+                monthly_fee: 0,
                 implementation_fee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']),
-                contractual_term: isGrowth ? null : parseInteger(data['PRAZO CONTRATUAL MESES']),
+                contractual_term: parseInteger(data['PRAZO CONTRATUAL MESES']),
                 due_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
                 legal_repre_email: data['EMAIL DO REPRESENTANTE'],
                 first_payment_date: parseDate(data['DATA PRIMEIRO PAGAMENTO']),
-                first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
+                first_payment_amount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']) || parseDecimal(data['VALOR MENSALIDADE']) || 0,
                 document_id: providedEnvelopeId ? providedEnvelopeId : null,
                 envelope_id: providedEnvelopeId ? (envelopeIdToSave || providedEnvelopeId) : null,
                 type_contract: sheetName,
@@ -574,7 +598,11 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 change_status: null,
                 link: generatedFileLink,
                 approved: !!providedEnvelopeId, // Se for bypass, já nasce aprovado
-                approved_at: providedEnvelopeId ? new Date() : null
+                approved_at: providedEnvelopeId ? new Date() : null,
+                fin_phone: data['TELEFONE FINANCEIRO CONTRATANTE'] || null,
+                fin_email: data['EMAIL FINANCEIRO CONTRATANTE'] || null,
+                negotiation_template_id: data['NEGOTIATION_TEMPLATE_ID'] ? BigInt(data['NEGOTIATION_TEMPLATE_ID']) : null,
+                negotiation_clause: data['NEGOTIATION_RENDERED_CLAUSE'] || null,
             }
         });
 
@@ -620,6 +648,45 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
         }
 
         console.log(`[DB] Registro de contrato criado (ID: ${newContract.id}). Tempo: ${Date.now() - dbStartTime}ms`);
+
+        // === CÁLCULO DE MÉTRICAS (P1, TCV) VIA IA ===
+        // Aguarda o cálculo antes de finalizar para que o TCV esteja correto ao redirecionar
+        const negotiationClause = data['NEGOTIATION_RENDERED_CLAUSE'];
+        if (negotiationClause) {
+            const contractId = newContract.id;
+            const metricsParams = {
+                renderedClause: String(negotiationClause),
+                implementationFee: parseDecimal(data['VALOR TAXA IMPLEMENTACAO']) ?? 0,
+                contractualTerm: parseInteger(data['PRAZO CONTRATUAL MESES']),
+                firstPaymentAmount: parseDecimal(data['VALOR DO PRIMEIRO PAGAMENTO']),
+                monthlyFee: parseDecimal(data['VALOR MENSALIDADE']),
+            };
+
+            if (trackingId) {
+                progressTracker.emitProgress(trackingId, {
+                    status: 'processing',
+                    progress: 85,
+                    step: 'Calculando métricas financeiras (IA)...',
+                    log: 'Calculando P1 e TCV via IA'
+                });
+            }
+
+            try {
+                const metrics = await OpenAIService.calculateContractMetrics(metricsParams);
+                console.log(`[METRICS] Contrato ${contractId}: P1=${metrics.p1}, TCV=${metrics.tcv}`);
+                await prisma.contracts.update({
+                    where: { id: contractId },
+                    data: {
+                        first_payment_amount: metrics.p1,
+                        tcv: metrics.tcv,
+                    },
+                });
+                console.log(`[METRICS] Contrato ${contractId}: métricas salvas no banco.`);
+            } catch (err: any) {
+                console.error(`[METRICS] Falha ao calcular métricas do contrato ${contractId}:`, err.message);
+                // Não bloqueia o fluxo — contrato já foi criado, métricas ficam zeradas
+            }
+        }
 
         const totalTime = Date.now() - startTime;
         console.log(`[FIM] Contrato processado com sucesso em ${totalTime}ms`);

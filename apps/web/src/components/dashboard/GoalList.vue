@@ -86,6 +86,9 @@
                     <div>
                       <div class="text-xs font-black text-white group-hover:text-brand-cyan transition-colors">
                         {{ getTargetName(goal) }}
+                        <span v-if="(goal as any).isVirtual" class="ml-1 text-[8px] uppercase tracking-widest text-brand-cyan/40">
+                          (Automática)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -150,24 +153,28 @@
 
                 <td class="px-8 py-5 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button @click="$emit('edit', goal)"
-                      class="p-2.5 rounded-xl bg-white/5 text-white/40 hover:bg-brand-cyan/20 hover:text-brand-cyan transition-all duration-300 hover:scale-110 active:scale-90 border border-transparent hover:border-brand-cyan/30 group/btn"
-                      title="Editar meta">
-                      <Edit3 class="h-4 w-4" />
-                    </button>
-                    <!-- Confirmação de exclusão em dois cliques -->
-                    <button v-if="confirmDeleteId !== goal.id" @click="requestDelete(goal.id)"
-                      class="p-2.5 rounded-xl bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-all duration-300 hover:scale-110 active:scale-90 border border-transparent hover:border-red-500/30"
-                      title="Excluir meta">
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                    <button v-else @click="confirmDelete(goal.id)" :disabled="deleting === goal.id"
-                      class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider hover:bg-red-500/30 active:scale-95 transition-all disabled:opacity-50"
-                      title="Clique para confirmar">
-                      <Loader2 v-if="deleting === goal.id" class="h-3.5 w-3.5 animate-spin" />
-                      <Trash2 v-else class="h-3.5 w-3.5" />
-                      {{ deleting === goal.id ? '...' : 'Confirmar' }}
-                    </button>
+                    <template v-if="!(goal as any).isVirtual">
+                      <button @click="$emit('edit', goal)"
+                        class="p-2.5 rounded-xl bg-white/5 text-white/40 hover:bg-brand-cyan/20 hover:text-brand-cyan transition-all duration-300 hover:scale-110 active:scale-90 border border-transparent hover:border-brand-cyan/30 group/btn"
+                        title="Editar meta">
+                        <Edit3 class="h-4 w-4" />
+                      </button>
+                      <button v-if="confirmDeleteId !== goal.id" @click="requestDelete(goal.id)"
+                        class="p-2.5 rounded-xl bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-all duration-300 hover:scale-110 active:scale-90 border border-transparent hover:border-red-500/30"
+                        title="Excluir meta">
+                        <Trash2 class="h-4 w-4" />
+                      </button>
+                      <button v-else @click="confirmDelete(goal.id)" :disabled="deleting === goal.id"
+                        class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider hover:bg-red-500/30 active:scale-95 transition-all disabled:opacity-50"
+                        title="Clique para confirmar">
+                        <Loader2 v-if="deleting === goal.id" class="h-3.5 w-3.5 animate-spin" />
+                        <Trash2 v-else class="h-3.5 w-3.5" />
+                        {{ deleting === goal.id ? '...' : 'Confirmar' }}
+                      </button>
+                    </template>
+                    <div v-else class="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-brand-cyan/20">
+                      Calculado
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -244,6 +251,8 @@ import type { Business } from '../../gen/types/Business'
 const props = defineProps<{
   goals: Goal[]
   business: Business[]
+  initialMonth?: number
+  initialYear?: number
 }>()
 
 const emit = defineEmits(['add', 'edit'])
@@ -254,11 +263,19 @@ const authStore = useAuthStore()
 const teamStore = useTeamStore()
 
 const activeType = ref('all')
-const filterYear = ref(new Date().getFullYear())
-const filterMonth = ref(new Date().getMonth() + 1)
+const filterYear = ref(props.initialYear || new Date().getFullYear())
+const filterMonth = ref(props.initialMonth || new Date().getMonth() + 1)
 const confirmDeleteId = ref<number | null>(null)
 const deleting = ref<number | null>(null)
 let confirmTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(() => props.initialMonth, (newVal) => {
+  if (newVal) filterMonth.value = newVal
+})
+
+watch(() => props.initialYear, (newVal) => {
+  if (newVal) filterYear.value = newVal
+})
 
 const requestDelete = (id: number) => {
   if (confirmTimer) clearTimeout(confirmTimer)
@@ -291,6 +308,10 @@ const typeFilters = computed(() => {
     { value: 'all', label: 'Todas' },
     { value: 'seller', label: 'Vendedores' },
   ]
+
+  if (['admin', 'coord', 'head'].includes(authStore.user?.type || '')) {
+    filters.splice(1, 0, { value: 'team', label: 'Equipes' })
+  }
 
   if (['admin', 'coord'].includes(authStore.user?.type || '')) {
     filters.splice(1, 0, { value: 'bu', label: 'BUs' })

@@ -77,6 +77,12 @@ const options: swaggerJsdoc.Options = {
                         canceled_at: { type: 'string', format: 'date-time', nullable: true },
                         approved: { type: 'boolean', nullable: true },
                         approved_at: { type: 'string', format: 'date-time', nullable: true },
+                        type_of_negociation: { type: 'string', nullable: true },
+                        first_quant: { type: 'string', description: 'BigInt serializado', nullable: true },
+                        first_value: { type: 'number', nullable: true },
+                        last_quant: { type: 'string', description: 'BigInt serializado', nullable: true },
+                        last_value: { type: 'number', nullable: true },
+                        tcv: { type: 'string', description: 'Decimal', nullable: true },
                     },
                 },
                 ContractData: {

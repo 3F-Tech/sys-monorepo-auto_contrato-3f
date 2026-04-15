@@ -243,105 +243,40 @@
       </div>
     </div>
 
-    <!-- Seção: VALORES E PAGAMENTO -->
+    <!-- Seção: CONTATO FINANCEIRO -->
     <div class="space-y-6">
       <div class="flex items-center gap-3 border-b border-brand-glass-border pb-2">
         <div class="p-2 rounded-lg bg-brand-cyan/10 text-brand-cyan">
-          <DollarSign class="h-5 w-5" />
+          <Phone class="h-5 w-5" />
         </div>
-        <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Valores e Pagamento</h3>
+        <h3 class="text-sm font-black uppercase tracking-[0.2em] text-white/90">Contato Financeiro</h3>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">VALOR TAXA IMPLEMENTAÇÃO</label>
-          <div class="relative">
-            <span
-              class="absolute left-4 h-full flex items-center text-brand-cyan/40 text-xs font-bold pointer-events-none">
-              R$
-            </span>
-            <input type="text" id="VALOR TAXA IMPLEMENTACAO" v-model="form['VALOR TAXA IMPLEMENTACAO']" v-maska="{
-              mask: '###.###.###,##',
-              tokens: { '#': { pattern: /[0-9]/, repeated: true } },
-              reversed: true,
-            }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[
-                errors && errors['VALOR TAXA IMPLEMENTACAO']
-                  ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
-                  : '',
-              ]" />
-            <span v-if="errors && errors['VALOR TAXA IMPLEMENTACAO']"
-              class="text-[9px] text-red-500 font-bold mt-1 block">
-              {{ errors['VALOR TAXA IMPLEMENTACAO'] }}
-            </span>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">VALOR MENSALIDADE</label>
-          <div class="relative">
-            <span
-              class="absolute left-4 h-full flex items-center text-brand-cyan/40 text-xs font-bold pointer-events-none">
-              R$
-            </span>
-            <input type="text" id="VALOR MENSALIDADE" v-model="form['VALOR MENSALIDADE']" v-maska="{
-              mask: '###.###.###,##',
-              tokens: { '#': { pattern: /[0-9]/, repeated: true } },
-              reversed: true,
-            }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[
-                errors && errors['VALOR MENSALIDADE']
-                  ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
-                  : '',
-              ]" />
-            <span v-if="errors && errors['VALOR MENSALIDADE']" class="text-[9px] text-red-500 font-bold mt-1 block">
-              {{ errors['VALOR MENSALIDADE'] }}
-            </span>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-            VALOR DO PRIMEIRO PAGAMENTO
-          </label>
-          <div class="relative">
-            <span
-              class="absolute left-4 h-full flex items-center text-brand-cyan/40 text-xs font-bold pointer-events-none">
-              R$
-            </span>
-            <input type="text" id="VALOR DO PRIMEIRO PAGAMENTO" v-model="form['VALOR DO PRIMEIRO PAGAMENTO']" v-maska="{
-              mask: '###.###.###,##',
-              tokens: { '#': { pattern: /[0-9]/, repeated: true } },
-              reversed: true,
-            }" class="input-glass w-full !pl-10" placeholder="0,00" :class="[
-                  errors && errors['VALOR DO PRIMEIRO PAGAMENTO']
-                    ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
-                    : '',
-                ]" />
-          </div>
-          <span v-if="errors && errors['VALOR DO PRIMEIRO PAGAMENTO']"
+          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">TELEFONE FINANCEIRO</label>
+          <input type="text" id="TELEFONE FINANCEIRO CONTRATANTE" v-model="form['TELEFONE FINANCEIRO CONTRATANTE']"
+            v-maska="'(##) # ####-####'" class="input-glass w-full" placeholder="(00) 0 0000-0000" :class="[
+              errors && errors['TELEFONE FINANCEIRO CONTRATANTE']
+                ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
+                : '',
+            ]" />
+          <span v-if="errors && errors['TELEFONE FINANCEIRO CONTRATANTE']"
             class="text-[9px] text-red-500 font-bold mt-1 block">
-            {{ errors['VALOR DO PRIMEIRO PAGAMENTO'] }}
+            {{ errors['TELEFONE FINANCEIRO CONTRATANTE'] }}
           </span>
         </div>
         <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DATA PRIMEIRO PAGAMENTO</label>
-          <input type="text" id="DATA PRIMEIRO PAGAMENTO" v-model="form['DATA PRIMEIRO PAGAMENTO']"
-            v-maska="'##/##/####'" class="input-glass w-full" placeholder="DD/MM/AAAA" :class="[
-              errors && errors['DATA PRIMEIRO PAGAMENTO']
+          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">E-MAIL FINANCEIRO</label>
+          <input type="text" id="EMAIL FINANCEIRO CONTRATANTE" v-model="form['EMAIL FINANCEIRO CONTRATANTE']"
+            class="input-glass w-full" placeholder="financeiro@empresa.com" :class="[
+              errors && errors['EMAIL FINANCEIRO CONTRATANTE']
                 ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
                 : '',
             ]" />
-          <span v-if="errors && errors['DATA PRIMEIRO PAGAMENTO']" class="text-[9px] text-red-500 font-bold mt-1 block">
-            {{ errors['DATA PRIMEIRO PAGAMENTO'] }}
-          </span>
-        </div>
-        <div class="space-y-2">
-          <label class="text-[10px] font-bold text-white/40 uppercase tracking-widest">DIA VENCIMENTO MENSAL</label>
-          <input type="number" id="DIA VENCIMENTO MENSAL" v-model="form['DIA VENCIMENTO MENSAL']" min="1" max="31"
-            class="input-glass w-full" placeholder="EX: 10" :class="[
-              errors && errors['DIA VENCIMENTO MENSAL']
-                ? '!border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] bg-red-500/5'
-                : '',
-            ]" />
-          <span v-if="errors && errors['DIA VENCIMENTO MENSAL']" class="text-[9px] text-red-500 font-bold mt-1 block">
-            {{ errors['DIA VENCIMENTO MENSAL'] }}
+          <span v-if="errors && errors['EMAIL FINANCEIRO CONTRATANTE']"
+            class="text-[9px] text-red-500 font-bold mt-1 block">
+            {{ errors['EMAIL FINANCEIRO CONTRATANTE'] }}
           </span>
         </div>
       </div>
@@ -385,6 +320,11 @@
       </div>
     </div>
 
+    <!-- Seção: VALORES E PAGAMENTO (DINÂMICA) -->
+    <NegotiationSection :form="form" :errors="errors" />
+
+
+
     <!-- Seção: TESTEMUNHAS -->
     <div class="space-y-12 pt-6 border-t border-brand-glass-border">
       <WitnessSection :form="form" :errors="errors" :buName="buName" :buId="buId" />
@@ -419,12 +359,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAuthStore } from '../../../store/auth'
 import { useCep } from '../../../composables/useCep'
 import WitnessSection from '../../../components/contracts/WitnessSection.vue'
+import NegotiationSection from '../../../components/contracts/NegotiationSection.vue'
 import CustomSelect from '../../../components/ui/CustomSelect.vue'
-import { Building2, MapPin, User as UserIcon, DollarSign, FileText, Info, Users as UsersIcon } from '@lucide/vue'
+import { Building2, MapPin, User as UserIcon, DollarSign, FileText, Info, Users as UsersIcon, TrendingUp, Phone, Eye, X } from '@lucide/vue'
 
 const props = defineProps({
   form: {
@@ -448,13 +389,15 @@ const emit = defineEmits(['update-sdr-id'])
 
 const { loading: cepLoading, fetchAddress } = useCep()
 
+
+
 const selectedSDRId = ref<string | null>(null)
 
 const authStore = useAuthStore()
 
 const sdrOptions = computed(() => {
   return (props.sellers as any[])
-    .filter((s) => s.type === 'sdr' && (s.head_id === authStore.user?.head_id || s.head_id === authStore.user?.id))
+    .filter((s) => s.type === 'sdr' && (authStore.user?.type === 'admin' || s.head_id === authStore.user?.head_id || s.head_id === authStore.user?.id))
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((s) => ({ value: s.id.toString(), label: s.name }))
 })
@@ -481,6 +424,25 @@ watch(selectedSDRId, (newId) => {
     props.form['NOME SDR'] = ''
     props.form['CPF SDR'] = ''
   }
+})
+
+// Mapeamento local para cálculo financeiro
+const parseMoney = (value: string) => {
+  if (!value) return 0
+  const raw = String(value).replace(/\./g, '').replace(',', '.')
+  return parseFloat(raw) || 0
+}
+
+const calculatedNMRR = computed(() => {
+  const term = parseInt(props.form['PRAZO CONTRATUAL MESES']?.toString() || '0', 10)
+  if (!term || isNaN(term) || term <= 0) return 0
+
+  const implementation = parseMoney(props.form['VALOR TAXA IMPLEMENTACAO'])
+  const p1 = parseMoney(props.form['VALOR DO PRIMEIRO PAGAMENTO'])
+  const monthly = parseMoney(props.form['VALOR MENSALIDADE'])
+  
+  const estimatedTcv = implementation + p1 + (monthly * Math.max(0, term - 1))
+  return estimatedTcv / term
 })
 
 watch(

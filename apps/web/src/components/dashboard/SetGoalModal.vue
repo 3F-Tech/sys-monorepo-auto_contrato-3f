@@ -38,6 +38,8 @@
           v-if="view === 'list'"
           :goals="goalStore.goals"
           :business="allBusiness"
+          :initial-month="month || form.month"
+          :initial-year="year || form.year"
           @add="addNew"
           @edit="editGoal"
         />
@@ -109,8 +111,10 @@
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                     <input
                       v-model="form.p1"
-                      type="number"
-                      step="0.01"
+                      v-maska="maskOptions"
+                      @keypress="onlyNumbers"
+                      type="text"
+                      inputmode="numeric"
                       class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                       placeholder="0,00"
                     />
@@ -126,8 +130,10 @@
                       <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                       <input
                         v-model="form.p1_period_1"
-                        type="number"
-                        step="0.01"
+                        v-maska="maskOptions"
+                        @keypress="onlyNumbers"
+                        type="text"
+                        inputmode="numeric"
                         class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                         placeholder="Automático"
                       />
@@ -142,8 +148,10 @@
                       <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                       <input
                         v-model="form.p1_period_2"
-                        type="number"
-                        step="0.01"
+                        v-maska="maskOptions"
+                        @keypress="onlyNumbers"
+                        type="text"
+                        inputmode="numeric"
                         class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                         placeholder="Automático"
                       />
@@ -158,8 +166,10 @@
                       <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                       <input
                         v-model="form.p1_period_3"
-                        type="number"
-                        step="0.01"
+                        v-maska="maskOptions"
+                        @keypress="onlyNumbers"
+                        type="text"
+                        inputmode="numeric"
                         class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                         placeholder="Automático"
                       />
@@ -174,8 +184,10 @@
                       <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                       <input
                         v-model="form.p1_period_4"
-                        type="number"
-                        step="0.01"
+                        v-maska="maskOptions"
+                        @keypress="onlyNumbers"
+                        type="text"
+                        inputmode="numeric"
                         class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                         placeholder="Automático"
                       />
@@ -199,8 +211,10 @@
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                     <input
                       v-model="form.tcv"
-                      type="number"
-                      step="0.01"
+                      v-maska="maskOptions"
+                      @keypress="onlyNumbers"
+                      type="text"
+                      inputmode="numeric"
                       class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                       placeholder="0,00"
                     />
@@ -212,8 +226,10 @@
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/20">R$</span>
                     <input
                       v-model="form.nmrr"
-                      type="number"
-                      step="0.01"
+                      v-maska="maskOptions"
+                      @keypress="onlyNumbers"
+                      type="text"
+                      inputmode="numeric"
                       class="w-full bg-brand-surface border border-brand-glass-border rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-brand-cyan/40 focus:outline-none transition-all"
                       placeholder="0,00"
                     />
@@ -285,15 +301,15 @@
   const form = ref({
     target_type: 'seller' as 'seller' | 'head' | 'team' | 'bu',
     target_id: '' as string | number,
-    p1: null as number | null,
-    p1_period_1: null as number | null,
-    p1_period_2: null as number | null,
-    p1_period_3: null as number | null,
-    p1_period_4: null as number | null,
-    tcv: null as number | null,
-    nmrr: null as number | null,
-    implementation: null as number | null,
-    monthly: null as number | null,
+    p1: '' as string,
+    p1_period_1: '' as string,
+    p1_period_2: '' as string,
+    p1_period_3: '' as string,
+    p1_period_4: '' as string,
+    tcv: '' as string,
+    nmrr: '' as string,
+    implementation: '' as string,
+    monthly: '' as string,
 
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -366,26 +382,61 @@
   })
 
   const formatFullCurrency = (val: number | string | null | undefined) => {
-    if (val === null || val === undefined) return 'R$ 0,00'
-    const num = typeof val === 'string' ? parseFloat(val) : val
+    if (val === null || val === undefined || val === '') return 'R$ 0,00'
+    const num = typeof val === 'string' ? parseBRL(val) : val
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(num)
   }
 
+  const onlyNumbers = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || ['Backspace', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
+      return
+    }
+    if (!/[0-9]/.test(e.key)) {
+      e.preventDefault()
+    }
+  }
+
+  const maskOptions = {
+    preProcess: (val: string) => val.replace(/[^\d]/g, ''),
+    postProcess: (val: string) => {
+      if (!val) return ''
+      const num = parseInt(val, 10) / 100
+      return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(num)
+    },
+  }
+
+  const parseBRL = (val: string | number | null | undefined) => {
+    if (typeof val === 'number') return val
+    if (!val) return 0
+    return parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) || 0
+  }
+
+  const formatBRLInput = (val: number | null | undefined) => {
+    if (!val || val === 0) return ''
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(val)
+  }
+
   const selectType = (value: string) => {
     form.value.target_type = value as 'seller' | 'head' | 'team' | 'bu'
     form.value.target_id = ''
-    form.value.p1 = null
-    form.value.p1_period_1 = null
-    form.value.p1_period_2 = null
-    form.value.p1_period_3 = null
-    form.value.p1_period_4 = null
-    form.value.tcv = null
-    form.value.nmrr = null
-    form.value.implementation = null
-    form.value.monthly = null
+    form.value.p1 = ''
+    form.value.p1_period_1 = ''
+    form.value.p1_period_2 = ''
+    form.value.p1_period_3 = ''
+    form.value.p1_period_4 = ''
+    form.value.tcv = ''
+    form.value.nmrr = ''
+    form.value.implementation = ''
+    form.value.monthly = ''
   }
 
   const targetLabel = computed(() => {
@@ -449,8 +500,6 @@
         view.value = props.initialView || 'list'
         editingGoal.value = null
         loadData()
-        // Pre-carrega todas as metas para o dashboard
-        goalStore.fetchGoals()
 
         // Disable body scroll when modal opens
         document.body.style.overflow = 'hidden'
@@ -482,15 +531,15 @@
     form.value = {
       target_type: utype === 'admin' || utype === 'head' ? 'bu' : 'seller',
       target_id: '',
-      p1: null,
-      p1_period_1: null,
-      p1_period_2: null,
-      p1_period_3: null,
-      p1_period_4: null,
-      tcv: null,
-      nmrr: null,
-      implementation: null,
-      monthly: null,
+      p1: '',
+      p1_period_1: '',
+      p1_period_2: '',
+      p1_period_3: '',
+      p1_period_4: '',
+      tcv: '',
+      nmrr: '',
+      implementation: '',
+      monthly: '',
 
       month: props.month || new Date().getMonth() + 1,
       year: props.year || new Date().getFullYear(),
@@ -503,15 +552,15 @@
     form.value = {
       target_type: goal.target_type as any,
       target_id: goal.target_id as any,
-      p1: goal.p1 != null ? Number(goal.p1) : null,
-      p1_period_1: goal.p1_period_1 != null ? Number(goal.p1_period_1) : null,
-      p1_period_2: goal.p1_period_2 != null ? Number(goal.p1_period_2) : null,
-      p1_period_3: goal.p1_period_3 != null ? Number(goal.p1_period_3) : null,
-      p1_period_4: goal.p1_period_4 != null ? Number(goal.p1_period_4) : null,
-      tcv: goal.tcv != null ? Number(goal.tcv) : null,
-      nmrr: goal.nmrr != null ? Number(goal.nmrr) : null,
-      implementation: goal.implementation != null ? Number(goal.implementation) : null,
-      monthly: goal.monthly != null ? Number(goal.monthly) : null,
+      p1: formatBRLInput(goal.p1 != null ? Number(goal.p1) : null),
+      p1_period_1: formatBRLInput(goal.p1_period_1 != null ? Number(goal.p1_period_1) : null),
+      p1_period_2: formatBRLInput(goal.p1_period_2 != null ? Number(goal.p1_period_2) : null),
+      p1_period_3: formatBRLInput(goal.p1_period_3 != null ? Number(goal.p1_period_3) : null),
+      p1_period_4: formatBRLInput(goal.p1_period_4 != null ? Number(goal.p1_period_4) : null),
+      tcv: formatBRLInput(goal.tcv != null ? Number(goal.tcv) : null),
+      nmrr: formatBRLInput(goal.nmrr != null ? Number(goal.nmrr) : null),
+      implementation: formatBRLInput(goal.implementation != null ? Number(goal.implementation) : null),
+      monthly: formatBRLInput(goal.monthly != null ? Number(goal.monthly) : null),
 
       month: goal.month || new Date().getMonth() + 1,
       year: goal.year || new Date().getFullYear(),
@@ -533,25 +582,25 @@
       )
 
       if (existing) {
-        form.value.p1 = existing.p1 != null ? Number(existing.p1) : null
-        form.value.p1_period_1 = existing.p1_period_1 != null ? Number(existing.p1_period_1) : null
-        form.value.p1_period_2 = existing.p1_period_2 != null ? Number(existing.p1_period_2) : null
-        form.value.p1_period_3 = existing.p1_period_3 != null ? Number(existing.p1_period_3) : null
-        form.value.p1_period_4 = existing.p1_period_4 != null ? Number(existing.p1_period_4) : null
-        form.value.tcv = existing.tcv != null ? Number(existing.tcv) : null
-        form.value.nmrr = existing.nmrr != null ? Number(existing.nmrr) : null
-        form.value.implementation = existing.implementation != null ? Number(existing.implementation) : null
-        form.value.monthly = existing.monthly != null ? Number(existing.monthly) : null
+        form.value.p1 = formatBRLInput(existing.p1 != null ? Number(existing.p1) : null)
+        form.value.p1_period_1 = formatBRLInput(existing.p1_period_1 != null ? Number(existing.p1_period_1) : null)
+        form.value.p1_period_2 = formatBRLInput(existing.p1_period_2 != null ? Number(existing.p1_period_2) : null)
+        form.value.p1_period_3 = formatBRLInput(existing.p1_period_3 != null ? Number(existing.p1_period_3) : null)
+        form.value.p1_period_4 = formatBRLInput(existing.p1_period_4 != null ? Number(existing.p1_period_4) : null)
+        form.value.tcv = formatBRLInput(existing.tcv != null ? Number(existing.tcv) : null)
+        form.value.nmrr = formatBRLInput(existing.nmrr != null ? Number(existing.nmrr) : null)
+        form.value.implementation = formatBRLInput(existing.implementation != null ? Number(existing.implementation) : null)
+        form.value.monthly = formatBRLInput(existing.monthly != null ? Number(existing.monthly) : null)
       } else {
-        form.value.p1 = null
-        form.value.p1_period_1 = null
-        form.value.p1_period_2 = null
-        form.value.p1_period_3 = null
-        form.value.p1_period_4 = null
-        form.value.tcv = null
-        form.value.nmrr = null
-        form.value.implementation = null
-        form.value.monthly = null
+        form.value.p1 = ''
+        form.value.p1_period_1 = ''
+        form.value.p1_period_2 = ''
+        form.value.p1_period_3 = ''
+        form.value.p1_period_4 = ''
+        form.value.tcv = ''
+        form.value.nmrr = ''
+        form.value.implementation = ''
+        form.value.monthly = ''
       }
     },
   )
@@ -566,6 +615,15 @@
 
       await goalStore.saveGoal({
         ...form.value,
+        p1: parseBRL(form.value.p1),
+        p1_period_1: parseBRL(form.value.p1_period_1),
+        p1_period_2: parseBRL(form.value.p1_period_2),
+        p1_period_3: parseBRL(form.value.p1_period_3),
+        p1_period_4: parseBRL(form.value.p1_period_4),
+        tcv: parseBRL(form.value.tcv),
+        nmrr: parseBRL(form.value.nmrr),
+        implementation: parseBRL(form.value.implementation),
+        monthly: parseBRL(form.value.monthly),
         target_id: form.value.target_id.toString(),
       })
 

@@ -96,21 +96,21 @@ Siga estritamente o `apps/web/design-system.md`:
 
 O `ContractFlow.vue` decide o componente e endpoint com base na BU + template selecionados:
 
-| BU | Template (UI) | Componente | Endpoint API |
-|---|---|---|---|
-| Impulse | Plano 1 - Geração de Oportunidade | `ImpulsePlano1.vue` | `/contracts-sheets/impulse-plano-1` |
-| Impulse | Plano 2 - + Social Media | `ImpulsePlano2.vue` | `/contracts-sheets/impulse-plano-2` |
-| Seed | Plano 1 - Geração de Oportunidade | `SeedPlano1.vue` | `/contracts-sheets/seed-plano-1` |
-| Seed | Plano 2 - + Social Media | `SeedPlano2.vue` | `/contracts-sheets/seed-plano-2` |
-| Seed | Plano Growth | `SeedPlanoGrowth.vue` | `/contracts-sheets/seed-plano-growth` |
-| Bomma | Assessoria | `BommaTemplate.vue` | `/contracts-sheets/bomma-assessoria` |
-| Bomma | Consultoria | `BommaTemplate.vue` | `/contracts-sheets/bomma-consultoria` |
-| Bomma | Assessoria + Social Media (Qtd Min Artes) | `BommaTemplate.vue` | `/contracts-sheets/bomma-assessoria-social-artes` |
-| Bomma | Assessoria + Social Media (Qtd Min Determinada) | `BommaTemplate.vue` | `/contracts-sheets/bomma-assessoria-social-determinada` |
-| Bomma | Assessoria + Social Media (Qtd Min Vídeos) | `BommaTemplate.vue` | `/contracts-sheets/bomma-assessoria-social-videos` |
-| Bomma | Assessoria + Social Media (Ilimitado) | `BommaTemplate.vue` | `/contracts-sheets/bomma-assessoria-social-ilimitado` |
-| Bomma | Social Media (Ilimitado) | `BommaTemplate.vue` | `/contracts-sheets/bomma-social-ilimitado` |
-| Bomma | Social Media (Qtd Min Determinada) | `BommaTemplate.vue` | `/contracts-sheets/bomma-social-determinada` |
+| BU      | Template (UI)                                   | Componente            | Endpoint API                                            |
+| ------- | ----------------------------------------------- | --------------------- | ------------------------------------------------------- |
+| Impulse | Plano 1 - Geração de Oportunidade               | `ImpulsePlano1.vue`   | `/contracts-sheets/impulse-plano-1`                     |
+| Impulse | Plano 2 - + Social Media                        | `ImpulsePlano2.vue`   | `/contracts-sheets/impulse-plano-2`                     |
+| Seed    | Plano 1 - Geração de Oportunidade               | `SeedPlano1.vue`      | `/contracts-sheets/seed-plano-1`                        |
+| Seed    | Plano 2 - + Social Media                        | `SeedPlano2.vue`      | `/contracts-sheets/seed-plano-2`                        |
+| Seed    | Plano Growth                                    | `SeedPlanoGrowth.vue` | `/contracts-sheets/seed-plano-growth`                   |
+| Bomma   | Assessoria                                      | `BommaTemplate.vue`   | `/contracts-sheets/bomma-assessoria`                    |
+| Bomma   | Consultoria                                     | `BommaTemplate.vue`   | `/contracts-sheets/bomma-consultoria`                   |
+| Bomma   | Assessoria + Social Media (Qtd Min Artes)       | `BommaTemplate.vue`   | `/contracts-sheets/bomma-assessoria-social-artes`       |
+| Bomma   | Assessoria + Social Media (Qtd Min Determinada) | `BommaTemplate.vue`   | `/contracts-sheets/bomma-assessoria-social-determinada` |
+| Bomma   | Assessoria + Social Media (Qtd Min Vídeos)      | `BommaTemplate.vue`   | `/contracts-sheets/bomma-assessoria-social-videos`      |
+| Bomma   | Assessoria + Social Media (Ilimitado)           | `BommaTemplate.vue`   | `/contracts-sheets/bomma-assessoria-social-ilimitado`   |
+| Bomma   | Social Media (Ilimitado)                        | `BommaTemplate.vue`   | `/contracts-sheets/bomma-social-ilimitado`              |
+| Bomma   | Social Media (Qtd Min Determinada)              | `BommaTemplate.vue`   | `/contracts-sheets/bomma-social-determinada`            |
 
 > **Regra:** Todos os templates Bomma compartilham o `BommaTemplate.vue`. O `sheetName` correto é enviado ao backend via payload e determina o modelo do Google Drive a ser copiado.
 
@@ -133,3 +133,82 @@ O `ContractFlow.vue` decide o componente e endpoint com base na BU + template se
 
 > [!IMPORTANT]
 > A alteração de `signed_date` deve ser consistente com o campo `signed` (booleano). Se `signed_date` for definida, `signed` deve ser `true` para que os cálculos de média de assinatura funcionem corretamente.
+
+## 💰 Sistema de Negociação Dinâmica (Templates + IA)
+
+Os tipos de negociação de pagamento deixaram de ser hardcoded e agora são **templates dinâmicos vindos do banco** (tabela `negociation_template`). Coordenadores criam modelos de cláusula via IA (OpenAI GPT) ou manualmente, e vendedores selecionam um modelo ao criar um contrato.
+
+### Fluxo do Coordenador
+1. Botão "Novo Modelo" ao lado de "Geração de Contratos" no `Home.vue` (visível para coord/head/admin)
+2. Abre `NegotiationTemplateModal.vue` → descreve a negociação → "Gerar com IA"
+3. IA retorna texto jurídico com `{{placeholders}}` → coord revisa/edita → salva no banco
+
+### Convenção de Placeholders
+- Formato: `{{nome_variavel}}` (minúsculo, underline, português)
+- `valor_*` → input monetário (R$)
+- `data_*` → date picker
+- `dia_*` → input numérico
+- Demais → input de texto
+
+### Tabela `negociation_template`
+- `caluse_template`: texto jurídico com `{{placeholders}}`
+- `num_max_item`: quantidade de itens variáveis (para numeração dinâmica dos itens fixos)
+- `created_by`: FK → sellers (coord que criou)
+- Visibilidade: vendedores veem templates do seu coord (via `head_id`)
+
+### Backend: Montagem da Cláusula e Injeção no Google Docs
+O frontend monta a cláusula completa (variável + fixa renumerada) no computed `renderedClause` e sincroniza via `form['NEGOTIATION_RENDERED_CLAUSE']`. O backend injeta esse texto no Google Docs via `replacements['negotiation_seller']` → substitui `{{negotiation_seller}}` no template do Docs. Campos internos (`NEGOTIATION_*`) são filtrados do loop genérico de replacements.
+
+### Sincronização de Placeholders → Campos Fixos do Form
+Todos os formulários agora possuem um `watch` (via `NegotiationSection.vue`) que mapeia placeholders dinâmicos para campos fixos:
+- `data_primeiro_pagamento` → `DATA PRIMEIRO PAGAMENTO`
+- `valor_mensalidade` → `VALOR MENSALIDADE`
+- `valor_primeiro_pagamento` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_pagamento_unico` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_entrada` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_a_vista` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_parcela_unica` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_parcela_inicial` → `VALOR DO PRIMEIRO PAGAMENTO`
+- `valor_parcela_subsequente` → `VALOR MENSALIDADE`
+- `dia_vencimento_mensal` → `DIA VENCIMENTO MENSAL`
+- `valor_taxa_implementacao` → `VALOR TAXA IMPLEMENTACAO`
+
+### NegotiationSection.vue — Props Configuráveis
+- **`clauseNumber`** (default: 4): Número da cláusula. Bomma usa `5`, Seed/Impulse usam `4`. Os templates da IA sempre geram com "4.X" — o componente renumera automaticamente quando `clauseNumber !== 4`.
+- **`fixedBoilerplate`** (default: 4 itens Seed/Impulse): Array de textos fixos. Bomma passa 3 itens próprios (NF/boleto, tributos, inadimplência com IPCA/juros/multa).
+
+### SDR no Formulário
+- **Admin**: vê **todos** os SDRs da empresa (sem filtro por `head_id`)
+- **Demais** (head, coord, seller): vê apenas SDRs do mesmo `head_id`
+
+### Persistência de Valores Financeiros
+- **`monthly_fee`**: sempre `0` para contratos novos (coluna legada)
+- **`implementation_fee`**: salvo por código, campo fixo dedicado
+- **`first_payment_amount`**: valor inicial por código (fallback VALOR DO PRIMEIRO PAGAMENTO → VALOR MENSALIDADE → 0), depois **sobrescrito pela IA** com o P1 correto (SEM implementação)
+- **`tcv`**: calculado pela IA e salvo no banco (aguardado antes de finalizar — loader fica em 85%)
+- **`nmrr`**: coluna **removida** do banco — sempre calculado pelo frontend como `TCV / contractual_term`
+- **`contractual_term`**: sempre do campo `PRAZO CONTRATUAL MESES` (sem override para Growth)
+- O dashboard calcula P1 completo: `first_payment_amount + implementation_fee`
+- **Fallback `effectiveMonthly`**: quando `tcv = 0` no banco e contrato **não tem** `negotiation_template_id`, usa `first_payment_amount` como mensalidade para cálculo. Contratos com negociação dinâmica dependem exclusivamente do TCV da IA.
+
+### Validação Frontend (contractValidations.ts)
+Quando o contrato usa template dinâmico (`NEGOTIATION_TEMPLATE_ID` presente), os campos `VALOR MENSALIDADE`, `VALOR DO PRIMEIRO PAGAMENTO`, `DATA PRIMEIRO PAGAMENTO` e `DIA VENCIMENTO MENSAL` **não são validados como obrigatórios** — seus valores vêm dos placeholders do template.
+
+### Itens Fixos da Cláusula 4 (SEED / IMPULSE)
+São 4 itens fixos, idênticos em todos os contratos SEED e IMPULSE. A numeração é dinâmica — começa em `4.(num_max_item + 1)`. Conteúdo (hardcoded no frontend para preview e no backend para geração):
+
+1. `A CONTRATADA emitirá a Nota Fiscal de Serviços correspondente ao valor mensal contratado no primeiro dia útil de cada mês, encaminhando-a à CONTRATANTE juntamente com o boleto bancário ou outro meio de pagamento acordado, com antecedência mínima de 5 (cinco) dias da data de vencimento.`
+2. `Os valores contratados incluem todos os tributos, encargos e despesas incidentes sobre os serviços prestados, não sendo devidos valores adicionais pela CONTRATANTE, salvo na hipótese de serviços extraordinários ou aditivos contratuais formalmente acordados entre as partes.`
+3. `O atraso superior a 15 (quinze) dias no pagamento de qualquer parcela autoriza a CONTRATADA a suspender a execução dos serviços, que somente será retomada após a regularização integral do débito.`
+4. `O pagamento pontual constitui condição essencial para a manutenção dos prazos, rotinas de entrega e continuidade dos serviços contratados.`
+
+> **BOMMA:** Possui itens fixos diferentes (cláusula 5, 3 itens: NF/boleto, tributos, inadimplência IPCA/juros/multa). Implementado via props `clause-number="5"` e `:fixed-boilerplate="bommaBoilerplate"` em `BommaPlano1.vue` e `BommaTemplate.vue`.
+
+### Preview da Cláusula (Frontend)
+O botão "Visualizar Cláusula" em `ImpulsePlano1.vue` mostra a cláusula completa: parte variável (template com `{{placeholders}}` substituídos pelos valores do vendedor) + parte fixa renumerada. Usa a constante `FIXED_CLAUSE_ITEMS` e o `num_max_item` do template selecionado.
+
+### Escopo Atual
+- **Migração Concluída**: Todos os formulários (`ImpulsePlano1/2`, `SeedPlano1/2`, `SeedPlanoGrowth`, `BommaTemplate`, `BommaPlano1`) foram migrados para o sistema de Negociação Dinâmica.
+- **Componente Reutilizável**: A lógica é centralizada em `NegotiationSection.vue`.
+- **Referência completa**: `.claude/NEGOTIATION_FEATURE.md`
+

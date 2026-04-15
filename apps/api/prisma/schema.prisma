@@ -34,58 +34,68 @@ model seller_business {
 }
 
 model sellers {
-  id                           BigInt            @id @default(autoincrement())
-  name                         String?           @db.VarChar(255)
-  cpf                          String            @unique
-  email                        String            @unique @db.VarChar(255)
+  id                           BigInt                 @id @default(autoincrement())
+  name                         String?                @db.VarChar(255)
+  cpf                          String                 @unique
+  email                        String                 @unique @db.VarChar(255)
   phone                        String
   password                     String
   type                         String
-  created_at                   DateTime?         @default(now()) @db.Timestamp(6)
-  update_at                    DateTime?         @default(now()) @db.Timestamp(6)
+  created_at                   DateTime?              @default(now()) @db.Timestamp(6)
+  update_at                    DateTime?              @default(now()) @db.Timestamp(6)
   head_id                      BigInt?
   team_id                      Int?
-  sdr_contracts                contracts[]       @relation("sdr_contracts")
-  contracts                    contracts[]       @relation("seller_contracts")
+  sdr_contracts                contracts[]            @relation("sdr_contracts")
+  contracts                    contracts[]            @relation("seller_contracts")
+  negociation_template         negociation_template[]
   seller_business              seller_business[]
-  teams_sellers_team_idToteams teams?            @relation("sellers_team_idToteams", fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  teams_teams_head_idTosellers teams[]           @relation("teams_head_idTosellers")
+  sellers                      sellers?               @relation("sellersTosellers", fields: [head_id], references: [id], onUpdate: NoAction)
+  other_sellers                sellers[]              @relation("sellersTosellers")
+  teams_sellers_team_idToteams teams?                 @relation("sellers_team_idToteams", fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teams_teams_head_idTosellers teams[]                @relation("teams_head_idTosellers")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model contracts {
-  id                   BigInt            @id @default(autoincrement())
-  title                String?
-  link                 String?
-  cnpj_client          String?
-  seller_id            BigInt
-  bu_id                Int
-  monthly_fee          Decimal?          @db.Decimal
-  implementation_fee   Decimal?          @db.Decimal
-  contractual_term     Int?              @db.SmallInt
-  due_date             DateTime?         @db.Date
-  type_contract        String?
-  created_at           DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime          @default(now()) @db.Timestamptz(6)
-  signed               Boolean           @default(false)
-  change_status        String?
-  signed_date          DateTime?         @db.Timestamptz(6)
-  change_description   String?
-  first_payment_amount Decimal?          @db.Decimal
-  first_payment_date   DateTime?         @db.Timestamptz(6)
-  legal_repre_email    String?
-  document_id          String?           @unique
-  signed_count         Int               @default(0)
-  total_signers        Int               @default(0)
-  canceled_at          DateTime?         @db.Timestamptz(6)
-  envelope_id          String?           @unique
-  sdr_id               BigInt?
-  approved             Boolean           @default(false)
-  approved_at          DateTime?         @db.Timestamptz(6)
-  business             business          @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  sdr                  sellers?          @relation("sdr_contracts", fields: [sdr_id], references: [id], onUpdate: NoAction)
-  sellers              sellers           @relation("seller_contracts", fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  witnesses_email      witnesses_email[]
+  id                      BigInt                @id @default(autoincrement())
+  title                   String?
+  link                    String?
+  cnpj_client             String?
+  seller_id               BigInt
+  bu_id                   Int
+  monthly_fee             Decimal?              @default(0.00) @db.Decimal
+  implementation_fee      Decimal?              @db.Decimal
+  contractual_term        Int?                  @db.SmallInt
+  due_date                DateTime?             @db.Date
+  type_contract           String?
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime              @default(now()) @db.Timestamptz(6)
+  signed                  Boolean               @default(false)
+  change_status           String?
+  signed_date             DateTime?             @db.Timestamptz(6)
+  change_description      String?
+  first_payment_amount    Decimal?              @db.Decimal
+  first_payment_date      DateTime?             @db.Timestamptz(6)
+  legal_repre_email       String?
+  document_id             String?               @unique
+  signed_count            Int                   @default(0)
+  total_signers           Int                   @default(0)
+  canceled_at             DateTime?             @db.Timestamptz(6)
+  envelope_id             String?               @unique
+  sdr_id                  BigInt?
+  approved                Boolean               @default(false)
+  approved_at             DateTime?             @db.Timestamptz(6)
+  fin_phone               String?
+  fin_email               String?
+  negotiation_template_id BigInt?
+  negotiation_clause      String?
+  negotiation_ai_prompt   String?
+  tcv                     Decimal               @default(0.00) @db.Decimal
+  business                business              @relation(fields: [bu_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  negociation_template    negociation_template? @relation(fields: [negotiation_template_id], references: [id], onUpdate: NoAction)
+  sdr                     sellers?              @relation("sdr_contracts", fields: [sdr_id], references: [id], onUpdate: NoAction)
+  sellers                 sellers               @relation("seller_contracts", fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  witnesses_email         witnesses_email[]
 }
 
 model goals {
@@ -146,26 +156,41 @@ model bu_cac {
 }
 
 model commercial_costs {
-  id                       Int       @id @default(autoincrement())
-  month                    Int
-  year                     Int
-  media_investment         Decimal?                  @db.Decimal
-  commercial_tools         Decimal?                  @db.Decimal
-  remuneration_coord       Decimal?                  @db.Decimal
-  referral_commission      Decimal?                  @db.Decimal
-  created_at               DateTime                  @default(now()) @db.Timestamptz(6)
-  updated_at               DateTime                  @default(now()) @db.Timestamptz(6)
-  bu_id                    Int?
-  business                 business?                 @relation(fields: [bu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  members                  commercial_cost_member[]
+  id                  Int                      @id @default(autoincrement())
+  month               Int
+  year                Int
+  media_investment    Decimal?                 @db.Decimal
+  commercial_tools    Decimal?                 @db.Decimal
+  remuneration_coord  Decimal?                 @db.Decimal
+  referral_commission Decimal?                 @db.Decimal
+  created_at          DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime                 @default(now()) @db.Timestamptz(6)
+  bu_id               Int?
+  members             commercial_cost_member[]
+  business            business?                @relation(fields: [bu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([month, year, bu_id])
 }
 
 model commercial_cost_member {
-  id        Int              @id @default(autoincrement())
-  cost_id   Int
-  type      String // SDR | CLOSER
-  value     Decimal          @db.Decimal
-  cost      commercial_costs @relation(fields: [cost_id], references: [id], onDelete: Cascade)
+  id      Int              @id @default(autoincrement())
+  cost_id Int
+  type    String
+  value   Decimal          @db.Decimal
+  cost    commercial_costs @relation(fields: [cost_id], references: [id], onDelete: Cascade)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model negociation_template {
+  id              BigInt      @id @default(autoincrement())
+  name            String
+  caluse_template String
+  num_max_item    BigInt
+  created_by      BigInt?
+  is_active       Boolean     @default(true)
+  created_at      DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime    @default(now()) @db.Timestamptz(6)
+  contracts       contracts[]
+  sellers         sellers?    @relation(fields: [created_by], references: [id], onUpdate: NoAction)
 }

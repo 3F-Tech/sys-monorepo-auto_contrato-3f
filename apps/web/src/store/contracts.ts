@@ -85,7 +85,11 @@ export const useContractStore = defineStore('contract', () => {
         created_at: data.created_at,
         link: data.link,
         change_status: data.change_status,
-        change_description: data.change_description
+        change_description: data.change_description,
+        first_payment_date: (data as any).first_payment_date,
+        due_date: (data as any).due_date,
+        fin_phone: (data as any).fin_phone,
+        fin_email: (data as any).fin_email,
       }, { client });
       
       const index = myContracts.value.findIndex(c => c.id?.toString() === id.toString());

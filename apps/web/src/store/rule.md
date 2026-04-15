@@ -104,6 +104,7 @@ Responsável pelo CAC (Custo de Aquisição de Clientes) por BU e período.
 ## ⚙️ Fluxo de Dados
 - **Ações**: Funções assíncronas devem tratar erros (try/catch) e retornar `{ success: boolean, error?: string }`.
 - **Hooks**: As stores são a ponte entre os hooks brutos do Kubb e os componentes da UI.
+- **Métricas de Performance**: P1 e TCV priorizam os valores diretos das colunas `first_payment_amount` e `tcv` do contrato. **NMRR não existe mais como coluna** — é sempre calculado pelo frontend como `TCV / contractual_term` (default 12 quando null). O fallback `effectiveMonthly` (usar `first_payment_amount` como mensalidade) só se aplica a contratos antigos sem `negotiation_template_id`.
 
 ## 📝 Manutenção
 Ao criar uma nova store, adicione-a aqui e referencie-a no `GEMINI.md`.

@@ -78,6 +78,14 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 - **Assinaturas**: Os campos `signed_count` (Int) e `total_signers` (Int) rastreiam o progresso de assinaturas do envelope no Clicksign v3.
 - **IDs Externos**: `envelope_id` armazena o UUID do Envelope na API v3. `document_id` pode armazenar o ID de documento v1/v3 ou o `fileId` do arquivo no Google Drive.
 - **Datas Editáveis**: A rota `PUT /contracts/:id` aceita `created_at` como campo opcional. Isso permite a edição retroativa de datas de criação e assinatura de contratos importados manualmente.
+- **Métricas Financeiras (IA)**: Após criar o contrato, o `handleContractSubmit` **aguarda** o cálculo de `first_payment_amount` (P1 sem implementação) e `tcv` via `OpenAIService.calculateContractMetrics` (gpt-4o, temperature 0). O loader permanece ativo (progress 85%) até a IA responder e salvar no banco. Se a IA falhar, o contrato é criado sem métricas (não trava o fluxo).
+- **`nmrr`**: Coluna **removida** da tabela `contracts`. NMRR é sempre calculado pelo frontend como `TCV / contractual_term`.
+- **`monthly_fee`**: Sempre `0` para contratos novos (coluna legada).
+- **`contractual_term`**: Sempre vem do campo `PRAZO CONTRATUAL MESES` do formulário, sem exceções (inclusive Growth).
+- **`first_payment_amount`**: Valor inicial por código (fallback `VALOR DO PRIMEIRO PAGAMENTO` → `VALOR MENSALIDADE` → 0), depois **sobrescrito pela IA** com o P1 correto (SEM taxa de implementação). O dashboard soma `implementation_fee` quando calcula P1 completo.
+- **Cláusula de Negociação**: O campo `NEGOTIATION_RENDERED_CLAUSE` no payload contém a cláusula completa renderizada (variável + fixa). O backend injeta via `replacements['negotiation_seller']` no Google Docs e salva em `contracts.negotiation_clause`. Campos `NEGOTIATION_*` são filtrados do loop genérico de replacements.
+- **Head da BU (Google Docs)**: O backend busca o head da BU (`type: 'head'` + `business_id`) e injeta `{{NOME-HEAD-BU}}` e `{{CPF-HEAD-BU}}` nos templates do Google Docs (testemunha nos contratos Bomma/Seed).
+- **Schema Zod**: `VALOR MENSALIDADE`, `VALOR DO PRIMEIRO PAGAMENTO`, `DATA PRIMEIRO PAGAMENTO` e `DIA VENCIMENTO MENSAL` são opcionais — com templates dinâmicos, seus valores vêm dos placeholders.
 
 ## 🔵 Endpoint: Signatários de Contrato
 - **Rota:** `GET /contracts/:id/signers`

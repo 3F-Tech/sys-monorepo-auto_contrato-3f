@@ -132,15 +132,6 @@
 
               <!-- Direita: Métricas + Chevron -->
               <div class="flex items-center gap-3 flex-shrink-0">
-                <!-- Mensalidade (xl+) -->
-                <div class="hidden xl:flex flex-col items-start gap-0.5">
-                  <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Mensalidade</span>
-                  <span class="text-xs font-black text-white/80 px-2.5 py-1">{{ formatCurrency(contract.monthly_fee)
-                  }}</span>
-                </div>
-                <div class="hidden xl:block h-7 w-px bg-white/5"></div>
-
-                <!-- Assinaturas (md+) -->
                 <div class="hidden md:flex flex-col items-start gap-0.5">
                   <span class="text-[10px] text-white/25 uppercase font-black tracking-widest">Assinaturas</span>
                   <div class="flex items-center gap-1">
@@ -286,9 +277,10 @@
                         </div>
                         <div class="text-right mt-2">
                           <p class="text-xs font-black text-white/30 uppercase tracking-widest mb-0.5">
-                            Mensalidade
+                            TCV
                           </p>
-                          <p class="text-base font-black text-brand-cyan">{{ formatCurrency(contract.monthly_fee) }}</p>
+                          <p class="text-base font-black text-brand-cyan">{{ formatCurrency(calculateTCV(contract)) }}
+                          </p>
                         </div>
                       </div>
                       <!-- P1 + NMRR + TCV -->
@@ -299,7 +291,7 @@
                             Valor P1
                           </p>
                           <p class="text-[14px] font-bold text-white/80">
-                            {{ formatCurrency(contract.first_payment_amount) }}
+                            {{ formatCurrency(contract.first_payment_amount || 0) }}
                           </p>
                         </div>
                         <div class="text-center">
@@ -313,9 +305,21 @@
                         <div class="text-right">
                           <p
                             class="text-[11px] font-black text-white/30 uppercase tracking-widest mb-0.5 whitespace-nowrap">
-                            TCV</p>
+                            LT</p>
                           <p class="text-[14px] font-bold text-white/90">
-                            {{ formatCurrency(calculateTCV(contract)) }}
+                            {{ (contract as any).contractual_term || 12 }} meses
+                          </p>
+                        </div>
+                      </div>
+                      <!-- Contato Financeiro -->
+                      <div class="pt-4 border-t border-white/5 space-y-2">
+                        <div class="flex items-center gap-2">
+                          <Phone class="h-3 w-3 text-white/30 shrink-0" />
+                          <p class="text-sm font-bold text-white/80">{{ (contract as any).fin_phone || '—' }}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <Mail class="h-3 w-3 text-white/30 shrink-0" />
+                          <p class="text-sm font-bold text-white/80 truncate">{{ (contract as any).fin_email || '—' }}
                           </p>
                         </div>
                       </div>
@@ -329,14 +333,10 @@
                           <Calendar class="h-3 w-3" />
                           Datas
                         </p>
-                        <button v-if="isEditingDates !== contract.id?.toString()" @click="startEditingDates(contract)"
-                          class="text-xs font-bold text-brand-cyan/60 hover:text-brand-cyan uppercase tracking-widest transition-colors">
-                          Editar
-                        </button>
                       </div>
 
                       <!-- Exibição -->
-                      <div v-if="isEditingDates !== contract.id?.toString()" class="grid grid-cols-2 gap-x-3 gap-y-5">
+                      <div class="grid grid-cols-2 gap-x-3 gap-y-5">
                         <div>
                           <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">Criação</p>
                           <p class="text-sm font-bold text-white/90">{{ formatDate(contract.created_at) }}</p>
@@ -367,53 +367,9 @@
                         </div>
                         <div>
                           <p class="text-xs font-black text-white/25 uppercase tracking-widest mb-0.5">
-                            {{ contract.signed ? 'Lead Assinatura' : 'Tempo Aberto' }}
+                            {{ contract.signed ? 'Geração até Assinatura' : 'Tempo Aberto' }}
                           </p>
                           <p class="text-sm font-black text-brand-cyan">{{ calculateDuration(contract) }}</p>
-                        </div>
-                      </div>
-
-                      <!-- Edição -->
-                      <div v-if="isEditingDates === contract.id?.toString()" class="space-y-2">
-                        <div>
-                          <label class="text-xs font-black text-white/30 uppercase tracking-widest">
-                            Data de Criação
-                          </label>
-                          <input v-model="editCreatedAt" type="date"
-                            class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
-                        </div>
-                        <div v-if="contract.signed">
-                          <label class="text-xs font-black text-white/30 uppercase tracking-widest">
-                            Data de Assinatura
-                          </label>
-                          <input v-model="editSignedDate" type="date"
-                            class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                          <div>
-                            <label class="text-xs font-black text-white/30 uppercase tracking-widest">
-                              Pagamento P1
-                            </label>
-                            <input v-model="editFirstPaymentDate" type="date"
-                              class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
-                          </div>
-                          <div>
-                            <label class="text-xs font-black text-white/30 uppercase tracking-widest">
-                              Vencimento
-                            </label>
-                            <input v-model="editDueDate" type="date"
-                              class="w-full mt-1 px-3 py-2 rounded-lg bg-brand-offset border border-brand-glass-border text-xs text-white focus:border-brand-cyan outline-none transition-all" />
-                          </div>
-                        </div>
-                        <div class="flex gap-2 pt-1">
-                          <button @click="saveDates(contract)" :disabled="isSavingDates"
-                            class="flex-1 py-2 rounded-lg bg-brand-cyan text-brand-deep font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all">
-                            {{ isSavingDates ? 'Salvando...' : 'Salvar' }}
-                          </button>
-                          <button @click="isEditingDates = null" :disabled="isSavingDates"
-                            class="px-3 py-2 rounded-lg bg-white/5 text-white/40 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">
-                            Cancelar
-                          </button>
                         </div>
                       </div>
 
@@ -444,6 +400,16 @@
                       </div>
 
                       <div class="space-y-2">
+                        <!-- Editar Informações -->
+                        <button v-if="!(contract as any).canceled_at && isEditingDates !== contract.id?.toString()"
+                          @click="startEditingDates(contract)" :class="[
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 group/btn',
+                            'bg-brand-offset border-brand-glass-border text-white/40 hover:border-brand-cyan/40 hover:text-brand-cyan hover:bg-brand-cyan/5',
+                          ]">
+                          <Pencil class="h-4 w-4 flex-shrink-0 transition-transform group-hover/btn:scale-110" />
+                          <span class="text-xs font-black uppercase tracking-wider">Editar Informações</span>
+                        </button>
+
                         <!-- Marcar Assinado -->
                         <button v-if="(contract as any).approved && !(contract as any).canceled_at"
                           @click="handleToggleSigned(contract)"
@@ -758,6 +724,122 @@
         <img src="/clicksign.png" class="h-full w-full object-cover" />
       </template>
     </ConfirmModal>
+
+    <!-- Modal: Editar Informações do Contrato -->
+    <Teleport to="body">
+      <Transition name="edit-info-fade">
+        <div v-if="isEditingDates" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeEditModal"></div>
+          <div
+            class="relative bg-brand-offset border border-brand-glass-border rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <!-- Decoration -->
+            <div class="absolute -top-20 -right-20 h-40 w-40 bg-brand-cyan/5 rounded-full blur-3xl pointer-events-none">
+            </div>
+
+            <!-- Header -->
+            <div class="relative z-10 flex items-start justify-between p-6 border-b border-brand-glass-border">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="p-2.5 rounded-xl bg-brand-cyan/10 text-brand-cyan shrink-0">
+                  <Pencil class="h-4 w-4" />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[10px] font-black text-white/30 uppercase tracking-widest mb-0.5">Editando contrato</p>
+                  <h3 class="text-sm font-black text-white leading-tight truncate">{{ editingContract?.title }}</h3>
+                  <span
+                    class="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest mt-1 inline-block"
+                    :class="[
+                      editingContract?.canceled_at ? 'bg-red-500/15 text-red-400 border border-red-500/20' :
+                        editingContract?.signed ? 'bg-green-500/15 text-green-300 border border-green-500/20' :
+                          !editingContract?.approved ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' :
+                            'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20'
+                    ]">
+                    {{ editingContract?.canceled_at ? 'Cancelado' : editingContract?.signed ? 'Assinado' :
+                      !editingContract?.approved ? 'Rascunho' : 'Pendente' }}
+                  </span>
+                </div>
+              </div>
+              <button @click="closeEditModal" class="p-2 rounded-lg hover:bg-white/5 transition-colors shrink-0 ml-2">
+                <X class="h-4 w-4 text-white/40" />
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="relative z-10 p-6 space-y-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <!-- Datas -->
+              <div class="space-y-3">
+                <p
+                  class="text-[10px] font-black text-brand-cyan/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                  <Calendar class="h-3 w-3" />
+                  Datas
+                </p>
+                <div class="space-y-3">
+                  <div>
+                    <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">Data de
+                      Criação</label>
+                    <input v-model="editCreatedAt" type="date"
+                      class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                  </div>
+                  <div v-if="editingContract?.signed">
+                    <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">Data de
+                      Assinatura</label>
+                    <input v-model="editSignedDate" type="date"
+                      class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">Pagamento P1</label>
+                      <input v-model="editFirstPaymentDate" type="date"
+                        class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">Vencimento</label>
+                      <input v-model="editDueDate" type="date"
+                        class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contato Financeiro -->
+              <div class="space-y-3 pt-4 border-t border-brand-glass-border">
+                <p
+                  class="text-[10px] font-black text-brand-cyan/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                  <Phone class="h-3 w-3" />
+                  Contato Financeiro
+                </p>
+                <div class="space-y-3">
+                  <div>
+                    <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">Telefone
+                      Financeiro</label>
+                    <input v-model="editFinPhone" type="text" v-maska="'(##) # ####-####'"
+                      placeholder="(00) 0 0000-0000"
+                      class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-black text-white/30 uppercase tracking-widest">E-mail
+                      Financeiro</label>
+                    <input v-model="editFinEmail" type="text" placeholder="financeiro@empresa.com"
+                      class="w-full mt-1 px-4 py-3 rounded-xl bg-brand-surface border border-brand-glass-border text-sm text-white focus:border-brand-cyan outline-none transition-all" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="relative z-10 flex gap-3 p-6 border-t border-brand-glass-border">
+              <button @click="saveDates(editingContract)" :disabled="isSavingDates"
+                class="flex-1 py-3 rounded-xl bg-brand-cyan text-brand-deep font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all">
+                {{ isSavingDates ? 'Salvando...' : 'Salvar Informações' }}
+              </button>
+              <button @click="closeEditModal" :disabled="isSavingDates"
+                class="px-5 py-3 rounded-xl bg-white/5 text-white/40 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -790,6 +872,9 @@ import {
   Ban,
   RefreshCw,
   Users,
+  Phone,
+  Mail,
+  Pencil,
 } from '@lucide/vue'
 import { useToast } from '../../composables/useToast'
 import ConfirmModal from '../ui/ConfirmModal.vue'
@@ -835,9 +920,13 @@ const contractToCancel = ref<Contracts | null>(null)
 const isCanceling = ref(false)
 const isSyncing = ref<string | null>(null)
 
+// Estados edição de informações do contrato (declarados aqui para o anyModalOpen abaixo)
+const isEditingDates = ref<string | null>(null)
+const editingContract = ref<any>(null)
+
 // Bloqueio de scroll para modais internos
 const anyModalOpen = computed(
-  () => changeRequestModalOpen.value || reviewModalOpen.value || showCancelContractModal.value,
+  () => changeRequestModalOpen.value || reviewModalOpen.value || showCancelContractModal.value || !!isEditingDates.value,
 )
 
 watch(anyModalOpen, (val) => {
@@ -865,16 +954,23 @@ const loadingSignersId = ref<string | null>(null)
 const selectedContractForSigners = ref<Contracts | null>(null)
 const currentSigners = ref<any[]>([])
 
-// Novos estados para edição de datas
-const isEditingDates = ref<string | null>(null)
+// Estados de edição (refs adicionais)
 const editCreatedAt = ref('')
 const editSignedDate = ref('')
 const editFirstPaymentDate = ref('')
 const editDueDate = ref('')
+const editFinPhone = ref('')
+const editFinEmail = ref('')
 const isSavingDates = ref(false)
+
+const closeEditModal = () => {
+  isEditingDates.value = null
+  editingContract.value = null
+}
 
 const startEditingDates = (contract: Contracts) => {
   isEditingDates.value = contract.id?.toString() || null
+  editingContract.value = contract
   // Converte para formato YYYY-MM-DD para o input type="date"
   if (contract.created_at) {
     const date = new Date(contract.created_at)
@@ -903,6 +999,9 @@ const startEditingDates = (contract: Contracts) => {
   } else {
     editDueDate.value = ''
   }
+
+  editFinPhone.value = (contract as any).fin_phone || ''
+  editFinEmail.value = (contract as any).fin_email || ''
 }
 
 const saveDates = async (contract: Contracts) => {
@@ -919,11 +1018,13 @@ const saveDates = async (contract: Contracts) => {
         ? new Date(editFirstPaymentDate.value + 'T12:00:00Z').toISOString()
         : null,
       due_date: editDueDate.value ? new Date(editDueDate.value + 'T12:00:00Z').toISOString() : null,
+      fin_phone: editFinPhone.value || null,
+      fin_email: editFinEmail.value || null,
     } as any)
 
     if (res.success) {
-      toastSuccess('Datas atualizadas com sucesso')
-      isEditingDates.value = null
+      toastSuccess('Informações atualizadas com sucesso')
+      closeEditModal()
 
       // Atualiza o objeto local para refletir no Dashboard/Charts imediatamente
       contract.created_at = editCreatedAt.value ? new Date(editCreatedAt.value + 'T12:00:00Z').toISOString() : contract.created_at
@@ -1463,22 +1564,85 @@ const isP1ValidForMeta = (contract: Contracts) => {
   return payment <= deadline
 }
 
-const calculateNMRR = (contract: Contracts) => {
-  const implementation = parseFloat(contract.implementation_fee as any) || 0
+const calculateTCV = (contract: Contracts) => {
+  // Prioriza o valor vindo do banco (novos contratos)
+  if ((contract as any).tcv && Number((contract as any).tcv) > 0) {
+    return Number((contract as any).tcv)
+  }
+
+  const term = Number(contract.contractual_term) || 12
+  const impl = parseFloat(contract.implementation_fee as any) || 0
   const monthly = parseFloat(contract.monthly_fee as any) || 0
-  const term = (contract as any).contractual_term || 12
-  return (implementation / term) + monthly
+  const p1 = parseFloat(contract.first_payment_amount as any) || monthly
+  // effectiveMonthly só para contratos antigos (sem negociação dinâmica)
+  const hasNegotiation = !!(contract as any).negotiation_template_id || !!(contract as any).negotiation_clause
+  const effectiveMonthly = hasNegotiation ? monthly : (monthly || p1)
+  const type = (contract as any).type_of_negociation
+
+  if (!type || type === 'padrao_fee') {
+    return impl + (effectiveMonthly * term)
+  }
+
+  if (type === 'entrada_parcelas') {
+    return impl + p1 + (effectiveMonthly * Math.max(0, term - 1))
+  }
+
+  if (type === 'isencao_terceira') {
+    return impl + p1 + (effectiveMonthly * Math.max(0, term - 3))
+  }
+
+  if (type === 'escalonado') {
+    const firstQuant = Number((contract as any).first_quant) || 0
+    const firstVal = parseFloat((contract as any).first_val || (contract as any).first_value) || 0
+    const lastQuant = Number((contract as any).last_quant) || 0
+    const lastVal = parseFloat((contract as any).last_val || (contract as any).last_value) || 0
+    const interQuant = Math.max(0, term - firstQuant - lastQuant)
+    return impl + (firstQuant * firstVal) + (interQuant * effectiveMonthly) + (lastQuant * lastVal)
+  }
+
+  if (type === 'a_vista') {
+    return impl + p1
+  }
+
+  return impl + (effectiveMonthly * term)
 }
 
-const calculateTCV = (contract: Contracts) => {
-  const implementation = parseFloat(contract.implementation_fee as any) || 0
-  const monthly = parseFloat(contract.monthly_fee as any) || 0
-  const term = (contract as any).contractual_term || 12
-  return (monthly * term) + implementation
+
+const calculateNMRR = (contract: Contracts) => {
+  const tcv = calculateTCV(contract)
+  const term = Number(contract.contractual_term) || 12
+  return tcv / term
 }
 </script>
 
 <style scoped>
+.edit-info-fade-enter-active,
+.edit-info-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.edit-info-fade-enter-from,
+.edit-info-fade-leave-to {
+  opacity: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.3);
+}
+
 .expand-enter-active,
 .expand-leave-active {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);

@@ -23,11 +23,12 @@ Dashboard principal de metas e performance. Recebe dados agregados do `Home.vue`
   - Se `goal` é `null`, os indicadores de meta mostram `R$ 0` como alvo e o progresso real como "Realizado".
   - A linha "Planejado" do gráfico de evolução é **ocultada** automaticamente quando não há meta.
   - Um banner de aviso (âmbar) é exibido **apenas na visão mensal** (`periodType === 'month'`), com botão para configurar metas (visível apenas para `admin`, `head`, `coord`).
+- **NMRR (frontend-calculated):** A coluna `nmrr` foi removida da tabela `contracts`. O `calculateNMRR(c)` sempre retorna `calculateTCV(c) / (contractual_term || 12)`. O `actuals.nmrr` recebido via props do `Home.vue` já vem calculado da mesma forma. Goals continuam tendo `nmrr` como meta definida pelo usuário.
 - **Checkpoints da linha planejada (`dailyData`):** Os valores `p1_period_1...4` do `goal` podem vir como `undefined` (quando `activeGoal` é um agregado de múltiplas metas sem esses campos). A verificação **deve** usar `== null` (loose equality) para tratar `null` e `undefined` da mesma forma — nunca `=== null`.
 - **Parsing de datas (`first_payment_date` e `created_at`):** Esses campos chegam como ISO timestamp completo do Prisma (ex: `"2026-05-10T00:00:00.000Z"`). Para comparação correta com datas locais (ex: `startP1`, `endP1`), extrair apenas a parte da data com `.split('T')[0]` e parsear como `new Date(dateStr + 'T12:00:00')`.
 - **Janela do Gráfico de Evolução P1 (`dailyData`):**
   - **Eixo X:** Dia 01 ao último dia do mês (não vai até o dia 06 do mês seguinte).
-  - **Contagem P1:** Contrato é contado se `signed_date` está no mês E `first_payment_date ≤ dia 06 do mês seguinte`. Threshold é verificado separadamente da janela do gráfico.
+  - **Contagem P1:** Contrato é contado se `signed_date` está no mês E `first_payment_date ≤ dia 06 do mês seguinte`. Threshold é verificado separadamente da janela do gráfico. Valor P1 = (`first_payment_amount` || `monthly_fee`) + `implementation_fee`.
   - **Posição no gráfico:** Contratos são plotados na posição do `signed_date` (quando o P1 é realizado), nunca na posição do `first_payment_date`.
   - **Semanas do calendário:** As semanas seguem o calendário real (Domingo→Sábado). Se o mês não começa num domingo, a primeira semana é parcial (do dia 1 até o sábado). O número de semanas é dinâmico (4 a 6 por mês). Usar `computeCalendarWeeks(year, month)` para calcular.
   - **Semanas com âncora:** Nas views semanais (week2+), o primeiro ponto da série é o último dia da semana anterior. Isso garante continuidade visual e evita que o gráfico fique vazio no primeiro dia de uma nova semana. **Não aplicar entre meses.**

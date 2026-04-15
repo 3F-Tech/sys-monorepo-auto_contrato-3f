@@ -92,6 +92,7 @@
     icon: { type: String, default: 'trash' },
     isLoading: { type: Boolean, default: false },
     loadingMessage: { type: String, default: '' },
+    preserveScroll: { type: Boolean, default: false },
   })
 
   const emit = defineEmits(['confirm', 'cancel'])
@@ -102,7 +103,7 @@
     (val) => {
       if (val) {
         document.body.style.overflow = 'hidden'
-      } else {
+      } else if (!props.preserveScroll) {
         document.body.style.overflow = ''
       }
     },
@@ -110,7 +111,9 @@
   )
 
   onUnmounted(() => {
-    document.body.style.overflow = ''
+    if (!props.preserveScroll) {
+      document.body.style.overflow = ''
+    }
   })
 
   const iconComponent = computed(() => {

@@ -235,6 +235,20 @@ export const createContract = async (req: Request, res: Response) => {
  *               change_description:
  *                 type: string
  *                 nullable: true
+ *               first_payment_date:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *               due_date:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *               fin_phone:
+ *                 type: string
+ *                 nullable: true
+ *               fin_email:
+ *                 type: string
+ *                 nullable: true
  *     responses:
  *       200:
  *         description: Contrato atualizado
@@ -246,10 +260,10 @@ export const createContract = async (req: Request, res: Response) => {
 export const updateContract = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { signed, signed_date, created_at, link, change_status, change_description } = req.body;
-        
+        const { signed, signed_date, created_at, link, change_status, change_description, first_payment_date, due_date, fin_phone, fin_email } = req.body;
+
         // Verifica se pelo menos uma propriedade foi enviada no body (mesmo que seja false ou null)
-        if (signed === undefined && signed_date === undefined && created_at === undefined && link === undefined && change_status === undefined && change_description === undefined) {
+        if (signed === undefined && signed_date === undefined && created_at === undefined && link === undefined && change_status === undefined && change_description === undefined && first_payment_date === undefined && due_date === undefined && fin_phone === undefined && fin_email === undefined) {
             return res.status(400).json({ error: 'Dados não fornecidos' });
         }
 
@@ -280,7 +294,11 @@ export const updateContract = async (req: Request, res: Response) => {
                 ...(created_at !== undefined && { created_at }),
                 ...(link !== undefined && { link }),
                 ...(change_status !== undefined && { change_status }),
-                ...(change_description !== undefined && { change_description })
+                ...(change_description !== undefined && { change_description }),
+                ...(first_payment_date !== undefined && { first_payment_date }),
+                ...(due_date !== undefined && { due_date }),
+                ...(fin_phone !== undefined && { fin_phone }),
+                ...(fin_email !== undefined && { fin_email })
             },
         });
 
@@ -325,7 +343,8 @@ export const deleteContract = async (req: any, res: Response) => {
                 envelope_id: true,
                 title: true,
                 canceled_at: true,
-                approved: true
+                approved: true,
+                link: true
             }
         });
 
@@ -347,7 +366,16 @@ export const deleteContract = async (req: any, res: Response) => {
         }
 
         const clicksignId = (contract as any).envelope_id || contract.document_id;
-        const driveFileId = contract.document_id; // No nosso sistema v3, document_id armazena o ID do arquivo no Drive
+        
+        // Extração do ID do Drive: Sempre extrai do link, pois document_id é reservado para o Clicksign
+        let driveFileId = null;
+        if (contract.link) {
+            const match = contract.link.trim().match(/\/d\/(.*?)(\/|$)/);
+            if (match && match[1]) {
+                driveFileId = match[1].trim();
+                console.log(`[DELETE] ID do Drive extraído do link: ${driveFileId}`);
+            }
+        }
 
         // 2. Limpeza no Clicksign
         if (clicksignId) {

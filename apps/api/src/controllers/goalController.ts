@@ -38,14 +38,26 @@ export const createOrUpdateGoal = async (req: any, res: Response) => {
         if (requester.type === 'admin') {
             // Admin pode tudo (BU, Head, Team, Seller)
         } else if (requester.type === 'coord') {
-            if (data.target_type !== 'bu') {
-                return res.status(403).json({ error: "Coordenadores só definem metas de BU" });
-            }
-            const myBU = await prisma.seller_business.findFirst({ 
-                where: { seller_id: BigInt(requester.id) } 
-            });
-            if (!myBU || myBU.business_id !== Number(data.target_id)) {
-                return res.status(403).json({ error: "Você só pode definir metas para sua própria BU" });
+            if (data.target_type === 'bu') {
+                const myBU = await prisma.seller_business.findFirst({ 
+                    where: { seller_id: BigInt(requester.id) } 
+                });
+                if (!myBU || myBU.business_id !== Number(data.target_id)) {
+                    return res.status(403).json({ error: "Você só pode definir metas para sua própria BU" });
+                }
+            } else if (data.target_type === 'team') {
+                const teamId = Number(data.target_id);
+                const team = await prisma.teams.findUnique({ where: { id: teamId } });
+                if (!team || team.head_id?.toString() !== requester.id.toString()) {
+                    return res.status(403).json({ error: "Você só pode definir metas para equipes sob sua gestão" });
+                }
+            } else if (data.target_type === 'seller') {
+                const seller = await prisma.sellers.findUnique({ where: { id: data.target_id } });
+                if (!seller || seller.head_id?.toString() !== requester.id.toString()) {
+                    return res.status(403).json({ error: "Vendedor não pertence à sua equipe" });
+                }
+            } else {
+                return res.status(403).json({ error: "Coordenadores não definem metas pessoais ou de outros tipos" });
             }
         } else if (requester.type === 'head') {
             if (data.target_type === 'bu' || data.target_type === 'head') {
@@ -120,16 +132,31 @@ export const getGoals = async (req: any, res: Response) => {
         if (requester.type === 'admin') {
             // Vê tudo
         } else if (requester.type === 'coord') {
-            // Vê a BU dele
+            // Vê a BU dele + suas equipes + seus sellers
             const myBU = await prisma.seller_business.findFirst({
                 where: { seller_id: BigInt(requester.id) }
             });
+            
+            const teamSellers = await prisma.sellers.findMany({
+                where: { head_id: BigInt(requester.id) },
+                select: { id: true }
+            });
+            const sellerIds = teamSellers.map(s => s.id);
+
+            const managedTeams = await prisma.teams.findMany({
+                where: { head_id: BigInt(requester.id) },
+                select: { id: true }
+            });
+            const managedTeamIds = managedTeams.map(t => BigInt(t.id));
+
+            where.OR = [
+                { target_type: 'seller', target_id: { in: sellerIds } },
+                { target_type: 'seller', target_id: BigInt(requester.id) }, // Vê a própria se tiver
+                { target_type: 'team', target_id: { in: managedTeamIds } }
+            ];
+
             if (myBU) {
-                where.OR = [
-                    { target_type: 'bu', target_id: BigInt(myBU.business_id) }
-                ];
-            } else {
-                return res.json([]);
+                where.OR.push({ target_type: 'bu', target_id: BigInt(myBU.business_id) });
             }
         } else if (requester.type === 'head') {
             // Vê sua própria meta de Equipe (team e head) + metas dos seus sellers + metas de suas BUs
@@ -147,7 +174,7 @@ export const getGoals = async (req: any, res: Response) => {
 
             where.OR = [
                 { target_type: 'head', target_id: BigInt(requester.id) },
-                { target_type: 'team', target_id: BigInt(requester.id) },
+                { target_type: 'seller', target_id: BigInt(requester.id) }, // Vê a própria meta de vendedor (common for Head)
                 { target_type: 'seller', target_id: { in: sellerIds } },
                 { target_type: 'bu', target_id: { in: buIds } }
             ];
@@ -169,19 +196,21 @@ export const getGoals = async (req: any, res: Response) => {
             }
 
         } else {
-            // Seller vê a sua + a de sua equipe (se houver) + vendedores da mesma equipe + metas das BUs vinculadas
+            // Seller / SDR vê a sua + a de sua equipe (se houver) + vendedores da mesma equipe + metas das BUs vinculadas
             const me = await prisma.sellers.findUnique({
                 where: { id: BigInt(requester.id) },
                 include: { seller_business: true }
             });
 
-            const buIds = me?.seller_business.map(sb => BigInt(sb.business_id)) || [];
+            if (!me) return res.status(404).json({ error: 'Perfil não encontrado' });
+
+            const buIds = me.seller_business.map(sb => BigInt(sb.business_id));
             const orConditions: any[] = [
                 { target_type: 'seller', target_id: BigInt(requester.id) },
                 { target_type: 'bu', target_id: { in: buIds } }
             ];
 
-            if (me?.team_id) {
+            if (me.team_id) {
                 const teamSellers = await prisma.sellers.findMany({
                     where: { team_id: me.team_id },
                     select: { id: true }
@@ -195,8 +224,77 @@ export const getGoals = async (req: any, res: Response) => {
             where.OR = orConditions;
         }
 
-        const goals = await prisma.goals.findMany({ where });
-        res.json(serializeBigInt(goals));
+        let goalsList = await prisma.goals.findMany({ where });
+
+        // Cálculo automático de meta de equipe (Soma dos vendedores)
+        const sellerGoals = goalsList.filter(g => g.target_type === 'seller');
+        
+        if (sellerGoals.length > 0) {
+            // Buscamos a relação seller -> team_id (apenas IDs únicos para performance)
+            const uniqueSellerIds = Array.from(new Set(sellerGoals.map(g => g.target_id.toString()))).map(id => BigInt(id));
+            
+            const sellers = await prisma.sellers.findMany({
+                where: { id: { in: uniqueSellerIds } },
+                select: { id: true, team_id: true }
+            });
+
+            const teamSums = new Map<string, any>();
+            const sellerToTeam = new Map(sellers.map(s => [s.id.toString(), s.team_id]));
+
+            sellerGoals.forEach(g => {
+                const teamId = sellerToTeam.get(g.target_id.toString());
+                if (teamId) {
+                    const key = `${teamId}-${g.month}-${g.year}`;
+                    
+                    if (!teamSums.has(key)) {
+                        teamSums.set(key, {
+                            target_type: 'team',
+                            target_id: BigInt(teamId),
+                            month: g.month,
+                            year: g.year,
+                            p1: 0,
+                            tcv: 0,
+                            nmrr: 0,
+                            implementation: 0,
+                            monthly: 0,
+                            p1_period_1: 0,
+                            p1_period_2: 0,
+                            p1_period_3: 0,
+                            p1_period_4: 0,
+                            isVirtual: true
+                        });
+                    }
+                    const s = teamSums.get(key);
+                    s.p1 = Number(s.p1) + Number(g.p1 || 0);
+                    s.tcv = Number(s.tcv) + Number(g.tcv || 0);
+                    s.nmrr = Number(s.nmrr) + Number(g.nmrr || 0);
+                    s.implementation = Number(s.implementation) + Number(g.implementation || 0);
+                    s.monthly = Number(s.monthly) + Number(g.monthly || 0);
+                    s.p1_period_1 = Number(s.p1_period_1) + Number(g.p1_period_1 || 0);
+                    s.p1_period_2 = Number(s.p1_period_2) + Number(g.p1_period_2 || 0);
+                    s.p1_period_3 = Number(s.p1_period_3) + Number(g.p1_period_3 || 0);
+                    s.p1_period_4 = Number(s.p1_period_4) + Number(g.p1_period_4 || 0);
+                }
+            });
+
+            // Convert Map to array e removemos metas reais de equipe onde houver virtualizada
+            const virtualTeamGoals = Array.from(teamSums.values()).map((vg) => ({
+                ...vg,
+                id: -(Number(vg.target_id) + Number(vg.month) * 1000 + Number(vg.year) * 10000) 
+            }));
+
+            const teamKeysToVirtualize = new Set(Array.from(teamSums.keys()));
+            
+            goalsList = goalsList.filter(g => {
+                if (g.target_type !== 'team') return true;
+                const key = `${g.target_id}-${g.month}-${g.year}`;
+                return !teamKeysToVirtualize.has(key);
+            });
+
+            goalsList = [...goalsList, ...virtualTeamGoals];
+        }
+
+        res.json(serializeBigInt(goalsList));
     } catch (error: any) {
         console.error('GOAL_FETCH_ERROR:', error);
         res.status(500).json({ error: 'Erro ao buscar metas', details: error.message });
@@ -232,14 +330,25 @@ export const deleteGoal = async (req: any, res: Response) => {
         if (requester.type === 'admin') {
             // Admin pode excluir qualquer meta
         } else if (requester.type === 'coord') {
-            if (goal.target_type !== 'bu') {
-                return res.status(403).json({ error: 'Coordenadores só podem excluir metas de BU' });
-            }
-            const myBU = await prisma.seller_business.findFirst({
-                where: { seller_id: BigInt(requester.id) }
-            });
-            if (!myBU || myBU.business_id !== Number(goal.target_id)) {
-                return res.status(403).json({ error: 'Você só pode excluir metas da sua BU' });
+            if (goal.target_type === 'bu') {
+                const myBU = await prisma.seller_business.findFirst({
+                    where: { seller_id: BigInt(requester.id) }
+                });
+                if (!myBU || myBU.business_id !== Number(goal.target_id)) {
+                    return res.status(403).json({ error: 'Você só pode excluir metas da sua BU' });
+                }
+            } else if (goal.target_type === 'team') {
+                const team = await prisma.teams.findUnique({ where: { id: Number(goal.target_id) } });
+                if (!team || team.head_id?.toString() !== requester.id.toString()) {
+                    return res.status(403).json({ error: 'Você só pode excluir metas de equipes sob sua gestão' });
+                }
+            } else if (goal.target_type === 'seller') {
+                const seller = await prisma.sellers.findUnique({ where: { id: goal.target_id } });
+                if (!seller || seller.head_id?.toString() !== requester.id.toString()) {
+                    return res.status(403).json({ error: 'Vendedor não pertence à sua equipe' });
+                }
+            } else {
+                return res.status(403).json({ error: 'Coordenadores não podem excluir este tipo de meta' });
             }
         } else if (requester.type === 'head') {
             if (goal.target_type === 'bu' || goal.target_type === 'head') {

@@ -38,6 +38,7 @@ Use as classes CSS estabelecidas em `src/style.css`:
 - [ ] Sem cores genéricas (Vermelho, Verde, Azul) — use os equivalentes da marca ou variações refinadas.
 - [ ] Manter espaço negativo generoso.
 - [ ] As interações devem ter transições suaves (200ms).
+- [ ] **Scrollbars Customizadas**: Nenhuma tela ou componente deve ter o scrollbar nativo grosseiro do navegador. O sistema aplica o padrão global (fino, cor ciano translúcido: `.custom-scrollbar` no `src/style.css`). Se criar um container overflow interno, certifique-se de que ele use a scrollbar padronizada.
 
 ## 6. Estados de Performance (Metas)
 Para indicadores de progresso e atingimento, use a seguinte semântica de cores:

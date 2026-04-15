@@ -27,6 +27,7 @@ import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalCon
 import { getTeams, createTeam, updateTeam, addTeamMember, removeTeamMember, deleteTeam } from '../controllers/teamController';
 import { getCac, upsertCac } from '../controllers/cacController';
 import { getCommercialCosts, upsertCommercialCosts } from '../controllers/commercialCostsController';
+import { getNegotiationTemplates, generateNegotiationClause, createNegotiationTemplate, updateNegotiationTemplate, toggleNegotiationTemplate } from '../controllers/negotiationTemplateController';
 
 const router = Router();
 
@@ -145,6 +146,13 @@ router.post('/cac', upsertCac);
 // COMMERCIAL COSTS ROUTES
 router.get('/commercial-costs', getCommercialCosts);
 router.post('/commercial-costs', upsertCommercialCosts);
+
+// NEGOTIATION TEMPLATE ROUTES
+router.get('/negotiation-templates', getNegotiationTemplates);
+router.post('/negotiation-templates', createNegotiationTemplate);
+router.put('/negotiation-templates/:id', updateNegotiationTemplate);
+router.post('/negotiation-templates/generate', generateNegotiationClause);
+router.patch('/negotiation-templates/:id/toggle', toggleNegotiationTemplate);
 
 // AUTH ROUTES
 // (A rota de login foi movida para o topo das Rotas Públicas)

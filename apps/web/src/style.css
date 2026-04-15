@@ -57,3 +57,29 @@
     filter: blur(2px);
   }
 }
+
+@layer base {
+  /* Scrollbar Global: Padrão do Sistema (Design System) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, 0.15);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.3);
+  }
+}

@@ -78,19 +78,23 @@ export const getValidationRules = (data: Record<string, any>, buName?: string, t
   check('CPF DO REPRESENTANTE', validateCPF(data['CPF DO REPRESENTANTE'] || ''));
   
   check('VALOR TAXA IMPLEMENTACAO', validateRequired(data['VALOR TAXA IMPLEMENTACAO'], 'Taxa de implementação'));
-  check('VALOR MENSALIDADE', validateRequired(data['VALOR MENSALIDADE'], 'Mensalidade'));
 
-  // VALOR DO PRIMEIRO PAGAMENTO só é obrigatório em contratos que tenham esse campo (Seed/Impulse)
-  // A Bomma não possui esse campo no formulário
-  if (!isBomma) {
-    check('VALOR DO PRIMEIRO PAGAMENTO', validateRequired(data['VALOR DO PRIMEIRO PAGAMENTO'], 'Valor do primeiro pagamento'));
-  }
-  
-  check('DATA PRIMEIRO PAGAMENTO', validateDate(data['DATA PRIMEIRO PAGAMENTO'] || ''));
-  
-  const diaVenc = Number(data['DIA VENCIMENTO MENSAL']);
-  if (isNaN(diaVenc) || diaVenc < 1 || diaVenc > 31) {
-    errors['DIA VENCIMENTO MENSAL'] = "Vencimento deve ser entre 1 e 31";
+  // Campos que podem vir de placeholders dinâmicos — só validar se preenchidos ou se não usa template dinâmico
+  const usaDinamico = !!data['NEGOTIATION_TEMPLATE_ID'];
+
+  if (!usaDinamico) {
+    check('VALOR MENSALIDADE', validateRequired(data['VALOR MENSALIDADE'], 'Mensalidade'));
+
+    if (!isBomma) {
+      check('VALOR DO PRIMEIRO PAGAMENTO', validateRequired(data['VALOR DO PRIMEIRO PAGAMENTO'], 'Valor do primeiro pagamento'));
+    }
+
+    check('DATA PRIMEIRO PAGAMENTO', validateDate(data['DATA PRIMEIRO PAGAMENTO'] || ''));
+
+    const diaVenc = Number(data['DIA VENCIMENTO MENSAL']);
+    if (isNaN(diaVenc) || diaVenc < 1 || diaVenc > 31) {
+      errors['DIA VENCIMENTO MENSAL'] = "Vencimento deve ser entre 1 e 31";
+    }
   }
 
   check('DATA ASSINATURA CONTRATO', validateDate(data['DATA ASSINATURA CONTRATO'] || ''));

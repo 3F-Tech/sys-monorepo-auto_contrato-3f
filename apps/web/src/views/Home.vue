@@ -105,6 +105,8 @@
     <SetCacModal :is-open="cacModalOpen" :month="dashboardContext.month" :year="dashboardContext.year"
       @close="cacModalOpen = false" @saved="handleGoalSaved" />
 
+    <NegotiationTemplateModal :is-open="negotiationModalOpen" @close="negotiationModalOpen = false" />
+
     <ConfirmModal :is-open="dissociateConfirmOpen" title="Remover da Equipe"
       :message="`Tem certeza que deseja remover este vendedor da sua equipe?`" confirm-text="Remover"
       cancel-text="Manter" type="warning" icon="circle" @confirm="confirmDissociate"
@@ -278,7 +280,9 @@
 
             <!-- Label + Value -->
             <div class="relative z-10">
-              <p class="text-[9px] font-black text-white/45 uppercase tracking-[0.18em] leading-tight mb-1">{{ stat.label }}</p>
+              <p class="text-[9px] font-black text-white/45 uppercase tracking-[0.18em] leading-tight mb-1">{{
+                stat.label }}
+              </p>
               <div v-if="contractStore.loading" class="h-8 w-28 bg-white/5 rounded-lg animate-pulse"></div>
               <h3 v-else
                 class="text-[22px] font-black tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-300 leading-none">
@@ -370,9 +374,16 @@
 
       <!-- Actions Grid -->
       <section class="pt-10 space-y-6">
-        <h3 class="text-lg font-bold flex items-center gap-2">
-          <LayoutGrid class="h-5 w-5 text-brand-cyan" />Geração de Contratos
-        </h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold flex items-center gap-2">
+            <LayoutGrid class="h-5 w-5 text-brand-cyan" />Geração de Contratos
+          </h3>
+          <button v-if="['admin', 'head', 'coord'].includes(user?.type || '')" @click="negotiationModalOpen = true"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-brand-surface border border-brand-glass-border hover:border-brand-cyan/40 text-brand-cyan/70 hover:text-brand-cyan transition-all duration-300">
+            <FileCog class="h-4 w-4" />
+            Gerenciar Modelos de Negociação
+          </button>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Premium Novo Contrato Button (UI/UX Pro Max + Design System Fixed) -->
           <button v-for="action in filteredActions" :key="action.title" @click="action.handler"
@@ -505,7 +516,7 @@ import {
   LogOut, FileText, Users, Building2, LayoutGrid, ArrowRight, TrendingUp, Receipt, DollarSign, BanknoteArrowUp,
   Settings, Users2, UserRound, Check, Search, Calendar, X, ChevronDown as ChevronDownIcon, Clock,
   Activity, Construction, Target, ListFilterPlus, FileCheck, Percent, Timer,
-  UsersRound
+  UsersRound, Plus, FileCog
 } from '@lucide/vue'
 import ProfileModal from '../components/profile/ProfileModal.vue'
 import GoalsDashboard from '../components/dashboard/GoalsDashboard.vue'
@@ -513,6 +524,7 @@ import SetGoalModal from '../components/dashboard/SetGoalModal.vue'
 import SetCacModal from '../components/dashboard/SetCacModal.vue'
 import SetCostsModal from '../components/dashboard/SetCostsModal.vue'
 import ContractList from '../components/contracts/ContractList.vue'
+import NegotiationTemplateModal from '../components/contracts/NegotiationTemplateModal.vue'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
 import TeamManager from '../components/dashboard/TeamManager.vue'
 import { useToast } from '../composables/useToast'
@@ -545,6 +557,7 @@ const activeTarget = ref<{ type: string; id: string } | null>(null)
 const dissociateConfirmOpen = ref(false)
 const sellerToDissociate = ref<string | null>(null)
 const contractFilterMode = ref<'own' | 'team'>('own')
+const negotiationModalOpen = ref(false)
 
 // --- Filters State ---
 const dashboardFilterType = ref<'bu' | 'team' | 'coord'>(authStore.user?.type === 'head' || authStore.user?.type === 'admin' ? 'bu' : 'team')
@@ -738,29 +751,107 @@ const currentPerformance = computed(() => {
   })
   // PRINCIPAIS CÁLCULOS
   const p1 = filteredP1Contracts.value.reduce((acc, c) => {
-    let p1Amount = parseFloat(c.first_payment_amount as any) || 0
-    if (!p1Amount) {
-      p1Amount = parseFloat(c.monthly_fee as any) || 0
-    }
+    const p1Amount = parseFloat(c.first_payment_amount as any) || 0
+    // Regra 11: P1 agora é pego diretamente do banco, já calculado na origem
     return acc + p1Amount
   }, 0)
 
-  const tcv = gen.reduce((acc, c) => acc + ((parseFloat(c.monthly_fee as any) || 0) * (c.contractual_term || 12)) + (parseFloat(c.implementation_fee as any) || 0), 0)
-  const nmrr = gen.reduce((acc, c) => acc + ((parseFloat(c.implementation_fee as any) || 0) / (c.contractual_term || 12)) + (parseFloat(c.monthly_fee as any) || 0), 0)
-  return { p1, tcv, nmrr, implementation: gen.reduce((acc, c) => acc + (parseFloat(c.implementation_fee as any) || 0), 0), monthly: gen.reduce((acc, c) => acc + (parseFloat(c.monthly_fee as any) || 0), 0) }
+
+  const calcTCV = (c: any) => {
+    // Prioriza o valor vindo do banco (novos contratos)
+    if (c.tcv && Number(c.tcv) > 0) {
+      return Number(c.tcv)
+    }
+
+    const term = Number(c.contractual_term) || 12
+    const impl = parseFloat(c.implementation_fee as any) || 0
+    const monthly = parseFloat(c.monthly_fee as any) || 0
+    const p1 = parseFloat(c.first_payment_amount as any) || monthly
+    // effectiveMonthly só para contratos antigos (sem negociação dinâmica)
+    const hasNegotiation = !!(c.negotiation_template_id || c.negotiation_clause)
+    const effectiveMonthly = hasNegotiation ? monthly : (monthly || p1)
+    const type = c.type_of_negociation
+
+    if (!type || type === 'padrao_fee') {
+      return impl + (effectiveMonthly * term)
+    }
+
+    if (type === 'entrada_parcelas') {
+      return impl + p1 + (effectiveMonthly * Math.max(0, term - 1))
+    }
+
+    if (type === 'isencao_terceira') {
+      return impl + p1 + (effectiveMonthly * Math.max(0, term - 3))
+    }
+
+    if (type === 'escalonado') {
+      const firstQuant = Number(c.first_quant) || 0
+      const firstVal = parseFloat(c.first_value as any) || 0
+      const lastQuant = Number(c.last_quant) || 0
+      const lastVal = parseFloat(c.last_value as any) || 0
+      const interQuant = Math.max(0, term - firstQuant - lastQuant)
+      return impl + (firstQuant * firstVal) + (interQuant * effectiveMonthly) + (lastQuant * lastVal)
+    }
+
+    if (type === 'a_vista') {
+      return impl + p1
+    }
+
+    return impl + (effectiveMonthly * term)
+  }
+
+
+  const tcv = gen.reduce((acc, c) => acc + calcTCV(c), 0)
+  const nmrr = gen.reduce((acc, c) => {
+    const tcvVal = calcTCV(c)
+    const term = Number(c.contractual_term) || 12
+    return acc + (tcvVal / term)
+  }, 0)
+
+
+  return {
+    p1,
+    tcv,
+    nmrr,
+    implementation: gen.reduce((acc, c) => acc + (parseFloat(c.implementation_fee as any) || 0), 0),
+    monthly: gen.reduce((acc, c) => acc + (parseFloat(c.monthly_fee as any) || 0), 0)
+  }
 })
 
 const activeGoalsList = computed(() => {
   const months = currentDateRange.value.months
+  const u = authStore.user
+
+  // Se for seller/sdr e estiver no modo "Minha Meta"
+  if (isSeller.value && contractFilterMode.value === 'own') {
+    return goalStore.goals.filter(g => 
+      g.target_type === 'seller' && 
+      g.target_id.toString() === u?.id?.toString() &&
+      months.some(m => g.month === m.m && g.year === m.y)
+    )
+  }
+
+  // Lógica para Admin/Liderança ou modo "Meta da Equipe"
   if (dashboardFilterType.value === 'bu') {
     const buId = selectedBUId.value || 'all'
     return goalStore.goals.filter(g => g.target_type === 'bu' && (buId === 'all' || g.target_id.toString() === buId.toString()) && months.some(m => g.month === m.m && g.year === m.y))
   }
-  if (selectedSellerId.value) return goalStore.goals.filter(g => g.target_type === 'seller' && g.target_id.toString() === selectedSellerId.value && months.some(m => g.month === m.m && g.year === m.y))
-  if (selectedTeamId.value) {
-    const tid = selectedTeamId.value.replace('team_', '').replace('head_own_', '')
+
+  // Se houver vendedor selecionado no filtro (Admin/Líder)
+  if (selectedSellerId.value) {
+    return goalStore.goals.filter(g => g.target_type === 'seller' && g.target_id.toString() === selectedSellerId.value && months.some(m => g.month === m.m && g.year === m.y))
+  }
+  
+  // Determinar o Team ID (seja do filtro ou da própria equipe do seller)
+  let tid = selectedTeamId.value?.replace('team_', '').replace('head_own_', '')
+  if (isSeller.value && sellerTeam.value && contractFilterMode.value === 'team') {
+    tid = sellerTeam.value.id.toString()
+  }
+
+  if (tid) {
     return goalStore.goals.filter(g => (g.target_type === 'team' || g.target_type === 'head') && g.target_id.toString() === tid && months.some(m => g.month === m.m && g.year === m.y))
   }
+
   return []
 })
 
@@ -790,7 +881,7 @@ const financialStats = computed(() => {
   const roi = totalCosts > 0 ? (perf.p1 / totalCosts).toFixed(2) + 'x' : '0x'
   return [
     { label: 'Total Implementação', value: fmt(perf.implementation), icon: Receipt },
-    { label: 'Recorrência Mensal', value: fmt(perf.monthly), icon: Activity },
+    { label: 'Recorrência Mensal', value: fmt(perf.nmrr), icon: Activity },
     { label: 'Custo por Aquisição (CAC)', value: fmt(cac), icon: DollarSign },
     { label: 'ROI P1', value: roi, icon: BanknoteArrowUp },
   ]
@@ -821,14 +912,19 @@ const operationalStats = computed(() => {
   const avgDays = (() => {
     const withDates = signedInPeriod.filter(c => c.signed_date && c.created_at)
     if (!withDates.length) return '0,0 dias'
-    const avg = withDates.reduce((acc, c) => {
-      const d1 = parseLocalDate(c.created_at)
-      const d2 = parseLocalDate(c.signed_date)
-      const diff = Math.round((d2.getTime() - d1.getTime()) / 86400000)
-      return acc + Math.max(1, diff)
-    }, 0) / withDates.length
+    const totalDays = withDates.reduce((acc, c) => {
+      const d1 = new Date(c.created_at as string)
+      const d2 = new Date(c.signed_date as string)
+      const diffTime = Math.abs(d2.getTime() - d1.getTime())
+      const diffInDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return acc + Math.max(1, diffInDays)
+    }, 0)
+    const avg = totalDays / withDates.length
     return avg.toFixed(1).replace('.', ',') + ' dias'
   })()
+
+
+
 
   return [
     { label: 'Contratos Assinados', value: signed.toString(), icon: FileCheck },
@@ -916,6 +1012,13 @@ const teamOptionsFormatted = computed(() => {
     return false
   }).map(t => ({ value: `team_${t.id}`, label: t.name }))
 })
+
+// Garantir que selectedTeamId seja inicializado se o filtro for Equipe
+watch([dashboardFilterType, teamOptionsFormatted], ([type, opts]) => {
+  if (type === 'team' && !selectedTeamId.value && opts.length > 0) {
+    selectedTeamId.value = opts[0].value
+  }
+}, { immediate: true })
 const sellerOptionsFormatted = computed(() => {
   let sls = sellerStore.allSellers
   if (selectedTeamId.value?.startsWith('team_')) sls = sls.filter(s => s.team_id === parseInt(selectedTeamId.value!.replace('team_', '')))

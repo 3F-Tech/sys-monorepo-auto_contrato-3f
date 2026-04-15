@@ -73,8 +73,9 @@ Plataforma de **Automacao de Contratos** para uma agencia de marketing (3F Ventu
 8. **Fluxo de Status (`change_status`):** `null` → `alert` (seller solicita) → `approved`/`reject` (lideranca decide).
 9. **Visibilidade no Dashboard:** Contratos filtrados em 3 estados: Pendentes (padrao), Assinados, Cancelados.
 10. **Usuarios:** Nome completo obrigatorio (min 2 palavras). CPF (11 digitos) e WhatsApp (DDD + numero) obrigatorios.
-11. **Calculo de P1:** Valor derivado de `first_payment_amount` (fallback: `monthly_fee`). Contrato assinado no Mes A so conta se pago ate **dia 06** do Mes B. Pagamento apos dia 06 = desconsiderado para fins de meta.
+11. **Calculo de P1:** Valor pego diretamente de `first_payment_amount` no banco de dados. Os novos contratos já possuem o valor final do P1 calculado na origem. Contrato assinado no Mes A so conta se pago ate **dia 06** do Mes B. Pagamento apos dia 06 = desconsiderado para fins de meta.
 13. **Regra de competencia:** A `signed_date` define o mes do contrato para **todas** as metricas (P1, TCV, NMRR, CAC, stats operacionais). Contrato gerado em marco e assinado em abril = contrato de abril em tudo.
+17. **Prioridade de Métricas (TCV/NMRR):** O dashboard prioriza o campo `tcv` do banco. **NMRR não existe mais como coluna** — é sempre calculado pelo frontend como `TCV / contractual_term` (default 12). O fallback `effectiveMonthly` (usar `first_payment_amount` como mensalidade) só se aplica a contratos antigos sem `negotiation_template_id`.
 12. **Debug (Impulse Plano 1):** Flag `isDebug: "preencher"` substitui signatarios por emails de teste.
 14. **Semanas do Calendário (Gráficos):** As divisões semanais (Week 1, Week 2...) usadas nos gráficos (ex: Evolução P1) não adotam intervalos fixos de 7 dias ou de dia 6 ao dia 5. Elas espelham o calendário real (de Domingo a Sábado). Assim, se o mês começar, por exemplo, numa quinta-feira, a "Semana 1" irá apenas do dia 01 ao dia 03 (sábado), e assim por diante. Pode gerar de 4 a 6 divisões dependendo das semanas abrangidas pelo mês.
 15. **Sincronizacao Frontend-Banco (Real-Time):** O frontend DEVE sempre refletir o estado mais recente do banco sem necessidade de recarregar a página. Toda mutação bem-sucedida (criar, editar, excluir) DEVE acionar um `fetch` fresco na store correspondente. As stores do Pinia NÃO devem usar cache que bloqueie atualizações (ex: `if (items.length > 0) return`).
@@ -124,4 +125,5 @@ Plataforma de **Automacao de Contratos** para uma agencia de marketing (3F Ventu
 | Backend Drive Service | `apps/api/src/services/google-drive.rule.md` |
 | Backend Clicksign | `apps/api/src/services/clicksign.rule.md` |
 | Backend Asaas | `apps/api/src/services/asaas.rule.md` |
+| Backend OpenAI | `apps/api/src/services/openai.rule.md` |
 | Arquitetura | `ARCHITECTURE.md` |

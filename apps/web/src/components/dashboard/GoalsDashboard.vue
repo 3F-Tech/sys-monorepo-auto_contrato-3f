@@ -356,8 +356,8 @@
 
                     <div class="grid grid-cols-3 gap-3 mb-2">
                       <div class="p-3 rounded-2xl bg-black/20 border border-white/5">
-                        <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Mensal</p>
-                        <p class="text-xs font-black text-white/80 tabular-nums">{{ formatCurrency(parseFloat(c.monthly_fee) || 0) }}</p>
+                        <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">NMRR</p>
+                        <p class="text-xs font-black text-brand-cyan/80 tabular-nums">{{ formatCurrency(calculateNMRR(c)) }}</p>
                       </div>
                       <div class="p-3 rounded-2xl bg-black/20 border border-white/5">
                         <p class="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Implantação</p>
@@ -366,7 +366,7 @@
                       <div class="p-3 rounded-2xl bg-brand-cyan/5 border border-brand-cyan/10">
                         <p class="text-[8px] font-black text-brand-cyan/30 uppercase tracking-widest mb-1.5">P1</p>
                         <p class="text-xs font-black text-brand-cyan tabular-nums">
-                          {{ formatCurrency(parseFloat(c.first_payment_amount) || parseFloat(c.monthly_fee) || 0) }}
+                          {{ formatCurrency(c.first_payment_amount || 0) }}
                         </p>
                       </div>
                     </div>
@@ -390,9 +390,9 @@
                     <div class="p-5 rounded-3xl bg-brand-cyan/5 border border-brand-cyan/10">
                       <div class="flex items-center gap-2 mb-3">
                         <Banknote class="h-3.5 w-3.5 text-brand-cyan/60" />
-                        <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-widest">Recorrente</span>
+                        <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-widest">NMRR</span>
                       </div>
-                      <p class="text-xl font-black text-white leading-none">{{ formatCurrency(parseFloat(selectedContract?.monthly_fee) || 0) }}</p>
+                      <p class="text-xl font-black text-white leading-none">{{ formatCurrency(selectedContract ? calculateNMRR(selectedContract) : 0) }}</p>
                     </div>
 
                     <!-- Setup -->
@@ -411,7 +411,7 @@
                         <span class="text-[8px] font-black text-brand-cyan/60 uppercase tracking-widest">P1</span>
                       </div>
                       <p class="text-xl font-black text-brand-cyan leading-none">
-                        {{ formatCurrency(parseFloat(selectedContract?.first_payment_amount) || parseFloat(selectedContract?.monthly_fee) || 0) }}
+                        {{ formatCurrency(selectedContract?.first_payment_amount || 0) }}
                       </p>
                     </div>
 
@@ -422,7 +422,7 @@
                         <span class="text-[8px] font-black text-white/30 uppercase tracking-widest">TCV Estimado</span>
                       </div>
                       <p class="text-xl font-black text-white/80 leading-none">
-                        {{ formatCurrency(((parseFloat(selectedContract?.monthly_fee) || 0) * (selectedContract?.contractual_term || 12)) + (parseFloat(selectedContract?.implementation_fee) || 0)) }}
+                        {{ formatCurrency(calculateTCV(selectedContract)) }}
                       </p>
                     </div>
                   </div>
@@ -458,6 +458,17 @@
                             <div class="flex flex-col gap-1.5">
                               <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Representante Legal</span>
                               <span class="text-base font-black text-brand-cyan/80 lowercase">{{ selectedContract?.legal_repre_email || '--' }}</span>
+                            </div>
+                            <div class="flex flex-col gap-1.5 pt-4 border-t border-white/5">
+                              <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Contato Financeiro</span>
+                              <div class="flex items-center gap-2 mt-1">
+                                <Phone class="h-3.5 w-3.5 text-white/20 shrink-0" />
+                                <span class="text-sm font-bold text-white/70">{{ (selectedContract as any)?.fin_phone || '—' }}</span>
+                              </div>
+                              <div class="flex items-center gap-2">
+                                <Mail class="h-3.5 w-3.5 text-white/20 shrink-0" />
+                                <span class="text-sm font-bold text-white/70 lowercase">{{ (selectedContract as any)?.fin_email || '—' }}</span>
+                              </div>
                             </div>
                               <div class="flex flex-col gap-1.5 pt-4 border-t border-white/5">
                                 <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Unidade de Negócio</span>
@@ -584,6 +595,8 @@ import {
   FileText,
   Maximize2,
   Users,
+  Phone,
+  Mail,
 } from '@lucide/vue'
 import VueApexCharts from 'vue3-apexcharts'
 import { useAuthStore } from '../../store/auth'
@@ -594,6 +607,65 @@ import client from '../../api/client'
 import type { Goal } from '../../api/goalService'
 
 const apexchart = VueApexCharts
+
+// Helpers de Cálculo Financeiro (Hoisted manually to top of script)
+const parseSafeNumber = (val: any): number => {
+  if (val === null || val === undefined || val === '') return 0
+  if (typeof val === 'number') return val
+  const str = String(val).replace('R$', '').replace(/\s/g, '')
+  if (str.includes(',') && str.includes('.')) {
+    return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0
+  } else if (str.includes(',')) {
+    return parseFloat(str.replace(',', '.')) || 0
+  }
+  return parseFloat(str) || 0
+}
+
+const calculateTCV = (c: any) => {
+  if (!c) return 0
+  if (Number(c.tcv) > 0) return Number(c.tcv)
+  const term = Number(c.contractual_term) || 12
+  const impl = parseSafeNumber(c.implementation_fee)
+  const monthly = parseSafeNumber(c.monthly_fee)
+  const p1 = parseSafeNumber(c.first_payment_amount) || monthly
+  // effectiveMonthly só para contratos antigos (sem negociação dinâmica)
+  const hasNegotiation = !!(c.negotiation_template_id || c.negotiation_clause)
+  const effectiveMonthly = hasNegotiation ? monthly : (monthly || p1)
+  const type = c.type_of_negociation
+
+  if (!type || type === 'padrao_fee') {
+    return impl + (effectiveMonthly * term)
+  }
+
+  if (type === 'entrada_parcelas') {
+    return impl + p1 + (effectiveMonthly * Math.max(0, term - 1))
+  }
+
+  if (type === 'isencao_terceira') {
+    return impl + p1 + (effectiveMonthly * Math.max(0, term - 3))
+  }
+
+  if (type === 'escalonado') {
+    const firstQuant = Number(c.first_quant) || 0
+    const firstVal = parseSafeNumber(c.first_value || c.first_val)
+    const lastQuant = Number(c.last_quant) || 0
+    const lastVal = parseSafeNumber(c.last_value || c.last_val)
+    const interQuant = Math.max(0, term - firstQuant - lastQuant)
+    return impl + (firstQuant * firstVal) + (interQuant * effectiveMonthly) + (lastQuant * lastVal)
+  }
+
+  if (type === 'a_vista') {
+    return impl + p1
+  }
+
+  return impl + (effectiveMonthly * term)
+}
+
+const calculateNMRR = (c: any) => {
+  if (!c) return 0
+  const term = Number(c.contractual_term) || 12
+  return calculateTCV(c) / term
+}
 
 const props = defineProps<{
   goal: Goal | null
@@ -822,6 +894,8 @@ onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
   window.removeEventListener('keydown', onKeydown)
 })
+
+
 
 // Sincronização automática ao visualizar contrato pendente no Dashboard
 watch(selectedContractId, async (newId) => {
@@ -1099,8 +1173,11 @@ const dailyData = computed(() => {
         const diffDays = Math.floor((signDt.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
         if (diffDays < 0 || diffDays >= totalDays) return
         // TCV e NMRR: sem threshold de pagamento
-        dailyActualsTcv[diffDays] += (parseFloat(c.monthly_fee) || 0) * (c.contractual_term || 12) + (parseFloat(c.implementation_fee) || 0)
-        dailyActualsNmrr[diffDays] += (parseFloat(c.implementation_fee) || 0) / (c.contractual_term || 12) + (parseFloat(c.monthly_fee) || 0)
+        const tcvVal = calculateTCV(c)
+        dailyActualsTcv[diffDays] += tcvVal
+        const nmrrVal = calculateNMRR(c)
+        dailyActualsNmrr[diffDays] += nmrrVal
+
         // P1: com threshold de pagamento
         if (c.first_payment_date) {
           const rawPay = c.first_payment_date as string
@@ -1108,9 +1185,11 @@ const dailyData = computed(() => {
           const payDt = new Date(payStr + 'T12:00:00')
           if (payDt > thresholdP1) return
         }
-        let val = parseFloat(c.first_payment_amount) || 0
-        if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
-        dailyActuals[diffDays] += val
+        const p1Val = parseSafeNumber(c.first_payment_amount)
+        const implVal = parseSafeNumber(c.implementation_fee)
+        // No Dashboard, P1 = Parcela Recorrente + Taxa de Implementação
+        dailyActuals[diffDays] += (p1Val + implVal)
+
       })
     }
 
@@ -1123,19 +1202,36 @@ const dailyData = computed(() => {
       const rawDate = c.created_at || ''
       const dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate
       const dateDt = new Date(dateStr + 'T12:00:00')
-      if (dateDt < startOfMonth || dateDt > endOfMonth) return
-      const diffDays = Math.floor((dateDt.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      // Se criado depois do mês, ignora
+      if (dateDt > endOfMonth) return
+      
+      // Se criado antes do mês, conta como esperado desde o dia 1
+      let diffDays = 0
+      if (dateDt >= startOfMonth) {
+        diffDays = Math.floor((dateDt.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      }
+      
       if (diffDays < 0 || diffDays >= totalDays) return
-      dailyPendingTcv[diffDays] += (parseFloat(c.monthly_fee) || 0) * (c.contractual_term || 12) + (parseFloat(c.implementation_fee) || 0)
-      dailyPendingNmrr[diffDays] += (parseFloat(c.implementation_fee) || 0) / (c.contractual_term || 12) + (parseFloat(c.monthly_fee) || 0)
+      
+      // TCV e NMRR da projeção
+      const ptcvVal = calculateTCV(c)
+      dailyPendingTcv[diffDays] += ptcvVal
+      const pnmrrVal = calculateNMRR(c)
+      dailyPendingNmrr[diffDays] += pnmrrVal
+
+      
       if (c.first_payment_date) {
         const rawPay = c.first_payment_date as string
         const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
         if (new Date(payStr + 'T12:00:00') > thresholdP1) return
       }
-      let val = parseFloat(c.first_payment_amount) || 0
-      if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
-      dailyPending[diffDays] += val
+      
+      const p1Pending = parseSafeNumber(c.first_payment_amount)
+      const implPending = parseSafeNumber(c.implementation_fee)
+      // No Dashboard, P1 = Parcela Recorrente + Taxa de Implementação
+      dailyPending[diffDays] += (p1Pending + implPending)
+
     })
 
     const cumulate = (arr: number[]) => {
@@ -1258,16 +1354,11 @@ const dailyData = computed(() => {
           const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
           if (new Date(payStr + 'T12:00:00') > thresholdP1) return acc
         }
-        let val = parseFloat(c.first_payment_amount) || 0
-        if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
-        return acc + val
+        return acc + (parseFloat(c.first_payment_amount) || 0)
       }, 0)
 
-      const monthTcv = signedInMonth.reduce((acc, c) =>
-        acc + (parseFloat(c.monthly_fee) || 0) * (c.contractual_term || 12) + (parseFloat(c.implementation_fee) || 0), 0)
-
-      const monthNmrr = signedInMonth.reduce((acc, c) =>
-        acc + (parseFloat(c.implementation_fee) || 0) / (c.contractual_term || 12) + (parseFloat(c.monthly_fee) || 0), 0)
+      const monthTcv = signedInMonth.reduce((acc, c) => acc + calculateTCV(c), 0)
+      const monthNmrr = signedInMonth.reduce((acc, c) => acc + calculateNMRR(c), 0)
 
       cumActual += monthActual
       monthlyActuals.push(Number(cumActual.toFixed(2)))
@@ -1291,20 +1382,16 @@ const dailyData = computed(() => {
         const dateDt = new Date(dateStr + 'T12:00:00')
         return dateDt >= startOfMonth && dateDt <= endOfMonth
       })
-      const monthPendingP1 = pendingInMonth.reduce((acc, c) => {
-        if (c.first_payment_date) {
-          const rawPay = c.first_payment_date
-          const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
-          if (new Date(payStr + 'T12:00:00') > thresholdP1) return acc
-        }
-        let val = parseFloat(c.first_payment_amount) || 0
-        if (val === 0) val = (parseFloat(c.implementation_fee) || 0) + (parseFloat(c.monthly_fee) || 0)
-        return acc + val
-      }, 0)
-      const monthPendingTcv = pendingInMonth.reduce((acc, c) =>
-        acc + (parseFloat(c.monthly_fee) || 0) * (c.contractual_term || 12) + (parseFloat(c.implementation_fee) || 0), 0)
-      const monthPendingNmrr = pendingInMonth.reduce((acc, c) =>
-        acc + (parseFloat(c.implementation_fee) || 0) / (c.contractual_term || 12) + (parseFloat(c.monthly_fee) || 0), 0)
+        const monthPendingP1 = pendingInMonth.reduce((acc, c) => {
+          if (c.first_payment_date) {
+            const rawPay = c.first_payment_date
+            const payStr = rawPay.includes('T') ? rawPay.split('T')[0] : rawPay
+            if (new Date(payStr + 'T12:00:00') > thresholdP1) return acc
+          }
+          return acc + (parseFloat(c.first_payment_amount) || 0)
+        }, 0)
+        const monthPendingTcv = pendingInMonth.reduce((acc, c) => acc + calculateTCV(c), 0)
+        const monthPendingNmrr = pendingInMonth.reduce((acc, c) => acc + calculateNMRR(c), 0)
       cumPendingP1 += monthPendingP1
       cumPendingTcv += monthPendingTcv
       cumPendingNmrr += monthPendingNmrr
@@ -1628,7 +1715,7 @@ const lineSeries = computed(() => {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
 
-  const buildFutureAwareData = (values: number[]) =>
+  const buildFutureAwareData = (values: number[], allowFuture: boolean = false) =>
     values.map((v, idx) => {
       let isFuture = false
       if (props.periodType === 'month' || selectedGranularity.value.startsWith('month_')) {
@@ -1663,6 +1750,7 @@ const lineSeries = computed(() => {
           if (monthDate > currentMonthFirstDay) isFuture = true
         }
       }
+      if (allowFuture) return Number(v) || 0
       return isFuture ? null : (Number(v) || 0)
     })
 
@@ -1681,11 +1769,12 @@ const lineSeries = computed(() => {
   if (hasProjection.value) {
     series.push({
       name: 'Projeção',
-      data: buildFutureAwareData((chartData.value as any).projection || []),
+      data: buildFutureAwareData((chartData.value as any).projection || [], true),
     })
   }
   return series
 })
+
 </script>
 
 <style scoped>
@@ -1717,6 +1806,23 @@ const lineSeries = computed(() => {
   box-shadow: none !important;
 }
 
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.3);
+}
 
 .modal-fade-enter-active,
 .modal-fade-leave-active {
