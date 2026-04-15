@@ -1,8 +1,12 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-    apiKey: process.env.API_KEY_GPT,
-});
+let _openai: OpenAI | null = null;
+const getOpenAI = () => {
+    if (!_openai) {
+        _openai = new OpenAI({ apiKey: process.env.API_KEY_GPT });
+    }
+    return _openai;
+};
 
 export const OpenAIService = {
     async generateNegotiationClause(description: string): Promise<{ text: string; numItems: number }> {
@@ -64,7 +68,7 @@ Receber a descrição de uma negociação comercial em linguagem informal e tran
 - NUNCA gere itens sobre nota fiscal, tributos, suspensão por atraso ou pontualidade de pagamento.
 - O texto deve fluir como uma cláusula contratual real — coeso, sem redundâncias, mas cobrindo todas as condições de pagamento descritas.`;
 
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: 'gpt-4o',
             temperature: 0.2,
             messages: [
@@ -177,7 +181,7 @@ ${params.renderedClause}
 Calcule P1 e TCV.`;
 
         const tryCalculate = async (): Promise<{ p1: number; tcv: number }> => {
-            const response = await openai.chat.completions.create({
+            const response = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o',
                 temperature: 0,
                 messages: [
