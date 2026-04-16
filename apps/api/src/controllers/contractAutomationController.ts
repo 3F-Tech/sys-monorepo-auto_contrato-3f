@@ -889,6 +889,11 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
         // Executar o fluxo do Clicksign
         const witnessEmails = contract.witnesses_email.map(w => w.email);
 
+        // Quando o criador é um coordenador, não adicionar o coord do banco como
+        // signatário extra — o findFirst retorna o primeiro coord da BU no banco,
+        // que pode ser uma pessoa completamente diferente de quem criou o contrato.
+        const creatorIsCoord = contract.sellers?.type === 'coord';
+
         const result = await executeClickSignv3Flow({
             contractId: contract.id,
             fileId: fileId,
@@ -903,9 +908,9 @@ export const sendContractToClickSign = async (req: Request, res: Response) => {
             sellerName: contract.sellers?.name || '',
             sellerEmail: contract.sellers?.email || '',
             sellerCpf: contract.sellers?.cpf || '',
-            coordName: coordinator?.name || '',
-            coordEmail: coordinator?.email || '',
-            coordCpf: coordinator?.cpf || '',
+            coordName: creatorIsCoord ? '' : (coordinator?.name || ''),
+            coordEmail: creatorIsCoord ? '' : (coordinator?.email || ''),
+            coordCpf: creatorIsCoord ? '' : (coordinator?.cpf || ''),
             headName: head?.name || '',
             headEmail: head?.email || '',
             headCpf: head?.cpf || ''
