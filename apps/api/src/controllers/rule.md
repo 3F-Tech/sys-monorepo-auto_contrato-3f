@@ -87,11 +87,53 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 - **Head da BU (Google Docs)**: O backend busca o head da BU (`type: 'head'` + `business_id`) e injeta `{{NOME-HEAD-BU}}` e `{{CPF-HEAD-BU}}` nos templates do Google Docs (testemunha nos contratos Bomma/Seed).
 - **Schema Zod**: `VALOR MENSALIDADE`, `VALOR DO PRIMEIRO PAGAMENTO`, `DATA PRIMEIRO PAGAMENTO` e `DIA VENCIMENTO MENSAL` são opcionais — com templates dinâmicos, seus valores vêm dos placeholders.
 
-## 🔵 Endpoint: Signatários de Contrato
-- **Rota:** `GET /contracts/:id/signers`
-- **Handler:** `getContractSigners`
-- **Descrição:** Consulta em tempo real a API v3 da Clicksign, mapeando os requisitos para determinar quem já assinou. Retorna `[{name, email, signed}]`.
+## 👤 Regra de Visibilidade: INFOS-VENDEDOR vs Coordenador (CRÍTICO)
+
+Esta regra define como as variáveis do Google Docs são preenchidas com base em **quem está criando o contrato** (`user.type` do JWT).
+
+### Quando o criador é `vendedor`
+- `{{INFOS-VENDEDOR}}`, `{{NOME-VENDEDOR}}`, `{{CPF-VENDEDOR}}` → preenchidos com os dados do **próprio vendedor** (`data['NOME VENDEDOR']`, `data['CPF VENDEDOR']`)
+- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados do **coordenador da BU** (vindo do payload ou buscado automaticamente no banco por `type: 'coord'` + `business_id`)
+- O vendedor também aparece como `NOME TESTEMUNHA FIXA {N}` (adicionado pelo `WitnessSection.vue`)
+
+### Quando o criador é `coord`
+- `{{INFOS-VENDEDOR}}`, `{{NOME-VENDEDOR}}`, `{{CPF-VENDEDOR}}` → **COMPLETAMENTE VAZIOS** (string `''`)
+- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados **do próprio coordenador logado**
+- O slot `NOME TESTEMUNHA FIXA {N}` que o `WitnessSection.vue` adiciona com os dados do "vendedor" (que são na verdade os dados do coord) também é **zerado** — o backend detecta o nome do coord nesses slots e os limpa
+
+### Implementação (`contractAutomationController.ts` → `handleContractSubmit`)
+```
+const isCoord = user?.type === 'coord';
+const sellerName = data['NOME VENDEDOR'];   // ← chave CORRETA (sem "DO")
+const sellerCpf  = data['CPF VENDEDOR'];    // ← chave CORRETA (sem "DO")
+
+if (isCoord) {
+  // Zera INFOS-VENDEDOR, NOME-VENDEDOR, CPF-VENDEDOR (todas as variações)
+  // Varre NOME-TESTEMUNHA-FIXA-1..6 e zera o slot que contém o nome do coord
+} else {
+  // Preenche INFOS-VENDEDOR com bloco "TESTEMUNHA\nNOME: ...\nCPF: ..."
+  // Preenche NOME-VENDEDOR, CPF-VENDEDOR
+  // Coordenador: vem do payload (NOME COORD BU / CPF COORD BU)
+  //              ou fallback automático via Prisma (type: 'coord' + business_id)
+}
+```
+
+> **Atenção:** As chaves corretas no schema Zod são `'NOME VENDEDOR'` e `'CPF VENDEDOR'` (sem "DO"). Nunca use `'NOME DO VENDEDOR'` ou `'CPF DO VENDEDOR'` — essas chaves não existem no schema e retornam `undefined`.
+
+## 🔵 Endpoints: Signatários de Contrato
+
+### `GET /contracts/:id/signers` — `getContractSigners`
+Consulta em tempo real a API v3 da Clicksign, mapeando os requisitos para determinar quem já assinou.
+- **Retorno:** `[{ signerId, name, email, signed }]`
+- **Prioridade de ID:** `envelope_id` (Clicksign UUID v3) → fallback `document_id` (v1/Drive). **Nunca inverter** — para contratos v3, `document_id` é o fileId do Google Drive, não um ID Clicksign.
 - **Frontend:** Utilizado pelo `SignersModal.vue` para exibir detalhe de progresso de assinaturas.
+
+### `POST /contracts/:id/signers/:signerId/notify` — `sendSignerReminder`
+Envia um lembrete de assinatura via Clicksign para um signatário pendente.
+- **Body:** `{ message?: string }` — se omitido ou vazio, usa mensagem padrão.
+- **Validações:** Contrato deve existir, ter `envelope_id`, `approved: true` e `signed: false`.
+- **Serviço:** `ClickSignService.sendNotification(envelope_id, signerId, message)`.
+- **Frontend:** Disparado pelo botão de sino no `SignersModal.vue` (apenas signatários pendentes).
 
 ## 🗑️ Exclusão Completa (DELETE /contracts/:id) 
 A exclusão de contratos é **atômica e multi-serviço** e possui as seguintes regras de permissão:

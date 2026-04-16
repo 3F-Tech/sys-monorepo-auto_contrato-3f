@@ -22,7 +22,7 @@ import {
 import { handleClicksignWebhook } from '../controllers/webhookController';
 import { getSellerBusinessBySeller, getSellerBusinessByBusiness, updateSellerBusiness } from '../controllers/sellerBussinessController';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract, cancelContract, syncContractStatus, getContractSigners } from '../controllers/contractController';
+import { getContracts, getContractBySellerId, getContractByBuId, getContractByHeadId, createContract, updateContract, deleteContract, cancelContract, syncContractStatus, getContractSigners, sendSignerReminder } from '../controllers/contractController';
 import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalController';
 import { getTeams, createTeam, updateTeam, addTeamMember, removeTeamMember, deleteTeam } from '../controllers/teamController';
 import { getCac, upsertCac } from '../controllers/cacController';
@@ -124,6 +124,7 @@ router.post('/contracts/:id/cancel', cancelContract);
 router.post('/contracts/:id/sync', syncContractStatus);
 router.post('/contracts/:id/send-to-signature', sendContractToClickSign);
 router.get('/contracts/:id/signers', getContractSigners);
+router.post('/contracts/:id/signers/:signerId/notify', sendSignerReminder);
 router.delete('/contracts/:id', deleteContract);
 
 // GOAL ROUTES

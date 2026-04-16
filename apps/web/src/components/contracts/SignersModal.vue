@@ -66,46 +66,94 @@
               v-else
               v-for="(signer, idx) in signers"
               :key="idx"
-              class="group p-5 rounded-[24px] bg-white/[0.03] border border-white/[0.05] transition-all duration-300 flex items-center justify-between hover:bg-white/[0.06] hover:border-brand-cyan/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.05)] animate-slide-up"
+              class="group rounded-[24px] bg-white/[0.03] border border-white/[0.05] transition-all duration-300 hover:bg-white/[0.06] hover:border-brand-cyan/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.05)] animate-slide-up overflow-hidden"
               :style="{ animationDelay: idx * 0.1 + 's' }"
             >
-              <div class="flex items-center gap-4 text-left flex-1 min-w-0">
-                <div
-                  class="h-11 w-11 rounded-xl border border-white/10 flex items-center justify-center font-extrabold text-[11px] transition-all group-hover:border-brand-cyan/40 group-hover:shadow-[0_0_15px_rgba(0,212,255,0.2)]"
-                  :class="
-                    signer.signed
-                      ? 'bg-brand-cyan/10 text-brand-cyan shadow-[inset_0_0_10px_rgba(0,212,255,0.1)]'
-                      : 'bg-white/5 text-white/30'
-                  "
-                >
-                  {{ getInitials(signer.name) }}
+              <!-- Linha do signatário -->
+              <div class="p-5 flex items-center justify-between">
+                <div class="flex items-center gap-4 text-left flex-1 min-w-0">
+                  <div
+                    class="h-11 w-11 rounded-xl border border-white/10 flex items-center justify-center font-extrabold text-[11px] transition-all group-hover:border-brand-cyan/40 group-hover:shadow-[0_0_15px_rgba(0,212,255,0.2)]"
+                    :class="
+                      signer.signed
+                        ? 'bg-brand-cyan/10 text-brand-cyan shadow-[inset_0_0_10px_rgba(0,212,255,0.1)]'
+                        : 'bg-white/5 text-white/30'
+                    "
+                  >
+                    {{ getInitials(signer.name) }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h4 class="text-sm font-extrabold text-white group-hover:text-brand-cyan transition-colors truncate">
+                      {{ signer.name }}
+                    </h4>
+                    <p class="text-[10px] text-white/30 font-medium lowercase truncate mt-1 tracking-wide">
+                      {{ signer.email }}
+                    </p>
+                  </div>
                 </div>
-                <div class="min-w-0 flex-1">
-                  <h4 class="text-sm font-extrabold text-white group-hover:text-brand-cyan transition-colors truncate">
-                    {{ signer.name }}
-                  </h4>
-                  <p class="text-[10px] text-white/30 font-medium lowercase truncate mt-1 tracking-wide">
-                    {{ signer.email }}
-                  </p>
+
+                <div class="flex-shrink-0 ml-4 flex items-center gap-2">
+                  <!-- Botão de lembrete (apenas pendentes) -->
+                  <button
+                    v-if="!signer.signed"
+                    @click="toggleReminderInput(signer.signerId ?? '')"
+                    :disabled="loadingReminders.has(signer.signerId ?? '')"
+                    class="p-2 rounded-xl border border-brand-glass-border text-white/30 hover:text-brand-cyan hover:border-brand-cyan/40 hover:bg-brand-cyan/5 transition-all active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Enviar lembrete"
+                  >
+                    <span v-if="loadingReminders.has(signer.signerId ?? '')" class="h-3.5 w-3.5 border-2 border-brand-cyan/30 border-t-brand-cyan rounded-full animate-spin block"></span>
+                    <Bell v-else class="h-3.5 w-3.5 bell-icon" />
+                  </button>
+
+                  <!-- Badge de status -->
+                  <div
+                    v-if="signer.signed"
+                    class="px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[9px] font-black uppercase tracking-widest border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)] flex items-center gap-1.5"
+                  >
+                    <div class="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                    Assinado
+                  </div>
+                  <div
+                    v-else
+                    class="px-3 py-1.5 rounded-full bg-white/5 text-white/30 text-[9px] font-black uppercase tracking-widest border border-white/5 flex items-center gap-1.5"
+                  >
+                    <div class="h-1.5 w-1.5 rounded-full bg-white/20"></div>
+                    Pendente
+                  </div>
                 </div>
               </div>
 
-              <div class="flex-shrink-0 ml-4">
+              <!-- Área de lembrete expandível (só abre quando signerId está disponível) -->
+              <Transition name="reminder-expand">
                 <div
-                  v-if="signer.signed"
-                  class="px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[9px] font-black uppercase tracking-widest border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)] flex items-center gap-1.5"
+                  v-if="!signer.signed && signer.signerId && activeReminderSignerId === signer.signerId"
+                  class="px-5 pb-5 space-y-2 border-t border-white/[0.05]"
                 >
-                  <div class="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                  Assinado
+                  <p class="text-[9px] text-white/30 font-black uppercase tracking-widest pt-4">Mensagem do lembrete</p>
+                  <textarea
+                    v-model="reminderMessages[signer.signerId]"
+                    rows="3"
+                    class="w-full bg-white/5 border border-brand-glass-border rounded-2xl px-4 py-3 text-white/80 text-xs resize-none focus:outline-none focus:border-brand-cyan/50 focus:bg-white/[0.07] transition-all placeholder:text-white/20 custom-scrollbar"
+                    placeholder="Digite a mensagem ou use o padrão..."
+                  ></textarea>
+                  <div class="flex justify-end gap-2">
+                    <button
+                      @click="activeReminderSignerId = null"
+                      class="px-4 py-2 rounded-xl text-white/40 hover:text-white/70 text-[10px] font-black uppercase tracking-widest transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      @click="submitReminder(signer)"
+                      :disabled="loadingReminders.has(signer.signerId)"
+                      class="px-5 py-2 rounded-xl bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan text-[10px] font-black uppercase tracking-widest hover:bg-brand-cyan/20 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <span v-if="loadingReminders.has(signer.signerId)" class="h-3 w-3 border-2 border-brand-cyan/30 border-t-brand-cyan rounded-full animate-spin"></span>
+                      Enviar
+                    </button>
+                  </div>
                 </div>
-                <div
-                  v-else
-                  class="px-3 py-1.5 rounded-full bg-white/5 text-white/30 text-[9px] font-black uppercase tracking-widest border border-white/5 flex items-center gap-1.5"
-                >
-                  <div class="h-1.5 w-1.5 rounded-full bg-white/20"></div>
-                  Pendente
-                </div>
-              </div>
+              </Transition>
             </div>
           </div>
 
@@ -130,19 +178,62 @@
 </template>
 
 <script setup lang="ts">
-  import { Users, X } from '@lucide/vue'
-  import { watch, onUnmounted } from 'vue'
+  import { Users, X, Bell } from '@lucide/vue'
+  import { watch, onUnmounted, ref, reactive } from 'vue'
+
+  const DEFAULT_REMINDER_MESSAGE = 'Olá! Você tem um contrato aguardando a sua assinatura. Por favor, verifique seu email para assinar.'
 
   const props = defineProps<{
     isOpen: boolean
     loading: boolean
     contractTitle: string
-    signers: Array<{ name: string; email: string; signed: boolean }>
+    signers: Array<{ signerId?: string; name: string; email: string; signed: boolean }>
   }>()
 
-  const emit = defineEmits(['close'])
+  const emit = defineEmits<{
+    close: []
+    'send-reminder': [{ signerId: string; message: string }]
+  }>()
 
   const close = () => emit('close')
+
+  const activeReminderSignerId = ref<string | null>(null)
+  const loadingReminders = ref<Set<string>>(new Set())
+  const reminderMessages = reactive<Record<string, string>>({})
+
+  const toggleReminderInput = (signerId: string) => {
+    if (!signerId) return
+    if (activeReminderSignerId.value === signerId) {
+      activeReminderSignerId.value = null
+      return
+    }
+    if (!reminderMessages[signerId]) {
+      reminderMessages[signerId] = DEFAULT_REMINDER_MESSAGE
+    }
+    activeReminderSignerId.value = signerId
+  }
+
+  const submitReminder = (signer: { signerId?: string; name: string; email: string; signed: boolean }) => {
+    if (!signer.signerId) return
+    emit('send-reminder', {
+      signerId: signer.signerId,
+      message: reminderMessages[signer.signerId] || DEFAULT_REMINDER_MESSAGE
+    })
+    activeReminderSignerId.value = null
+  }
+
+  // Expõe controle de loading para que o ContractList.vue possa atualizar
+  const setReminderLoading = (signerId: string, loading: boolean) => {
+    if (loading) {
+      loadingReminders.value = new Set([...loadingReminders.value, signerId])
+    } else {
+      const next = new Set(loadingReminders.value)
+      next.delete(signerId)
+      loadingReminders.value = next
+    }
+  }
+
+  defineExpose({ setReminderLoading })
 
   // Bloquear scroll do body ao abrir o modal
   watch(
@@ -150,6 +241,7 @@
     (val) => {
       if (val) {
         document.body.style.overflow = 'hidden'
+        activeReminderSignerId.value = null
       } else {
         document.body.style.overflow = ''
       }
@@ -169,6 +261,23 @@
 </script>
 
 <style scoped>
+  .bell-icon {
+    transition: color 0.2s ease;
+  }
+
+  button:hover .bell-icon {
+    animation: bell-ring 0.4s ease;
+  }
+
+  @keyframes bell-ring {
+    0%   { transform: rotate(0deg); }
+    20%  { transform: rotate(-12deg); }
+    40%  { transform: rotate(12deg); }
+    60%  { transform: rotate(-8deg); }
+    80%  { transform: rotate(8deg); }
+    100% { transform: rotate(0deg); }
+  }
+
   .animate-slide-up {
     animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
@@ -183,6 +292,24 @@
       opacity: 1;
       transform: translateY(0) scale(1);
     }
+  }
+
+  .reminder-expand-enter-active,
+  .reminder-expand-leave-active {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .reminder-expand-enter-from,
+  .reminder-expand-leave-to {
+    opacity: 0;
+    max-height: 0;
+  }
+
+  .reminder-expand-enter-to,
+  .reminder-expand-leave-from {
+    opacity: 1;
+    max-height: 200px;
   }
 
   .modal-scale-enter-active,

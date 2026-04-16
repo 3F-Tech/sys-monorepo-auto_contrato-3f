@@ -711,9 +711,9 @@
     </Transition>
 
     <!-- Modal Detalhes de Signatários -->
-    <SignersModal :isOpen="showSignersModal" :loading="loadingSigners"
+    <SignersModal ref="signersModalRef" :isOpen="showSignersModal" :loading="loadingSigners"
       :contractTitle="selectedContractForSigners?.title || ''" :signers="currentSigners"
-      @close="showSignersModal = false" />
+      @close="showSignersModal = false" @send-reminder="handleSendReminder" />
 
     <!-- Modal Confirmação Envio Clicksign -->
     <ConfirmModal :isOpen="showSendToClicksignModal" title="Enviar para Clicksign"
@@ -953,6 +953,7 @@ const loadingSigners = ref(false)
 const loadingSignersId = ref<string | null>(null)
 const selectedContractForSigners = ref<Contracts | null>(null)
 const currentSigners = ref<any[]>([])
+const signersModalRef = ref<{ setReminderLoading: (signerId: string, loading: boolean) => void } | null>(null)
 
 // Estados de edição (refs adicionais)
 const editCreatedAt = ref('')
@@ -1093,6 +1094,22 @@ const openSignersModal = async (contract: Contracts) => {
   } finally {
     loadingSigners.value = false
     loadingSignersId.value = null
+  }
+}
+
+const handleSendReminder = async ({ signerId, message }: { signerId: string; message: string }) => {
+  const contractId = selectedContractForSigners.value?.id
+  if (!contractId) return
+
+  signersModalRef.value?.setReminderLoading(signerId, true)
+  try {
+    await client.post(`/contracts/${contractId}/signers/${signerId}/notify`, { message })
+    const signer = currentSigners.value.find((s: any) => s.signerId === signerId)
+    toastSuccess(`Lembrete enviado para ${signer?.email || 'o signatário'}`)
+  } catch {
+    toastError('Erro ao enviar lembrete')
+  } finally {
+    signersModalRef.value?.setReminderLoading(signerId, false)
   }
 }
 

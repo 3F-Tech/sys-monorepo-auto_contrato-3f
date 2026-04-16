@@ -560,7 +560,7 @@ export const getContractSigners = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Contrato não encontrado' });
         }
 
-        const clicksignId = contract.document_id || (contract as any).envelope_id;
+        const clicksignId = (contract as any).envelope_id || contract.document_id;
         if (!clicksignId) {
             return res.json({ success: true, signers: [] });
         }
@@ -574,11 +574,12 @@ export const getContractSigners = async (req: Request, res: Response) => {
                 
                 const requirements = await ClickSignService.getEnvelopeRequirements(envelopeIdToUse);
                 
-                const signerDataMap = new Map<string, { name: string, email: string, signed: boolean }>();
+                const signerDataMap = new Map<string, { signerId: string, name: string, email: string, signed: boolean }>();
 
                 // Inicializa o mapa com os dados básicos dos signatários
                 rawSigners.forEach((s: any) => {
                     signerDataMap.set(s.id, {
+                        signerId: s.id,
                         name: s.attributes?.name || 'Sem nome',
                         email: s.attributes?.email || 'Sem e-mail',
                         signed: false
@@ -632,5 +633,42 @@ export const getContractSigners = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('[GET SIGNERS] Erro principal:', error);
         res.status(500).json({ error: 'Erro ao buscar signatários' });
+    }
+};
+
+export const sendSignerReminder = async (req: Request, res: Response) => {
+    const { id, signerId } = req.params;
+    const { message } = req.body as { message?: string };
+    const targetId = BigInt(id);
+
+    try {
+        const contract = await prisma.contracts.findUnique({
+            where: { id: targetId },
+            select: { envelope_id: true, approved: true, signed: true }
+        });
+
+        if (!contract) {
+            return res.status(404).json({ error: 'Contrato não encontrado' });
+        }
+        if (!contract.envelope_id) {
+            return res.status(400).json({ error: 'Contrato não possui envelope Clicksign' });
+        }
+        if (!contract.approved) {
+            return res.status(400).json({ error: 'Contrato ainda não foi enviado ao Clicksign' });
+        }
+        if (contract.signed) {
+            return res.status(400).json({ error: 'Contrato já foi completamente assinado' });
+        }
+
+        const reminderMessage = (message && message.trim())
+            ? message.trim()
+            : 'Olá! Você tem um contrato aguardando a sua assinatura. Por favor, verifique seu email para assinar.';
+
+        await ClickSignService.sendNotification(contract.envelope_id, signerId, reminderMessage);
+
+        res.json({ success: true });
+    } catch (error: any) {
+        console.error('[SEND REMINDER] Erro ao enviar lembrete:', error.message);
+        res.status(500).json({ error: 'Erro ao enviar lembrete', details: error.message });
     }
 };

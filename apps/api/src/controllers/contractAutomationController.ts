@@ -451,13 +451,15 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 // Cleanup: Garante que slots de testemunhas não preenchidos fiquem vazios no documento
                 const allWitnessesForList: string[] = [];
 
-                // 1. Limpeza dos placeholders de Testemunhas Fixas (1 a 3)
+                // 1. Limpeza dos placeholders de Testemunhas Fixas (1 a 6)
                 // Eles NÃO entram na lista L1/L2 pois já possuem placeholders fixos no doc.
-                for (let i = 1; i <= 3; i++) {
+                for (let i = 1; i <= 6; i++) {
                     const nameKey = `NOME-TESTEMUNHA-FIXA-${i}`;
                     const cpfKey = `CPF-TESTEMUNHA-FIXA-${i}`;
+                    const emailKey = `EMAIL-TESTEMUNHA-FIXA-${i}`;
                     if (!replacements[nameKey]) replacements[nameKey] = '';
                     if (!replacements[cpfKey]) replacements[cpfKey] = '';
+                    if (!replacements[emailKey]) replacements[emailKey] = '';
                 }
 
                 // 2. Coleta Testemunhas Adicionais (1 a 6) para a lista L1/L2
@@ -495,6 +497,97 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 // Mapeamentos específicos extras conforme o modelo extraído
                 replacements['NOME-REPRESENTANTE-CONTRATANTE'] = data['NOME DO REPRESENTANTE'] || '';
                 replacements['CPF-REPRESENTANTE-CONTRATANTE'] = data['CPF DO REPRESENTANTE'] || '';
+
+                // === VENDEDOR (testemunha no documento) ===
+                const isCoord = user?.type === 'coord';
+                const sellerName = data['NOME VENDEDOR'] || '';
+                const sellerCpf = data['CPF VENDEDOR'] || '';
+
+                // === COORDENADOR (testemunha no documento) ===
+                // Busca do payload ou fallback automático para o coordenador da BU logado/cadastrado
+                let coordName = data['NOME COORD BU'];
+                let coordCpf = data['CPF COORD BU'];
+
+                if (!coordName || !coordCpf) {
+                    const dbCoord = await prisma.sellers.findFirst({
+                        where: {
+                            type: 'coord',
+                            seller_business: {
+                                some: { business_id: Number(bu_id) }
+                            }
+                        }
+                    });
+                    if (dbCoord) {
+                        coordName = dbCoord.name || '';
+                        coordCpf = dbCoord.cpf || '';
+                    }
+                }
+
+                // --- APLICAÇÃO DA REGRA DE VISIBILIDADE ---
+                if (isCoord) {
+                    // Se for coordenador, o bloco de vendedor fica COMPLETAMENTE VAZIO
+                    // Limpamos todas as variações possíveis (espaço, hífen, underline) para garantir
+                    const keysToClear = [
+                        'INFOS VENDEDOR', 'INFOS-VENDEDOR', 'INFOS_VENDEDOR',
+                        'NOME VENDEDOR', 'NOME-VENDEDOR', 'NOME_VENDEDOR',
+                        'CPF VENDEDOR', 'CPF-VENDEDOR', 'CPF_VENDEDOR'
+                    ];
+                    keysToClear.forEach(key => {
+                        replacements[key] = '';
+                    });
+
+                    // O WitnessSection.vue coloca o NOME VENDEDOR no slot de testemunha fixa seguinte
+                    // às testemunhas fixas (ex: slot 3). Quando o coord cria o contrato, o próprio
+                    // nome do coord vai para esse slot. Precisamos limpá-lo.
+                    if (sellerName) {
+                        for (let i = 1; i <= 6; i++) {
+                            if (replacements[`NOME-TESTEMUNHA-FIXA-${i}`] === sellerName) {
+                                replacements[`NOME TESTEMUNHA FIXA ${i}`] = '';
+                                replacements[`NOME-TESTEMUNHA-FIXA-${i}`] = '';
+                                replacements[`CPF TESTEMUNHA FIXA ${i}`] = '';
+                                replacements[`CPF-TESTEMUNHA-FIXA-${i}`] = '';
+                                replacements[`EMAIL TESTEMUNHA FIXA ${i}`] = '';
+                                replacements[`EMAIL-TESTEMUNHA-FIXA-${i}`] = '';
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // Se for vendedor, preenchemos o bloco INFOS-VENDEDOR com os rótulos e dados
+                    const block = sellerName && sellerCpf
+                        ? `TESTEMUNHA\nNOME: ${sellerName}\nCPF: ${sellerCpf}`
+                        : '';
+                    
+                    // Preenche todas as variações para garantir compatibilidade com qualquer template
+                    replacements['INFOS VENDEDOR'] = block;
+                    replacements['INFOS-VENDEDOR'] = block;
+                    replacements['INFOS_VENDEDOR'] = block;
+
+                    replacements['NOME VENDEDOR'] = sellerName;
+                    replacements['NOME-VENDEDOR'] = sellerName;
+                    replacements['NOME_VENDEDOR'] = sellerName;
+
+                    replacements['CPF VENDEDOR'] = sellerCpf;
+                    replacements['CPF-VENDEDOR'] = sellerCpf;
+                    replacements['CPF_VENDEDOR'] = sellerCpf;
+                }
+
+                // O Coordenador sempre é preenchido em suas variáveis específicas
+                replacements['NOME-COORDENADOR'] = coordName || '';
+                replacements['CPF-COORDENADOR'] = coordCpf || '';
+                replacements['NOME-COORD-BU'] = coordName || '';
+                replacements['CPF-COORD-BU'] = coordCpf || '';
+                replacements['INFOS-COORDENADOR'] = (coordName && coordCpf)
+                    ? `TESTEMUNHA\nNOME: ${coordName}\nCPF: ${coordCpf}`
+                    : '';
+
+                // === SIGNATÁRIO DA CONTRATADA (assinatura no documento) ===
+                const buSignerKey = Object.keys(BU_SIGNERS_MAP).find(k => buNameUpper.includes(k));
+                if (buSignerKey) {
+                    replacements['NOME-CONTRATADA'] = BU_SIGNERS_MAP[buSignerKey].name;
+                    replacements['CPF-CONTRATADA'] = BU_SIGNERS_MAP[buSignerKey].cpf;
+                }
+
 
                 // === HEAD DA BU (testemunha nos contratos Bomma/Seed) ===
                 const headBu = await prisma.sellers.findFirst({

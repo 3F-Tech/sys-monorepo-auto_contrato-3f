@@ -34,11 +34,15 @@ Este componente (\pps/web/src/components/ui/ProgressModal.vue\) é responsável
 
 ## 👥 SignersModal.vue
 Componente que exibe o progresso de assinaturas de um contrato em tempo real.
-- **Trigger:** Botão de detalhes (icône de usuários) ao lado do contador de progresso no card do contrato.
+- **Trigger:** Botão de detalhes (ícone de usuários) ao lado do contador de progresso no card do contrato.
 - **Fonte de Dados:** Consome `GET /contracts/:id/signers` do backend, que consulta a API v3 da Clicksign.
 - **Exibe:** Nome, e-mail e status (`Assinou` em verde / `Pendente` em cinza) de cada signatário.
 - **Estética:** Segue o design system (Dark Tech, glassmorphism, `brand-cyan`). Bloqueio de scroll aplicado.
 - **Sincronização Passiva:** Cada abertura do modal já realiza uma nova consulta, mantendo dados frescos.
+- **Botão de Lembrete (Sino):** Visível apenas para signatários com `signed: false`. Ao clicar, expande um `<textarea>` inline pré-preenchido com a mensagem padrão. O usuário pode editar e clicar "Enviar", que emite `send-reminder: { signerId, message }`.
+- **Loading Individual:** Estado de carregamento controlado por `Set<string>` de `signerId`s. O pai (`ContractList.vue`) chama `signersModalRef.value.setReminderLoading(signerId, bool)` exposto via `defineExpose`.
+- **Props:** `isOpen`, `loading`, `contractTitle`, `signers: [{ signerId?, name, email, signed }]`
+- **Emits:** `close`, `send-reminder: { signerId, message }`
 
 ## 🔴 ConfirmModal.vue
 - Usado para confirmar ações destrutivas (excluir, cancelar) ou ações críticas de envio (aprovação manual).

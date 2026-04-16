@@ -62,11 +62,19 @@ Para cada requirement:
 Contagem: signed_count = SignerMap.values().filter(v => v).length
 ```
 
-## 🔵 Endpoint: Detalhes de Signatários
-- **Rota:** `GET /contracts/:id/signers`
+## 🔵 Endpoints: Signatários e Lembretes
+
+### `GET /contracts/:id/signers`
 - **Handler:** `getContractSigners` em `contractController.ts`
-- **Retorno:** `{ success: boolean, signers: [{name, email, signed}] }`
-- **Frontend:** Usado pelo componente `SignersModal.vue` para exibir o status individual de cada signatário.
+- **Retorno:** `{ success: boolean, signers: [{ signerId, name, email, signed }] }`
+- **Prioridade de ID:** usa `envelope_id` primeiro, fallback `document_id` (v1/legado). Para contratos v3, `document_id` guarda o fileId do Drive — usar `envelope_id` é mandatório.
+- **Frontend:** Usado pelo `SignersModal.vue` para exibir o status individual de cada signatário.
+
+### `POST /contracts/:id/signers/:signerId/notify`
+- **Handler:** `sendSignerReminder` em `contractController.ts`
+- **Serviço:** `ClickSignService.sendNotification(envelopeId, signerId, message)` → `POST /envelopes/{id}/signers/{signerId}/notifications`
+- **Body:** `{ message?: string }` — mensagem personalizada ou padrão se omitida.
+- **Frontend:** Botão de sino no `SignersModal.vue`, visível apenas para signatários com `signed: false`.
 
 ## 🗑️ Exclusão de Envelope (Delete Contract)
 Quando um contrato é **excluído** via `DELETE /contracts/:id`:
