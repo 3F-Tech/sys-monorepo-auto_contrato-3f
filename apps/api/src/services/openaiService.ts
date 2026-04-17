@@ -232,7 +232,7 @@ ${params.renderedClause}
 
 Calcule P1 e TCV.`;
 
-        const tryCalculate = async (): Promise<{ p1: number; tcv: number }> => {
+        const tryCalculate = async (): Promise<{ p1: number; tcv: number; implementationFee: number }> => {
             const response = await getOpenAI().chat.completions.create({
                 model: 'gpt-4o',
                 temperature: 0,
