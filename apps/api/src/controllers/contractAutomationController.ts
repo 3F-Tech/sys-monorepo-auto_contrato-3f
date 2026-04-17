@@ -576,7 +576,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                     const block = sellerName && sellerCpf
                         ? `TESTEMUNHA\nNOME: ${sellerName}\nCPF: ${sellerCpf}`
                         : '';
-                    
+
                     // Preenche todas as variações para garantir compatibilidade com qualquer template
                     replacements['INFOS VENDEDOR'] = block;
                     replacements['INFOS-VENDEDOR'] = block;
@@ -596,9 +596,9 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 replacements['CPF-COORDENADOR'] = coordCpf || '';
                 replacements['NOME-COORD-BU'] = coordName || '';
                 replacements['CPF-COORD-BU'] = coordCpf || '';
-                replacements['INFOS-COORDENADOR'] = (coordName && coordCpf)
-                    ? `TESTEMUNHA\nNOME: ${coordName}\nCPF: ${coordCpf}`
-                    : '';
+                // replacements['INFOS-COORDENADOR'] = (coordName && coordCpf)
+                //     ? `TESTEMUNHA\nNOME: ${coordName}\nCPF: ${coordCpf}`
+                //     : '';
 
                 // === SIGNATÁRIO DA CONTRATADA (assinatura no documento) ===
                 const buSignerKey = Object.keys(BU_SIGNERS_MAP).find(k => buNameUpper.includes(k));
