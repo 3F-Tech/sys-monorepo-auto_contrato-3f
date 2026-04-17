@@ -504,22 +504,41 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 const sellerCpf = data['CPF VENDEDOR'] || '';
 
                 // === COORDENADOR (testemunha no documento) ===
-                // Busca do payload ou fallback automático para o coordenador da BU logado/cadastrado
-                let coordName = data['NOME COORD BU'];
-                let coordCpf = data['CPF COORD BU'];
+                // Derivação autoritativa a partir do usuário logado (JWT):
+                // - coord cria → usa os próprios dados do coord logado
+                // - vendedor/sdr cria → usa o coord apontado pelo head_id do logado
+                // Payload NOME/CPF COORD BU é ignorado (frontend pode enviar coord errado).
+                const loggedSeller = await prisma.sellers.findUnique({
+                    where: { id: BigInt(user.id) }
+                });
 
-                if (!coordName || !coordCpf) {
-                    const dbCoord = await prisma.sellers.findFirst({
-                        where: {
-                            type: 'coord',
-                            seller_business: {
-                                some: { business_id: Number(bu_id) }
-                            }
-                        }
+                let coordName = '';
+                let coordCpf = '';
+
+                if (isCoord) {
+                    coordName = loggedSeller?.name || '';
+                    coordCpf = loggedSeller?.cpf || '';
+                } else if (loggedSeller?.head_id) {
+                    const supervisor = await prisma.sellers.findUnique({
+                        where: { id: loggedSeller.head_id }
                     });
-                    if (dbCoord) {
-                        coordName = dbCoord.name || '';
-                        coordCpf = dbCoord.cpf || '';
+                    coordName = supervisor?.name || '';
+                    coordCpf = supervisor?.cpf || '';
+                }
+
+                // O frontend pode ter inserido um coord errado no slot de testemunha fixa.
+                // Substitui o slot que casa com o payload (possivelmente errado) pelo coord autoritativo.
+                const payloadCoordName = data['NOME COORD BU'];
+                if (payloadCoordName && payloadCoordName !== coordName) {
+                    for (let i = 1; i <= 6; i++) {
+                        if (replacements[`NOME-TESTEMUNHA-FIXA-${i}`] === payloadCoordName) {
+                            replacements[`NOME TESTEMUNHA FIXA ${i}`] = coordName;
+                            replacements[`NOME-TESTEMUNHA-FIXA-${i}`] = coordName;
+                            replacements[`NOME_TESTEMUNHA_FIXA_${i}`] = coordName;
+                            replacements[`CPF TESTEMUNHA FIXA ${i}`] = coordCpf;
+                            replacements[`CPF-TESTEMUNHA-FIXA-${i}`] = coordCpf;
+                            replacements[`CPF_TESTEMUNHA_FIXA_${i}`] = coordCpf;
+                        }
                     }
                 }
 
@@ -620,6 +639,16 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 await GoogleDocsService.replaceVariables(newFile.id, replacements);
                 console.log(`[DOCS] Variáveis substituídas! Tempo: ${Date.now() - docsStartTime}ms`);
 
+                // Coord criando contrato: remove pares órfãos "NOME:"/"CPF:" que sobram
+                // em templates (ex.: Impulse) com rótulos literais antes de {{NOME-VENDEDOR}}/{{CPF-VENDEDOR}}.
+                if (isCoord) {
+                    try {
+                        await GoogleDocsService.removeEmptyWitnessLabelPairs(newFile.id);
+                    } catch (cleanupErr: any) {
+                        console.warn(`[DOCS] Falha ao remover rótulos órfãos (não crítico):`, cleanupErr.message);
+                    }
+                }
+
                 // === AUTOMAÇÃO CLICKSIGN (REMOVIDO DO FLUXO PRINCIPAL) ===
                 // O envio para o Clicksign agora é feito via endpoint separado ou bypass
                 generatedFileLink = `https://docs.google.com/document/d/${newFile.id}/edit`;
@@ -696,6 +725,7 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
                 fin_email: data['EMAIL FINANCEIRO CONTRATANTE'] || null,
                 negotiation_template_id: data['NEGOTIATION_TEMPLATE_ID'] ? BigInt(data['NEGOTIATION_TEMPLATE_ID']) : null,
                 negotiation_clause: data['NEGOTIATION_RENDERED_CLAUSE'] || null,
+                negotiation_ai_prompt: data['NEGOTIATION_AI_PROMPT'] || null,
             }
         });
 
@@ -766,12 +796,13 @@ const handleContractSubmit = async (req: any, res: Response, sheetName: string) 
 
             try {
                 const metrics = await OpenAIService.calculateContractMetrics(metricsParams);
-                console.log(`[METRICS] Contrato ${contractId}: P1=${metrics.p1}, TCV=${metrics.tcv}`);
+                console.log(`[METRICS] Contrato ${contractId}: P1=${metrics.p1}, TCV=${metrics.tcv}, ImplFee=${metrics.implementationFee}`);
                 await prisma.contracts.update({
                     where: { id: contractId },
                     data: {
                         first_payment_amount: metrics.p1,
                         tcv: metrics.tcv,
+                        ...(metrics.implementationFee > 0 && { implementation_fee: metrics.implementationFee }),
                     },
                 });
                 console.log(`[METRICS] Contrato ${contractId}: métricas salvas no banco.`);

@@ -95,14 +95,54 @@ Receber a descrição de uma negociação comercial em linguagem informal e tran
      * Usa gpt-4o-mini com temperature 0 para máxima determinismo.
      * Inclui 1 retry automático em caso de resposta inválida.
      */
+    async generateCustomClause(description: string): Promise<{ text: string; numItems: number }> {
+        const systemPrompt = `Você é um redator jurídico especializado em contratos comerciais B2B de agências de marketing digital brasileiras.
+
+## Sua Tarefa
+Receber a descrição de uma negociação específica e transformá-la diretamente na parte variável da Cláusula 4 (Remuneração) de um contrato formal, com os valores já embutidos no texto.
+
+## Regras de Formato
+1. Numere cada item a partir de 4.1, 4.2, 4.3, etc.
+2. Use linguagem jurídica formal brasileira (CONTRATANTE e CONTRATADA).
+3. Insira os valores DIRETAMENTE no texto. NUNCA use placeholders, variáveis ou chaves duplas — escreva "R$ 2.500,00" e não "{{valor_mensalidade}}".
+4. Gere SOMENTE os itens variáveis da negociação. NÃO inclua cláusulas sobre nota fiscal, tributos, atraso de pagamento ou pontualidade.
+5. Use subitens com letras (a), (b), (c) quando listar componentes dentro de um item.
+6. Responda EXCLUSIVAMENTE com JSON válido, sem markdown, sem backticks, sem texto antes ou depois.
+7. NUNCA use linguagem interna ou comercial no texto. As únicas partes são CONTRATANTE e CONTRATADA.
+8. O texto deve ser sempre afirmativo e direto, sem condicionais.
+9. Quando o dia de vencimento for o mesmo para todas as parcelas, consolide em um único item genérico.
+
+## Formato de Resposta (JSON)
+{
+  "text": "texto completo dos itens com quebras de linha (\\n) entre eles",
+  "num_items": 3
+}`;
+
+        const response = await getOpenAI().chat.completions.create({
+            model: 'gpt-4o',
+            temperature: 0.2,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: description },
+            ],
+            response_format: { type: 'json_object' },
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) throw new Error('Resposta vazia da IA');
+
+        const parsed = JSON.parse(content);
+        return { text: parsed.text, numItems: parsed.num_items };
+    },
+
     async calculateContractMetrics(params: {
         renderedClause: string;
         implementationFee: number;
         contractualTerm: number | null;
         firstPaymentAmount: number | null;
         monthlyFee: number | null;
-    }): Promise<{ p1: number; tcv: number }> {
-        const systemPrompt = `Você é uma calculadora financeira de contratos. Sua ÚNICA função é calcular 2 métricas a partir dos dados de um contrato comercial.
+    }): Promise<{ p1: number; tcv: number; implementationFee: number }> {
+        const systemPrompt = `Você é uma calculadora financeira de contratos. Sua ÚNICA função é calcular 3 métricas a partir dos dados de um contrato comercial.
 
 ## REGRA SUPREMA — A CLÁUSULA É A FONTE DA VERDADE
 Os campos numéricos (first_payment_amount, monthly_fee) são AUXILIARES e podem estar zerados ou incompletos.
@@ -162,11 +202,23 @@ Cálculo: Pagamento único: 20.000 | + impl 1.000 = 21.000
 - NUNCA invente valores — use APENAS os dados fornecidos (cláusula + campos numéricos)
 - Se a cláusula e os campos numéricos divergem, PRIORIZE A CLÁUSULA
 
+## implementation_fee (Taxa de Implementação)
+- Se o campo implementation_fee fornecido for maior que 0, use esse valor.
+- Se for 0, leia a cláusula e extraia o valor da taxa de implementação mencionada (ex: "taxa de implementação no valor de R$ 800,00" → 800.00).
+- Se a cláusula não mencionar taxa de implementação, retorne 0.
+
 ## Formato de resposta
 Responda EXCLUSIVAMENTE com JSON válido, sem markdown, sem backticks.
-Inclua o campo "breakdown" com o raciocínio ANTES dos totais — isso força você a pensar antes de somar. O breakdown DEVE terminar com "+ impl X = TCV final" para garantir que a implementação foi incluída.
 
-{"breakdown": "Pagamento único: 20000 | + impl 1000 = 21000", "p1": 20000.00, "tcv": 21000.00}`;
+O campo "breakdown" é OBRIGATÓRIO e deve seguir este protocolo exato:
+1. Liste CADA mês individualmente: "Mês 1: 2100 | Mês 2: 2100 | Mês 3: 3500 | ... | Mês 12: 3500"
+2. Some todos os meses: "Soma meses: X"
+3. Adicione implementação: "Soma meses X + impl Y = TCV Z"
+4. Confirme a contagem: "Total de meses listados: N (deve ser igual ao prazo)"
+
+Isso garante que NENHUM mês seja esquecido ou duplicado.
+
+{"breakdown": "Mês 1: 2100 | Mês 2: 2100 | Meses 3-12: 3500×10=35000 | Soma meses: 39200 | + impl 800 = 40000 | Total meses: 12 ✓", "p1": 2100.00, "tcv": 40000.00, "implementation_fee": 800.00}`;
 
         const userMessage = `## Dados do Contrato
 
@@ -202,6 +254,7 @@ Calcule P1 e TCV.`;
 
             const p1 = parseFloat(parsed.p1);
             const tcv = parseFloat(parsed.tcv);
+            const implementationFee = parseFloat(parsed.implementation_fee ?? params.implementationFee ?? 0);
 
             if (isNaN(p1) || isNaN(tcv)) {
                 throw new Error(`Valores inválidos retornados: p1=${parsed.p1}, tcv=${parsed.tcv}`);
@@ -210,6 +263,7 @@ Calcule P1 e TCV.`;
             return {
                 p1: Math.round(p1 * 100) / 100,
                 tcv: Math.round(tcv * 100) / 100,
+                implementationFee: Math.round((isNaN(implementationFee) ? 0 : implementationFee) * 100) / 100,
             };
         };
 

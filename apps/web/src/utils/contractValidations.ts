@@ -77,12 +77,17 @@ export const getValidationRules = (data: Record<string, any>, buName?: string, t
   check('EMAIL DO REPRESENTANTE', validateRequired(data['EMAIL DO REPRESENTANTE'], 'E-mail do representante'));
   check('CPF DO REPRESENTANTE', validateCPF(data['CPF DO REPRESENTANTE'] || ''));
   
-  check('VALOR TAXA IMPLEMENTACAO', validateRequired(data['VALOR TAXA IMPLEMENTACAO'], 'Taxa de implementação'));
+  // Campos que podem vir de placeholders dinâmicos ou cláusula AI (valores embutidos no texto)
+  const isCustomMode = data['NEGOTIATION_CLAUSE_MODE'] === 'custom';
+  const usaDinamico = !!data['NEGOTIATION_TEMPLATE_ID'] || isCustomMode || !!data['NEGOTIATION_AI_PROMPT'] || !!data['NEGOTIATION_RENDERED_CLAUSE'];
 
-  // Campos que podem vir de placeholders dinâmicos — só validar se preenchidos ou se não usa template dinâmico
-  const usaDinamico = !!data['NEGOTIATION_TEMPLATE_ID'];
+  // Cláusula personalizada selecionada mas IA ainda não gerou
+  if (isCustomMode && !data['NEGOTIATION_AI_PROMPT'] && !data['NEGOTIATION_RENDERED_CLAUSE']) {
+    errors['NEGOTIATION_AI_CLAUSE'] = 'Gere a cláusula com IA antes de prosseguir';
+  }
 
   if (!usaDinamico) {
+    check('VALOR TAXA IMPLEMENTACAO', validateRequired(data['VALOR TAXA IMPLEMENTACAO'], 'Taxa de implementação'));
     check('VALOR MENSALIDADE', validateRequired(data['VALOR MENSALIDADE'], 'Mensalidade'));
 
     if (!isBomma) {

@@ -374,14 +374,25 @@ const fetchCoords = async () => {
 }
 
 const autoSelectFirstCoord = async () => {
-  // 1. Tentar selecionar o Coordenador configurado (head_id) para o vendedor atual
-  const vendorEmail = props.form['EMAIL VENDEDOR']
+  const vendorEmail = (props.form['EMAIL VENDEDOR'] || '').toLowerCase()
+
+  // 1. Se o vendedor é ele mesmo um coordenador — compara por e-mail direto em allCoords
+  if (vendorEmail) {
+    const selfCoord = allCoords.value.find(
+      (c) => (c.email || '').toLowerCase() === vendorEmail
+    )
+    if (selfCoord && coordOptions.value.some((opt) => opt.value === String(selfCoord.id))) {
+      selectedCoordId.value = String(selfCoord.id)
+      return
+    }
+  }
+
+  // 2. Tenta pelo head_id do vendedor (vendedor normal com coord associado)
   if (vendorEmail) {
     try {
-      const seller = await getSellersEmailEmail(vendorEmail, { client })
+      const seller = await getSellersEmailEmail(props.form['EMAIL VENDEDOR'], { client })
       if (seller && (seller as any).head_id) {
         const headId = String((seller as any).head_id)
-        // Verifica se esse coordenador está na lista de opções para esta BU
         if (coordOptions.value.some((opt) => opt.value === headId)) {
           selectedCoordId.value = headId
           return
@@ -392,7 +403,7 @@ const autoSelectFirstCoord = async () => {
     }
   }
 
-  // 2. Fallback: seleciona o primeiro se nada foi setado
+  // 3. Fallback: seleciona o primeiro
   if (!selectedCoordId.value && coordOptions.value.length > 0) {
     selectedCoordId.value = coordOptions.value[0].value
   }

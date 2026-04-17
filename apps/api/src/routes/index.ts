@@ -27,7 +27,7 @@ import { getGoals, createOrUpdateGoal, deleteGoal } from '../controllers/goalCon
 import { getTeams, createTeam, updateTeam, addTeamMember, removeTeamMember, deleteTeam } from '../controllers/teamController';
 import { getCac, upsertCac } from '../controllers/cacController';
 import { getCommercialCosts, upsertCommercialCosts } from '../controllers/commercialCostsController';
-import { getNegotiationTemplates, generateNegotiationClause, createNegotiationTemplate, updateNegotiationTemplate, toggleNegotiationTemplate } from '../controllers/negotiationTemplateController';
+import { getNegotiationTemplates, generateNegotiationClause, generateCustomNegotiationClause, createNegotiationTemplate, updateNegotiationTemplate, toggleNegotiationTemplate } from '../controllers/negotiationTemplateController';
 
 const router = Router();
 
@@ -153,6 +153,7 @@ router.get('/negotiation-templates', getNegotiationTemplates);
 router.post('/negotiation-templates', createNegotiationTemplate);
 router.put('/negotiation-templates/:id', updateNegotiationTemplate);
 router.post('/negotiation-templates/generate', generateNegotiationClause);
+router.post('/negotiation-templates/generate-custom', generateCustomNegotiationClause);
 router.patch('/negotiation-templates/:id/toggle', toggleNegotiationTemplate);
 
 // AUTH ROUTES

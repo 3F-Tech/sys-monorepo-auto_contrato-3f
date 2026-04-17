@@ -286,6 +286,20 @@ export const toggleNegotiationTemplate = async (req: Request, res: Response) => 
     }
 };
 
+export const generateCustomNegotiationClause = async (req: Request, res: Response) => {
+    try {
+        const { description } = req.body;
+        if (!description || !description.trim()) {
+            return res.status(400).json({ error: 'Descrição da negociação é obrigatória' });
+        }
+        const result = await OpenAIService.generateCustomClause(description.trim());
+        res.json(result);
+    } catch (error: any) {
+        console.error('[IA CUSTOM] Erro ao gerar cláusula:', error.message);
+        res.status(500).json({ error: 'Falha ao gerar cláusula com IA', details: error.message });
+    }
+};
+
 export const generateNegotiationClause = async (req: Request, res: Response) => {
     try {
         const { description } = req.body;

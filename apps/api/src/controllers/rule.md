@@ -91,15 +91,17 @@ Quando o campo `ID DO DOCUMENTO CLICKSIGN` é preenchido no formulário, o `hand
 
 Esta regra define como as variáveis do Google Docs são preenchidas com base em **quem está criando o contrato** (`user.type` do JWT).
 
-### Quando o criador é `vendedor`
+### Quando o criador é `vendedor`/`sdr`
 - `{{INFOS-VENDEDOR}}`, `{{NOME-VENDEDOR}}`, `{{CPF-VENDEDOR}}` → preenchidos com os dados do **próprio vendedor** (`data['NOME VENDEDOR']`, `data['CPF VENDEDOR']`)
-- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados do **coordenador da BU** (vindo do payload ou buscado automaticamente no banco por `type: 'coord'` + `business_id`)
+- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados do coord apontado por **`sellers.head_id` do vendedor logado** (derivado do JWT, não do payload)
 - O vendedor também aparece como `NOME TESTEMUNHA FIXA {N}` (adicionado pelo `WitnessSection.vue`)
 
 ### Quando o criador é `coord`
 - `{{INFOS-VENDEDOR}}`, `{{NOME-VENDEDOR}}`, `{{CPF-VENDEDOR}}` → **COMPLETAMENTE VAZIOS** (string `''`)
-- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados **do próprio coordenador logado**
+- `{{INFOS-COORDENADOR}}`, `{{NOME-COORDENADOR}}`, `{{CPF-COORDENADOR}}`, `{{NOME-COORD-BU}}`, `{{CPF-COORD-BU}}` → preenchidos com os dados **do próprio coordenador logado** (derivados do JWT, não do payload)
 - O slot `NOME TESTEMUNHA FIXA {N}` que o `WitnessSection.vue` adiciona com os dados do "vendedor" (que são na verdade os dados do coord) também é **zerado** — o backend detecta o nome do coord nesses slots e os limpa
+
+> **Autoridade:** o backend deriva o coordenador diretamente de `req.user.id` (JWT) e ignora `data['NOME COORD BU']` / `data['CPF COORD BU']` do payload — o frontend pode enviar um coord errado via fallback do `autoSelectFirstCoord`. O backend também sobrescreve slots `NOME-TESTEMUNHA-FIXA-{i}` que contenham o coord errado do payload pelo coord autoritativo.
 
 ### Implementação (`contractAutomationController.ts` → `handleContractSubmit`)
 ```

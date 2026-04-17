@@ -133,6 +133,83 @@ export class GoogleDocsService {
   }
 
   /**
+   * Remove pares de parágrafos consecutivos cujo texto (após trim) é exatamente
+   * "NOME:" seguido por "CPF:".
+   *
+   * Usado quando um coord cria contrato: o template Impulse tem literais
+   * "NOME: {{NOME-VENDEDOR}}" e "CPF: {{CPF-VENDEDOR}}" — quando o placeholder
+   * fica vazio, os rótulos "NOME:" e "CPF:" permanecem como linhas órfãs.
+   */
+  static async removeEmptyWitnessLabelPairs(documentId: string) {
+    const auth = this.getAuth();
+    const docs = google.docs({ version: "v1", auth });
+    const doc = await docs.documents.get({ documentId });
+    const body = doc.data.body?.content || [];
+
+    const ranges: { startIndex: number; endIndex: number }[] = [];
+    this.collectEmptyLabelRanges(body, ranges);
+
+    if (ranges.length === 0) return;
+
+    // Ordena em ordem decrescente para que deletes posteriores não invalidem índices anteriores
+    ranges.sort((a, b) => b.startIndex - a.startIndex);
+
+    await docs.documents.batchUpdate({
+      documentId,
+      requestBody: {
+        requests: ranges.map((range) => ({ deleteContentRange: { range } })),
+      },
+    });
+  }
+
+  private static paragraphText(paragraph: any): string {
+    return (paragraph?.elements || [])
+      .map((e: any) => e.textRun?.content || "")
+      .join("");
+  }
+
+  private static collectEmptyLabelRanges(
+    content: any[],
+    out: { startIndex: number; endIndex: number }[],
+  ) {
+    for (let i = 0; i < content.length; i++) {
+      const el = content[i];
+
+      if (el.paragraph && i + 1 < content.length && content[i + 1].paragraph) {
+        const t1 = this.paragraphText(el.paragraph).trim();
+        const t2 = this.paragraphText(content[i + 1].paragraph).trim();
+        if (t1 === "NOME:" && t2 === "CPF:") {
+          let lastIdx = i + 1;
+          // Consome UM parágrafo em branco imediatamente após o par, caso exista
+          // (evita deixar "\n\n" entre o título TESTEMUNHA e o próximo bloco)
+          const next = content[lastIdx + 1];
+          if (next?.paragraph && this.paragraphText(next.paragraph).trim() === "") {
+            lastIdx += 1;
+          }
+          out.push({
+            startIndex: el.startIndex,
+            endIndex: content[lastIdx].endIndex,
+          });
+          i = lastIdx; // Pula para depois do último consumido
+          continue;
+        }
+      }
+
+      if (el.table?.tableRows) {
+        for (const row of el.table.tableRows) {
+          for (const cell of row.tableCells || []) {
+            if (cell.content) this.collectEmptyLabelRanges(cell.content, out);
+          }
+        }
+      }
+
+      if (el.tableOfContents?.content) {
+        this.collectEmptyLabelRanges(el.tableOfContents.content, out);
+      }
+    }
+  }
+
+  /**
    * Busca recursivamente o índice de início de um placeholder no conteúdo do documento.
    * Suporta Parágrafos e Tabelas (Células).
    */

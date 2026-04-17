@@ -21,7 +21,7 @@ export const contractDataSchema = z.object({
   'NOME DO REPRESENTANTE': z.string().min(3, "Nome do representante muito curto"),
   'EMAIL DO REPRESENTANTE': z.string().email("E-mail do representante obrigatório"),
   'CPF DO REPRESENTANTE': z.string().regex(cpfRegex, "CPF inválido (use 000.000.000-00)"),
-  'VALOR TAXA IMPLEMENTACAO': z.string().min(1, "Taxa de implementação obrigatória"),
+  'VALOR TAXA IMPLEMENTACAO': z.string().optional().or(z.literal('')),
   'VALOR MENSALIDADE': z.string().optional().or(z.literal('')),
   'VALOR DO PRIMEIRO PAGAMENTO': z.string().optional().or(z.literal('')),
   'DATA PRIMEIRO PAGAMENTO': z.string().regex(dateRegex, "Data inválida (use DD/MM/AAAA)").optional().or(z.literal('')),
@@ -74,9 +74,10 @@ export const contractDataSchema = z.object({
   'VALOR_PRIMEIRAS_PARCELAS': z.string().optional().or(z.literal('')),
   'QTD_ULTIMAS_PARCELAS': z.union([z.number(), z.string()]).optional().transform(val => val ? Number(val) : undefined),
   'VALOR_ULTIMAS_PARCELAS': z.string().optional().or(z.literal('')),
-  'NEGOTIATION_TEMPLATE_ID': z.union([z.string(), z.number()]).optional(),
-  'NEGOTIATION_TEMPLATE_NAME': z.string().optional(),
+  'NEGOTIATION_TEMPLATE_ID': z.union([z.string(), z.number()]).optional().nullable(),
+  'NEGOTIATION_TEMPLATE_NAME': z.string().optional().nullable(),
   'NEGOTIATION_RENDERED_CLAUSE': z.string().optional(),
+  'NEGOTIATION_AI_PROMPT': z.string().optional().nullable(),
 });
 
 export const contractSubmissionSchema = z.object({
@@ -87,12 +88,21 @@ export const contractSubmissionSchema = z.object({
 }).superRefine((val, ctx) => {
   const isBomma = val.bu_name?.toUpperCase().includes('BOMMA');
   const instagram = val.data['LINK INSTAGRAM CONTRATANTE'];
-  
+  const isAIClause = !!val.data['NEGOTIATION_AI_PROMPT'];
+
   if (isBomma && (!instagram || instagram.trim() === '')) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "O link do Instagram é obrigatório para contratos Bomma",
       path: ['data', 'LINK INSTAGRAM CONTRATANTE'],
+    });
+  }
+
+  if (!isAIClause && (!val.data['VALOR TAXA IMPLEMENTACAO'] || val.data['VALOR TAXA IMPLEMENTACAO'].trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Taxa de implementação obrigatória",
+      path: ['data', 'VALOR TAXA IMPLEMENTACAO'],
     });
   }
 });
